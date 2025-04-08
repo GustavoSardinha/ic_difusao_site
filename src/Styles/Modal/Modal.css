@@ -1,0 +1,52 @@
+.Modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .Modal {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    min-width: 35vh;
+    max-width: min-content;
+    text-align: center;
+  }
+  .Close-button{
+    box-sizing: border-box;
+    width: 100%;
+    background-color: #007dc0; 
+    color: white;
+    font-size: medium;
+    font-weight: bold;   
+    padding: 1.5vh;
+    border: none;
+    border-radius: 1vh;
+  }
+  .Close-button:hover{
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    background-color: #015b8bd7;
+    cursor: pointer;
+  }
+  .Icon{
+    width: 5vh;
+    height: 5vh;
+    margin: 0 1.5vh;
+  }
+  .Title-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+  .Main-content{
+    text-align: justify;
+
+  }

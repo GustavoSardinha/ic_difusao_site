@@ -1,0 +1,65 @@
+.Modal-overlayC{
+    background-color: #007dc0;
+    display: flex;
+    flex-direction: column;
+
+}
+.ModalC{
+    background-color: #f9f9f9;;
+    padding: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+    border-top-right-radius: 2vh;
+    border-top-left-radius: 2vh;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+.Title{
+    color: #f9f9f9;;
+    font-weight: bold;
+    font-size: xx-large;
+}
+.Row-container{
+    display: flex;
+    flex-direction: row;
+}
+.Col-container{
+    display: flex;
+    flex-direction: column;
+    margin: 5vh;
+}
+@media (max-width: 600px) {
+    .Row-container {
+      flex-direction: column;
+      
+    }
+    .Col-container{
+        margin: 0vh;
+    }
+  }
+.Subtitle{
+    font-size: large;
+    font-weight: bold;
+}
+.Picker{
+    padding: 1.5vh;
+    box-sizing: border-box;
+    border-radius: 1vh;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-size: medium;
+    margin: 0 2vh;
+}
+.Picker:hover{
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+}
+.Button-container{
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100vh;
+}

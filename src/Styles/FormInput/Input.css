@@ -1,0 +1,65 @@
+.Form-Input {
+    background-color: #ffffff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    width: 100%;           
+    box-sizing: border-box; 
+    border: none;
+    transition: box-shadow 0.3s ease;
+    font-size: medium;
+  }
+  
+  .Form-Input:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+  .Input-container{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    margin: 0 2vh;
+  }
+  .Input-label{
+    font-size: smaller;
+  }
+  .Input-line{
+    width: 100%;           
+    box-sizing: border-box; 
+    display: flex;
+    flex-direction: row;
+  }
+  .Doubt-button{
+    border-radius: 50%;
+    width: 5vh;
+    height: 5vh;
+    border: none;
+    color: white;
+    background-color: #007dc0;
+    margin: 0 0 0 2vh;
+    font-weight: bold;
+    font-size: large;
+    font-family:'Times New Roman', Times, serif
+  }
+  .Doubt-button:hover{
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    background-color: #015b8bd7;
+    cursor: pointer;
+  }
+  .Continue-button{
+    background-color: #007dc0;
+    color: white;
+    border: none;
+    padding: 2vh 0;
+    margin: 2vh 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 1vh;
+    font-size: large;
+    font-weight: bold;
+  }
+  .Continue-button:hover{
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    background-color: #015b8bd7;
+    cursor: pointer;
+  }
