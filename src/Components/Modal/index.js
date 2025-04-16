@@ -1,8 +1,7 @@
 import React from "react";
 import "../../Styles/Modal/Modal.css";
 
-function Modal({ icon, title, msgAlert, exAlert, onClick }) {
-  // Função para destacar o texto entre *asteriscos*
+function Modal({ icon, title, msgAlert, exAlert, onClick }) { 
   function mark(text) {
     return text.split("*").map((segment, i) =>
       i % 2 === 1 ? <strong key={i}>{segment}</strong> : segment

@@ -127,7 +127,7 @@ export function useValidation() {
       stepTable,
     };
 
-    setValidated(result);
+    setValidated(true);
     return result;
   }
 

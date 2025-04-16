@@ -9,29 +9,13 @@ import ContinueButton from './Components/ContinueButton';
 import ContornoModal from './Components/ContornoModal';
 import { thomasSimetrico } from './Services/numericalMath';
 import api from './Services/API/quickchart';
-import html2pdf from 'html2pdf.js';
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
 
 function App() {
 
-  const [numRegioes, setNumRegioes] = useState("");
-  const [zonasMateriais, setZonasMateriais] = useState("");
-  const [mapeamento, setMapeamento] = useState("");
-  const [numCelulasPorRegiao, setNumCelulasPorRegiao] = useState("");
-  const [fonteNeutrons, setFonteNeutrons] = useState("");
-  const [coeficientesDifusao, setCoeficientesDifusao] = useState("");
-  const [choquesMacroscopicos, setChoquesMacroscopicos] = useState("");
-  const [espessura, setEspessura] = useState("");
-  const [stepGraphic, setStepGraphic] = useState("1");
-  const [stepTable, setStepTable] = useState("1");
-  const {validated, setValidated, runAll} = useValidation();
-  const [err, setErr] = useState(null)
-  const [contornoDir, setContornoDir] = useState("0;0")
-  const [contornoEsq, setContornoEsq] = useState("0;0")
-  const [incidenciaDir, setIncidenciaDir] = useState(0)
-  const [incidenciaEsq, setIncidenciaEsq] = useState(0)
   const [result, setResult] = useState(null);
   const [vector_solutions, setVector_solutions] = useState([]);
   const [esps, setEsps] = useState([]);
@@ -43,205 +27,6 @@ function App() {
     }
     return 0;
   }
-  
-  const onSubmit = () => {
-    try {
-      setResult(runAll({
-        numRegioes,
-        zonasMateriais,
-        mapeamento,
-        numCelulasPorRegiao,
-        fonteNeutrons,
-        coeficientesDifusao,
-        choquesMacroscopicos,
-        espessura,
-        stepGraphic,
-        stepTable,
-      }));
-    } catch (err) {
-      setErr(err);
-    }
-  };
-  const clearFields = () => {
-    setErr(null);
-    setNumRegioes("");
-    setZonasMateriais("");
-    setMapeamento("");
-    setNumCelulasPorRegiao("");
-    setCoeficientesDifusao("");
-    setFonteNeutrons("");
-    setEspessura("");
-    setChoquesMacroscopicos("");
-    setStepGraphic("1");
-    setStepTable("1");
-    setContornoDir("0;0");
-    setContornoEsq("0;0");
-    setIncidenciaDir(0);
-    setIncidenciaEsq(0);
-    setResult(null);
-  }
-  const generateVectors = () => {
-    const vectorA = [];
-    const vectorB = [];
-    const vectorFonte = [];
-  
-    const {
-      numRegioes,
-      mapeamento,
-      numCelulasPorRegiao,
-      fonteNeutrons,
-      coeficientesDifusao,
-      choquesMacroscopicos,
-      espessura,
-      comprimento,
-    } = result;
-  
-    let xsx = [];
-    let s = [];
-    let nm = 0;
-    let cond_left = contornoEsq.split(";");
-    let cond_right = contornoDir.split(";");
-    let espPorReg = [];
-  
-    for (let regioes = 0; regioes < numRegioes; regioes++) {
-      const indice_mapeamento = mapeamento[regioes] - 1;
-      const coef_difusao = coeficientesDifusao[indice_mapeamento];
-      const coef_choque_macro = choquesMacroscopicos[indice_mapeamento];
-      const fonte = fonteNeutrons[regioes];
-      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-  
-      for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
-        nm++;
-        espPorReg.push(h);
-        vectorB.push(coef_difusao / h);
-        xsx.push(coef_choque_macro * h / 2);
-        s.push(fonte * h / 2);
-      }
-    }
-  
-    espPorReg.push(comprimento);
-  
-    vectorA.push(vectorB[0] + xsx[0] + Number(cond_right[1]));
-    vectorFonte.push(s[0] + Number(incidenciaDir) * Number(cond_right[0]));
-  
-    for (let i = 1; i < nm; i++) {
-      vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
-      vectorFonte.push(s[i] + s[i - 1]);
-    }
-  
-    vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_left[1]));
-    vectorFonte.push(s[nm - 1] + Number(incidenciaEsq) * Number(cond_left[0]));
-  
-    const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
-  
-    const esps = [];
-    let pos = 0;
-    espPorReg.forEach((esp) => {
-      esps.push(pos);
-      pos += esp;
-    });
-  
-    setVector_solutions(solutions);
-    setEsps(esps);
-
-  };
-  const createFluxTable = () => {
-    if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
-  
-    const dataStep = (array, step) => {
-      return array
-        .map((value, index) => ({ index, value }))
-        .filter((_, i) => i % step === 0 || i === array.length - 1);
-    };
-  
-    const data = dataStep(vector_solutions, Number(result.stepTable));
-  
-    return `
-      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela do Fluxo de Nêutrons</h3>
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
-        <thead>
-          <tr>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Posição (cm)</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Fluxo de Nêutrons</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map((info) => `
-            <tr>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[info.index]?.toFixed(5) || 0}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-  };
-  const createGraphics = async () => {
-    if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
-  
-    try {
-      const dataStep = (array, step) => {
-        return array
-          .map((value, index) => ({ index, value }))
-          .filter((_, i) => i % step === 0 || i === array.length - 1);
-      };
-  
-      const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
-  
-      const data = stepData.map((info) => ({
-        x: esps[info.index].toFixed(5),
-        y: info.value.toFixed(5),
-      }));
-  
-      const response = await api.post(
-        "chart",
-        {
-          version: "2",
-          backgroundColor: "transparent",
-          width: 500,
-          height: 300,
-          devicePixelRatio: 1.0,
-          format: "png",
-          chart: {
-            type: "scatter",
-            data: {
-              datasets: [
-                {
-                  label: "Ponto da malha de discretização",
-                  borderColor: "rgb(255, 99, 132)",
-                  backgroundColor: "rgba(255, 99, 132, 0.2)",
-                  data: data,
-                },
-              ],
-            },
-            options: {
-              title: {
-                display: true,
-                text: "Fluxo de Nêutrons X Posição",
-              },
-            },
-          },
-        },
-        { responseType: "arraybuffer" }
-      );
-  
-      const bytes = new Uint8Array(response.data);
-      const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
-      const base64ImageString = btoa(binary);
-      const srcValue = "data:image/png;base64," + base64ImageString;
-  
-      return `
-        <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
-        <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
-
-      `;
-    } catch (error) {
-      console.error("Erro ao gerar o gráfico:", error);
-      return `<p>Erro ao gerar o gráfico</p>`;
-    }
-  };
   function calcEspessurasPorRegiao() {
     const { numRegioes, numCelulasPorRegiao, espessura} = result;
     const espsPorCels = [];
@@ -251,68 +36,6 @@ function App() {
     }
     return espsPorCels;
   }
-  const arrayFields = [
-    {
-      key: 'mapeamento',
-      label: 'Mapeamento:',
-      placeholder: 'Digite os índices do mapeamento.',
-      msgAlert:
-        'Para informar o mapeamento corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
-      exAlert: 'Exemplo: 1;2;3;1',
-      value: mapeamento,
-      setter: setMapeamento,
-    },
-    {
-      key: 'numCelulasPorRegiao',
-      label: 'Número de células por Região:',
-      placeholder: 'Informe o número de células por região.',
-      msgAlert:
-        'Para informar o número de células por região corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
-      exAlert: 'Exemplo: 1000;800;1000;500',
-      value: numCelulasPorRegiao,
-      setter: setNumCelulasPorRegiao,
-    },
-    {
-      key: 'fonteNeutrons',
-      label: 'Fonte de nêutrons:',
-      placeholder: 'Informe os valores das fontes de nêutrons.',
-      msgAlert:
-        'Para informar as fontes de nêutrons corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
-      exAlert: 'Exemplo: 4;0;0;2',
-      value: fonteNeutrons,
-      setter: setFonteNeutrons,
-    },
-    {
-      key: 'coeficientesDifusao',
-      label: 'Coeficientes de difusão:',
-      placeholder: 'Informe os valores dos coeficientes de difusão.',
-      msgAlert:
-        'Para informar os coeficientes de difusão corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
-      exAlert: 'Exemplo: 1.5;3.83;2.3;1',
-      value: coeficientesDifusao,
-      setter: setCoeficientesDifusao,
-    },
-    {
-      key: 'choquesMacroscopicos',
-      label: 'Seções de Choque Macroscópicas:',
-      placeholder: 'Informe os valores das seções de choque macroscópicas.',
-      msgAlert:
-        'Para informar os valores dos choques macroscópicos corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
-      exAlert: 'Exemplo: 0.7;3;4.2;1',
-      value: choquesMacroscopicos,
-      setter: setChoquesMacroscopicos,
-    },
-    {
-      key: 'espessura',
-      label: 'Espessura de cada Região (cm):',
-      placeholder: 'Informe os valores das espessuras em cm.',
-      msgAlert:
-        'Para informar as espessuras corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais e que a unidade de espessura é centímetros.',
-      exAlert: 'Exemplo: 2;1.4;1.7;2.3',
-      value: espessura,
-      setter: setEspessura,
-    },
-  ];
   return (
     <BrowserRouter>
       <Routes>
@@ -324,6 +47,179 @@ function App() {
 
   function Home(){
     const navigate = useNavigate();
+    const [numRegioes, setNumRegioes] = useState("");
+    const [zonasMateriais, setZonasMateriais] = useState("");
+    const [mapeamento, setMapeamento] = useState("");
+    const [numCelulasPorRegiao, setNumCelulasPorRegiao] = useState("");
+    const [fonteNeutrons, setFonteNeutrons] = useState("");
+    const [coeficientesDifusao, setCoeficientesDifusao] = useState("");
+    const [choquesMacroscopicos, setChoquesMacroscopicos] = useState("");
+    const [espessura, setEspessura] = useState("");
+    const [stepGraphic, setStepGraphic] = useState("1");
+    const [stepTable, setStepTable] = useState("1");
+    const {validated, setValidated, runAll} = useValidation();
+    const [err, setErr] = useState(null)
+    const [contornoDir, setContornoDir] = useState("0;0")
+    const [contornoEsq, setContornoEsq] = useState("0;0")
+    const [incidenciaDir, setIncidenciaDir] = useState(0)
+    const [incidenciaEsq, setIncidenciaEsq] = useState(0)
+    useEffect(() => {
+      console.log('Componente MONTADO');
+      return () => console.log('Componente DESMONTADO');
+    }, []);
+    const arrayFields = [
+      {
+        key: 'mapeamento',
+        label: 'Mapeamento:',
+        placeholder: 'Digite os índices do mapeamento.',
+        msgAlert:
+          'Para informar o mapeamento corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
+        exAlert: 'Exemplo: 1;2;3;1',
+        value: mapeamento,
+        setter: setMapeamento,
+      },
+      {
+        key: 'numCelulasPorRegiao',
+        label: 'Número de células por Região:',
+        placeholder: 'Informe o número de células por região.',
+        msgAlert:
+          'Para informar o número de células por região corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
+        exAlert: 'Exemplo: 1000;800;1000;500',
+        value: numCelulasPorRegiao,
+        setter: setNumCelulasPorRegiao,
+      },
+      {
+        key: 'fonteNeutrons',
+        label: 'Fonte de nêutrons:',
+        placeholder: 'Informe os valores das fontes de nêutrons.',
+        msgAlert:
+          'Para informar as fontes de nêutrons corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
+        exAlert: 'Exemplo: 4;0;0;2',
+        value: fonteNeutrons,
+        setter: setFonteNeutrons,
+      },
+      {
+        key: 'coeficientesDifusao',
+        label: 'Coeficientes de difusão:',
+        placeholder: 'Informe os valores dos coeficientes de difusão.',
+        msgAlert:
+          'Para informar os coeficientes de difusão corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
+        exAlert: 'Exemplo: 1.5;3.83;2.3;1',
+        value: coeficientesDifusao,
+        setter: setCoeficientesDifusao,
+      },
+      {
+        key: 'choquesMacroscopicos',
+        label: 'Seções de Choque Macroscópicas:',
+        placeholder: 'Informe os valores das seções de choque macroscópicas.',
+        msgAlert:
+          'Para informar os valores dos choques macroscópicos corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
+        exAlert: 'Exemplo: 0.7;3;4.2;1',
+        value: choquesMacroscopicos,
+        setter: setChoquesMacroscopicos,
+      },
+      {
+        key: 'espessura',
+        label: 'Espessura de cada Região (cm):',
+        placeholder: 'Informe os valores das espessuras em cm.',
+        msgAlert:
+          'Para informar as espessuras corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais e que a unidade de espessura é centímetros.',
+        exAlert: 'Exemplo: 2;1.4;1.7;2.3',
+        value: espessura,
+        setter: setEspessura,
+      },
+    ];
+    const onSubmit = () => {
+      try {
+        setResult(runAll({
+          numRegioes,
+          zonasMateriais,
+          mapeamento,
+          numCelulasPorRegiao,
+          fonteNeutrons,
+          coeficientesDifusao,
+          choquesMacroscopicos,
+          espessura,
+          stepGraphic,
+          stepTable,
+        }));
+      } catch (err) {
+        console.log(err);
+        setErr(err);
+      }
+    };
+    const generateVectors = () => {
+      const vectorA = [];
+      const vectorB = [];
+      const vectorFonte = [];
+    
+      const {
+        numRegioes,
+        mapeamento,
+        numCelulasPorRegiao,
+        fonteNeutrons,
+        coeficientesDifusao,
+        choquesMacroscopicos,
+        espessura,
+        comprimento,
+      } = result;
+    
+      let xsx = [];
+      let s = [];
+      let nm = 0;
+      let cond_left = contornoEsq.split(";");
+      let cond_right = contornoDir.split(";");
+      let espPorReg = [];
+    
+      for (let regioes = 0; regioes < numRegioes; regioes++) {
+        const indice_mapeamento = mapeamento[regioes] - 1;
+        const coef_difusao = coeficientesDifusao[indice_mapeamento];
+        const coef_choque_macro = choquesMacroscopicos[indice_mapeamento];
+        const fonte = fonteNeutrons[regioes];
+        const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+    
+        for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
+          nm++;
+          espPorReg.push(h);
+          vectorB.push(coef_difusao / h);
+          xsx.push(coef_choque_macro * h / 2);
+          s.push(fonte * h / 2);
+        }
+      }
+    
+      espPorReg.push(comprimento);
+    
+      vectorA.push(vectorB[0] + xsx[0] + Number(cond_right[1]));
+      vectorFonte.push(s[0] + Number(incidenciaDir) * Number(cond_right[0]));
+    
+      for (let i = 1; i < nm; i++) {
+        vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
+        vectorFonte.push(s[i] + s[i - 1]);
+      }
+    
+      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_left[1]));
+      vectorFonte.push(s[nm - 1] + Number(incidenciaEsq) * Number(cond_left[0]));
+    
+      const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
+    
+      const esps = [];
+      let pos = 0;
+      espPorReg.forEach((esp) => {
+        esps.push(pos);
+        pos += esp;
+      });
+      setResult(result => ({
+        ...result, 
+        contornoDir: contornoDir,   
+        incidenciaDir: incidenciaDir, 
+        contornoEsq: contornoEsq,  
+        incidenciaEsq: incidenciaEsq  
+      }));
+      console.log(result);
+      setVector_solutions(solutions);
+      setEsps(esps);
+  
+    };
     const solveProblem = async () => {
       setValidated(false);
       generateVectors();
@@ -388,7 +284,7 @@ function App() {
             onClick = {onSubmit}
             err = {err}>
             </ContinueButton>
-            {validated && (
+            { (result != null) && (
             <ContornoModal
             contornoDir = {contornoDir}
             setContornoDir = {setContornoDir}
@@ -478,6 +374,108 @@ function App() {
         </div>
       );
     }
+    const createFluxTable = () => {
+      if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+    
+      const dataStep = (array, step) => {
+        return array
+          .map((value, index) => ({ index, value }))
+          .filter((_, i) => i % step === 0 || i === array.length - 1);
+      };
+    
+      const data = dataStep(vector_solutions, Number(result.stepTable));
+    
+      return `
+        <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela do Fluxo de Nêutrons</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+          <thead>
+            <tr>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Posição (cm)</th>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Fluxo de Nêutrons</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map((info) => `
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[info.index]?.toFixed(5) || 0}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    };
+    const createGraphics = async () => {
+      if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+    
+      try {
+        const dataStep = (array, step) => {
+          return array
+            .map((value, index) => ({ index, value }))
+            .filter((_, i) => i % step === 0 || i === array.length - 1);
+        };
+    
+        const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
+    
+        const data = stepData.map((info) => ({
+          x: esps[info.index].toFixed(5),
+          y: info.value.toFixed(5),
+        }));
+    
+        const response = await api.post(
+          "chart",
+          {
+            version: "2",
+            backgroundColor: "transparent",
+            width: 500,
+            height: 300,
+            devicePixelRatio: 1.0,
+            format: "png",
+            chart: {
+              type: "scatter",
+              data: {
+                datasets: [
+                  {
+                    label: "Ponto da malha de discretização",
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                    data: data,
+                  },
+                ],
+              },
+              options: {
+                title: {
+                  display: true,
+                  text: "Fluxo de Nêutrons X Posição",
+                },
+              },
+            },
+          },
+          { responseType: "arraybuffer" }
+        );
+    
+        const bytes = new Uint8Array(response.data);
+        const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
+        const base64ImageString = btoa(binary);
+        const srcValue = "data:image/png;base64," + base64ImageString;
+    
+        return `
+          <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
+          <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+  
+        `;
+      } catch (error) {
+        console.error("Erro ao gerar o gráfico:", error);
+        return `<p>Erro ao gerar o gráfico</p>`;
+      }
+    };
+    if(result == null){
+       Back();
+       return "";
+    }
+
     return(
       <div>
         <div style={{margin: '5vh'}}>
@@ -544,36 +542,36 @@ function App() {
             </h2>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-              {generateSection('Número de Regiões', numRegioes)}
-              {generateSection('Zonas Materiais', zonasMateriais)}
+              {generateSection('Número de Regiões', result.numRegioes)}
+              {generateSection('Zonas Materiais', result.zonasMateriais)}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-              {generateSection('Mapeamento', mapeamento)}
+              {generateSection('Mapeamento', result.mapeamento.join(';'))}
               {generateSection(
                 'Número de Células por Região',
-                numCelulasPorRegiao
+                result.numCelulasPorRegiao.join(';')
               )}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-              {generateSection('Fonte de Nêutrons', fonteNeutrons)}
+              {generateSection('Fonte de Nêutrons', result.fonteNeutrons.join(';'))}
               {generateSection(
                 'Coeficientes de Difusão',
-                coeficientesDifusao
+                result.coeficientesDifusao.join(';')
               )}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
               {generateSection(
                 'Seções de Choque Macroscópicas',
-                choquesMacroscopicos
+                result.choquesMacroscopicos.join(';')
               )}
-              {generateSection('Espessura de cada Região', espessura)}
+              {generateSection('Espessura de cada Região', result.espessura.join(';'))}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15,             pageBreakInside: 'avoid',
             breakInside: 'avoid-page', }}>
               {generateSection('Comprimento Total', getComprimento())}
               {generateSection(
                 'Espessuras das células por região',
-                calcEspessurasPorRegiao()
+                calcEspessurasPorRegiao().join(';')
               )}
             </div>
 
@@ -617,7 +615,7 @@ function App() {
                     Esquerda: <br></br> x = 0
                   </h3>
                   <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                    {showCondicoesdeContorno(contornoEsq, '0', incidenciaEsq)}
+                    {showCondicoesdeContorno(result.contornoEsq, '0', result.incidenciaEsq)}
                   </div>
                 </div>
                 <div
@@ -639,7 +637,7 @@ function App() {
                     Direita: <br></br>x = {result.comprimento}
                   </h3>
                   <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                    {showCondicoesdeContorno(contornoDir, 'L', incidenciaDir)}
+                    {showCondicoesdeContorno(result.contornoDir, 'L', result.incidenciaDir)}
                   </div>
                 </div>
               </div>
