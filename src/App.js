@@ -37,7 +37,7 @@ function App() {
     return espsPorCels;
   }
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/ic_difusao_site">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/relatorio" element={<Relatorio />} />
@@ -63,10 +63,6 @@ function App() {
     const [contornoEsq, setContornoEsq] = useState("0;0")
     const [incidenciaDir, setIncidenciaDir] = useState(0)
     const [incidenciaEsq, setIncidenciaEsq] = useState(0)
-    useEffect(() => {
-      console.log('Componente MONTADO');
-      return () => console.log('Componente DESMONTADO');
-    }, []);
     const arrayFields = [
       {
         key: 'mapeamento',
