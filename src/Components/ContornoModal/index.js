@@ -84,6 +84,7 @@ function ContornoModal(props) {
             <input
             className="Continue-button"
             type="button"
+            onClick={props.successFunc}
             value={"Executar"}></input>
         </div>
       </div>

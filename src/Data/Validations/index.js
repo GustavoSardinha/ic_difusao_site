@@ -110,8 +110,8 @@ export function useValidation() {
 
     const totalLength = sum(espArr);
 
-    validateSteps(stepGraphic, "Passo no Gráfico", sum(cellsArr), "Número de Células");
-    validateSteps(stepTable, "Passo na Tabela", sum(cellsArr), "Número de Células");
+    validateSteps(Number(stepGraphic), "Passo no Gráfico", sum(cellsArr), "Número de Células");
+    validateSteps(Number(stepTable), "Passo na Tabela", sum(cellsArr), "Número de Células");
 
     const result = {
       numRegioes: r,
@@ -131,5 +131,5 @@ export function useValidation() {
     return result;
   }
 
-  return { validated, runAll };
+  return { validated, setValidated, runAll };
 }

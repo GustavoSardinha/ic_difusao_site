@@ -9,7 +9,8 @@ function ContinueButton(props) {
         props.onClick();
         if(props.err !=null){
             setShowModal(true);
-        }
+        }else
+            setShowModal(false);
     }
     return (
         <div>
@@ -21,7 +22,7 @@ function ContinueButton(props) {
             onClick={onClick}
             />
           </div>
-          {showModal && (
+          {(showModal && (props.err != null)) &&(
                 <Modal
                 title = "ERRO!"
                 icon =  {ErrorImg}
