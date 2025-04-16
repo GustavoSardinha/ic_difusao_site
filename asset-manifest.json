@@ -1,7 +1,9 @@
 {
   "files": {
     "main.css": "/ic_difusao_site/static/css/main.46b5de21.css",
-    "main.js": "/ic_difusao_site/static/js/main.acccffc2.js",
+    "main.js": "/ic_difusao_site/static/js/main.55734a81.js",
+    "static/js/977.123a0b0a.chunk.js": "/ic_difusao_site/static/js/977.123a0b0a.chunk.js",
+    "static/js/732.737687c7.chunk.js": "/ic_difusao_site/static/js/732.737687c7.chunk.js",
     "static/js/453.e58cd836.chunk.js": "/ic_difusao_site/static/js/453.e58cd836.chunk.js",
     "static/media/alert.png": "/ic_difusao_site/static/media/alert.eafa5ac728b47ade6d79.png",
     "static/media/logo_uerj.png": "/ic_difusao_site/static/media/logo_uerj.e7f534b931e54bd81b75.png",
@@ -9,11 +11,13 @@
     "static/media/error.png": "/ic_difusao_site/static/media/error.7f8fc3b751bda0faf017.png",
     "index.html": "/ic_difusao_site/index.html",
     "main.46b5de21.css.map": "/ic_difusao_site/static/css/main.46b5de21.css.map",
-    "main.acccffc2.js.map": "/ic_difusao_site/static/js/main.acccffc2.js.map",
+    "main.55734a81.js.map": "/ic_difusao_site/static/js/main.55734a81.js.map",
+    "977.123a0b0a.chunk.js.map": "/ic_difusao_site/static/js/977.123a0b0a.chunk.js.map",
+    "732.737687c7.chunk.js.map": "/ic_difusao_site/static/js/732.737687c7.chunk.js.map",
     "453.e58cd836.chunk.js.map": "/ic_difusao_site/static/js/453.e58cd836.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.46b5de21.css",
-    "static/js/main.acccffc2.js"
+    "static/js/main.55734a81.js"
   ]
 }
