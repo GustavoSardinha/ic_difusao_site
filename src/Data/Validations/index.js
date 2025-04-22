@@ -61,6 +61,8 @@ export function useValidation() {
     espessura,
     stepGraphic,
     stepTable,
+    advancedOptions,
+    filterPoint
   }) {
     // limpa validated anterior
     setValidated(null);
@@ -112,7 +114,9 @@ export function useValidation() {
 
     validateSteps(Number(stepGraphic), "Passo no Gráfico", sum(cellsArr), "Número de Células");
     validateSteps(Number(stepTable), "Passo na Tabela", sum(cellsArr), "Número de Células");
-
+    if(advancedOptions){
+      validateSteps(Number(filterPoint), "Índice na malha de discretização", sum(cellsArr), "Número de Células")
+    }
     const result = {
       numRegioes: r,
       zonasMateriais: z,

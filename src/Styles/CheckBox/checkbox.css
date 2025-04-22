@@ -1,0 +1,15 @@
+.Check-Container{
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    margin: 2vh;
+    gap: 0.5vh;
+}
+.Check{
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+.Label{
+    align-items: center;
+}

@@ -12,6 +12,7 @@ import api from './Services/API/quickchart';
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import CheckBoxInput from './Components/CheckBoxInput';
 
 
 function App() {
@@ -63,6 +64,9 @@ function App() {
     const [contornoEsq, setContornoEsq] = useState("0;0")
     const [incidenciaDir, setIncidenciaDir] = useState(0)
     const [incidenciaEsq, setIncidenciaEsq] = useState(0)
+    const [hasGrafic, setHasGrafic] = useState(true)
+    const [advancedOptions, setAdvancedOptions] = useState(false)
+    const [filterPoint, setFilterPoint] = useState("0")
     const arrayFields = [
       {
         key: 'mapeamento',
@@ -138,6 +142,14 @@ function App() {
           espessura,
           stepGraphic,
           stepTable,
+          advancedOptions,
+          filterPoint
+        }));
+        setResult(result => ({
+          ...result, 
+          hasGrafic: hasGrafic,
+          advancedOptions: advancedOptions,
+          filterPoint: filterPoint
         }));
       } catch (err) {
         console.log(err);
@@ -209,7 +221,7 @@ function App() {
         contornoDir: contornoDir,   
         incidenciaDir: incidenciaDir, 
         contornoEsq: contornoEsq,  
-        incidenciaEsq: incidenciaEsq  
+        incidenciaEsq: incidenciaEsq
       }));
       console.log(result);
       setVector_solutions(solutions);
@@ -264,18 +276,38 @@ function App() {
                 />
               )
             )}
-           <FormInput
+            <CheckBoxInput
+              text = {"Saída gráfica"}
+              value = {hasGrafic}
+              onChange = {setHasGrafic}>
+            </CheckBoxInput>
+            {(hasGrafic) && (
+              <FormInput
               label="Passo da malha de discretização no gráfico"
               placeholder="Informe o passo do gráfico"
               onChange={(value) => setStepGraphic(value)}
               value={stepGraphic}
-            />
+             />
+            )}
             <FormInput
               label="Passo da malha de discretização no tabela"
               placeholder="Informe o passo da tebela"
               onChange={(value) => setStepTable(value)}
               value={stepTable}
             />
+            <CheckBoxInput
+              text = {"Opções avançadas"}
+              value = {advancedOptions}
+              onChange = {setAdvancedOptions}>
+            </CheckBoxInput>
+            {((advancedOptions) && (
+              <FormInput
+              label="Ponto na malha de discretização (cm):"
+              placeholder="Digite o ponto a filtrar na malha de discretização."
+              onChange={(value) => setFilterPoint(value)}
+              value={filterPoint}
+              />
+            ))}
             <ContinueButton
             onClick = {onSubmit}
             err = {err}>
@@ -314,6 +346,7 @@ function App() {
     const navigate = useNavigate();
     const Back = () => {
       navigate("/");
+      window.location.reload();
     }
     const exportPDF = () => {
       const element = pdfRef.current;
@@ -369,6 +402,33 @@ function App() {
           </p>
         </div>
       );
+    }
+    const createFluxRegister = (position) => {
+      try{
+        return `
+        <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Ponto filtrado na malha de discretização</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+          <thead>
+            <tr>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Posição (cm)</th>
+              <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Fluxo de Nêutrons</th>
+            </tr>
+          </thead>
+          <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${Number(position) + 1}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[Number(position)]?.toFixed(5) || 0}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${vector_solutions[Number(position)].toExponential(5)}</td>
+              </tr>
+          </tbody>
+        </table>
+      `;
+      }
+      catch(error){
+        console.log(error);
+      }
+
     }
     const createFluxTable = () => {
       if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
@@ -653,11 +713,21 @@ function App() {
             >
               SAÍDAS
             </h2>
-            <div style={{boxSizing:"border-box", width:"100%"}}
+            {console.log(result)}
+            {(result.hasGrafic) && (
+              <div style={{boxSizing:"border-box", width:"100%"}}
               dangerouslySetInnerHTML={{
                 __html: graph
               }}
             />
+            )}
+            {(result.advancedOptions) && (
+            <div
+            dangerouslySetInnerHTML={{
+              __html: createFluxRegister(result.filterPoint)
+            }}
+           />
+            )}
             <div
               dangerouslySetInnerHTML={{
                 __html: createFluxTable()
