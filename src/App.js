@@ -197,16 +197,16 @@ function App() {
     
       espPorReg.push(comprimento);
     
-      vectorA.push(vectorB[0] + xsx[0] + Number(cond_right[1]));
-      vectorFonte.push(s[0] + Number(incidenciaDir) * Number(cond_right[0]));
+      vectorA.push(vectorB[0] + xsx[0] + Number(cond_left[1]));
+      vectorFonte.push(s[0] + Number(incidenciaDir) * Number(cond_left[0]));
     
       for (let i = 1; i < nm; i++) {
         vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
         vectorFonte.push(s[i] + s[i - 1]);
       }
     
-      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_left[1]));
-      vectorFonte.push(s[nm - 1] + Number(incidenciaEsq) * Number(cond_left[0]));
+      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
+      vectorFonte.push(s[nm - 1] + Number(incidenciaEsq) * Number(cond_right[0]));
     
       const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
     
@@ -417,9 +417,9 @@ function App() {
           </thead>
           <tbody>
               <tr>
-                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${Number(position) + 1}</td>
-                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[Number(position)]?.toFixed(5) || 0}</td>
-                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${vector_solutions[Number(position)].toExponential(5)}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${Number(position)}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[Number(position - 1)]?.toFixed(5) || 0}</td>
+                <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${vector_solutions[Number(position - 1)].toExponential(5)}</td>
               </tr>
           </tbody>
         </table>
