@@ -10,7 +10,7 @@ function ContornoModal(props) {
 
     function verifyCase(element, disableFunc, setFunc, setIncidenciaFunc){
         setFunc(element);
-        if(element != "0;0" && element != "0;999999999999")
+        if(element != "0;0" && element != "0;99999999999999999999")
             disableFunc(false);
         else{
             disableFunc(true);
@@ -30,7 +30,7 @@ function ContornoModal(props) {
                 onChange={(event) => {verifyCase(event.target.value, setDisabledEsq, props.setContornoEsq, props.setIncidenciaEsq)}}
                 >
                     <option value="0;0">Reflexiva</option>
-                    <option value="0;999999999999">Fluxo escalar nulo</option>
+                    <option value="0;99999999999999999999">Fluxo escalar nulo</option>
                     <option value="1.33333333333;0.66666666666">
                         Fluxo direcional incidente
                     </option>
@@ -58,7 +58,7 @@ function ContornoModal(props) {
                 onChange={(event) => {verifyCase(event.target.value, setDisabledDir, props.setContornoDir, props.setIncidenciaDir)}}
                 >
                     <option value="0;0">Reflexiva</option>
-                    <option value="0;999999999999">Fluxo escalar nulo</option>
+                    <option value="0;99999999999999999999">Fluxo escalar nulo</option>
                     <option value="1.33333333333;0.66666666666">
                         Fluxo direcional incidente
                     </option>

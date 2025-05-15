@@ -66,6 +66,7 @@ function App() {
     const [incidenciaEsq, setIncidenciaEsq] = useState(0)
     const [hasGrafic, setHasGrafic] = useState(true)
     const [advancedOptions, setAdvancedOptions] = useState(false)
+    const [noGamma, setNoGamma] = useState(false)
     const [filterPoint, setFilterPoint] = useState("0")
     const arrayFields = [
       {
@@ -185,27 +186,34 @@ function App() {
         const coef_choque_macro = choquesMacroscopicos[indice_mapeamento];
         const fonte = fonteNeutrons[regioes];
         const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+        const xL = Math.sqrt(coef_difusao/coef_choque_macro);
+        const z = h / (2 * xL);
+        const gamma = Math.tanh(z)/z;
+        if(noGamma)
+          gamma = 1;
     
         for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
           nm++;
           espPorReg.push(h);
-          vectorB.push(coef_difusao / h);
-          xsx.push(coef_choque_macro * h / 2);
-          s.push(fonte * h / 2);
+          vectorB.push((coef_difusao/(gamma*h)) - coef_choque_macro * h * gamma/ 4);
+          xsx.push(coef_choque_macro * h * gamma/ 4);
+          s.push(fonte * h * gamma / 2);                        
         }
       }
     
       espPorReg.push(comprimento);
     
-      vectorA.push(vectorB[0] + xsx[0] + Number(cond_left[1]));
+
+
+      vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
       vectorFonte.push(s[0] + Number(incidenciaDir) * Number(cond_left[0]));
     
       for (let i = 1; i < nm; i++) {
-        vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
+        vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
         vectorFonte.push(s[i] + s[i - 1]);
       }
     
-      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
+      vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
       vectorFonte.push(s[nm - 1] + Number(incidenciaEsq) * Number(cond_right[0]));
     
       const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
@@ -223,6 +231,10 @@ function App() {
         contornoEsq: contornoEsq,  
         incidenciaEsq: incidenciaEsq
       }));
+      console.log(vectorA);
+      console.log(vectorB);
+      console.log(vectorFonte);
+      console.log(solutions);
       console.log(result);
       setVector_solutions(solutions);
       setEsps(esps);
@@ -248,7 +260,11 @@ function App() {
                 Difusão de Partículas Neutras Unidimensional
               </h1>
             </div>
-  
+            <CheckBoxInput
+              text = {"Diferenças Finitas"}
+              value = {noGamma}
+              onChange = {setNoGamma}>
+            </CheckBoxInput>
             <FormInput
               label="Informe o número de regiões"
               placeholder="Digite o número de regiões."
@@ -602,32 +618,32 @@ function App() {
               {generateSection('Zonas Materiais', result.zonasMateriais)}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-              {generateSection('Mapeamento', result.mapeamento.join(';'))}
+              {generateSection('Mapeamento', result.mapeamento.join(' '))}
               {generateSection(
                 'Número de Células por Região',
-                result.numCelulasPorRegiao.join(';')
+                result.numCelulasPorRegiao.join(' ')
               )}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-              {generateSection('Fonte de Nêutrons', result.fonteNeutrons.join(';'))}
+              {generateSection('Fonte de Nêutrons', result.fonteNeutrons.join(' '))}
               {generateSection(
                 'Coeficientes de Difusão',
-                result.coeficientesDifusao.join(';')
+                result.coeficientesDifusao.join(' ')
               )}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
               {generateSection(
                 'Seções de Choque Macroscópicas',
-                result.choquesMacroscopicos.join(';')
+                result.choquesMacroscopicos.join(' ')
               )}
-              {generateSection('Espessura de cada Região', result.espessura.join(';'))}
+              {generateSection('Espessura de cada Região', result.espessura.join(' '))}
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15,             pageBreakInside: 'avoid',
             breakInside: 'avoid-page', }}>
               {generateSection('Comprimento Total', getComprimento())}
               {generateSection(
                 'Espessuras das células por região',
-                calcEspessurasPorRegiao().join(';')
+                calcEspessurasPorRegiao().join(' ')
               )}
             </div>
 
