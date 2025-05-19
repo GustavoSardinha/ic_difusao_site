@@ -150,7 +150,8 @@ function App() {
           ...result, 
           hasGrafic: hasGrafic,
           advancedOptions: advancedOptions,
-          filterPoint: filterPoint
+          filterPoint: filterPoint,
+          nogamma: noGamma
         }));
       } catch (err) {
         console.log(err);
@@ -171,6 +172,7 @@ function App() {
         choquesMacroscopicos,
         espessura,
         comprimento,
+        nogamma
       } = result;
     
       let xsx = [];
@@ -188,8 +190,9 @@ function App() {
         const h = espessura[regioes] / numCelulasPorRegiao[regioes];
         const xL = Math.sqrt(coef_difusao/coef_choque_macro);
         const z = h / (2 * xL);
-        const gamma = Math.tanh(z)/z;
-        if(noGamma)
+        console.log(nogamma);
+        let gamma = Math.tanh(z)/z;
+        if(nogamma)
           gamma = 1;
     
         for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
