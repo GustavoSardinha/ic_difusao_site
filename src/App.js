@@ -1,73 +1,96 @@
-import main_img from './img/logo_uerj.png';
-import logo from './img/atom.png';
+import { useState, useEffect, useRef } from 'react';
+import { createBrowserRouter, RouterProvider, useLocation, useNavigate } from 'react-router-dom';
 import './Styles/App.css';
 import FormInput from './Components/FormInput';
 import ArrayFormInput from './Components/ArrayFormInput';
-import { useState, useRef, useEffect } from 'react';
 import { useValidation } from './Data/Validations';
 import ContinueButton from './Components/ContinueButton';
 import ContornoModal from './Components/ContornoModal';
 import { thomasSimetrico } from './Services/numericalMath';
 import api from './Services/API/quickchart';
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import CheckBoxInput from './Components/CheckBoxInput';
+import main_img from './img/logo_uerj.png';
+import logo from './img/atom.png';
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomeWrapper />,
+  },
+  {
+    path: "/relatorio",
+    element: <RelatorioWrapper />,
+  },
+], { basename: "/ic_difusao_site" });
+
+function HomeWrapper() {
+  const location = useLocation();
+  return <Home initialState={location.state} />;
+}
+
+function RelatorioWrapper() {
+  const location = useLocation();
+  return <Relatorio initialState={location.state} />;
+}
 
 function App() {
+  return <RouterProvider router={router} />;
+}
 
-  const [result, setResult] = useState(null);
-  const [vector_solutions, setVector_solutions] = useState([]);
-  const [esps, setEsps] = useState([]);
+function Home({ initialState }) {
+  const navigate = useNavigate();
+  const [result, setResult] = useState(initialState?.result || null);
+  const [vector_solutions, setVector_solutions] = useState(initialState?.vector_solutions || []);
+  const [esps, setEsps] = useState(initialState?.esps || []);
+  
+  const [numRegioes, setNumRegioes] = useState(initialState?.result?.numRegioes?.toString() || "");
+  const [zonasMateriais, setZonasMateriais] = useState(initialState?.result?.zonasMateriais?.toString() || "");
+  const [mapeamento, setMapeamento] = useState(initialState?.result?.mapeamento?.join(';') || "");
+  const [numCelulasPorRegiao, setNumCelulasPorRegiao] = useState(initialState?.result?.numCelulasPorRegiao?.join(';') || "");
+  const [fonteNeutrons, setFonteNeutrons] = useState(initialState?.result?.fonteNeutrons?.join(';') || "");
+  const [coeficientesDifusao, setCoeficientesDifusao] = useState(initialState?.result?.coeficientesDifusao?.join(';') || "");
+  const [choquesMacroscopicos, setChoquesMacroscopicos] = useState(initialState?.result?.choquesMacroscopicos?.join(';') || "");
+  const [espessura, setEspessura] = useState(initialState?.result?.espessura?.join(';') || "");
+  const [stepGraphic, setStepGraphic] = useState(initialState?.result?.stepGraphic?.toString() || "1");
+  const [stepTable, setStepTable] = useState(initialState?.result?.stepTable?.toString() || "1");
+  const [contornoDir, setContornoDir] = useState(initialState?.result?.contornoDir || "0;0");
+  const [contornoEsq, setContornoEsq] = useState(initialState?.result?.contornoEsq || "0;0");
+  const [incidenciaDir, setIncidenciaDir] = useState(initialState?.result?.incidenciaDir || 0);
+  const [incidenciaEsq, setIncidenciaEsq] = useState(initialState?.result?.incidenciaEsq || 0);
+  const [hasGrafic, setHasGrafic] = useState(initialState?.result?.hasGrafic ?? true);
+  const [advancedOptions, setAdvancedOptions] = useState(initialState?.result?.advancedOptions || false);
+  const [noGamma, setNoGamma] = useState(initialState?.result?.nogamma || false);
+  const [filterPoint, setFilterPoint] = useState(initialState?.result?.filterPoint?.toString() || "0");
+  const [err, setErr] = useState(null);
+  
+  const { validated, setValidated, runAll } = useValidation();
+  const [cc_active, setCCActive] = useState(false);
 
-
-  function getComprimento() {
-    if(result != null){
-      return result.comprimento
+  useEffect(() => {
+    if (initialState?.result) {
+      const savedState = initialState.result;
+      setNumRegioes(savedState.numRegioes.toString());
+      setZonasMateriais(savedState.zonasMateriais.toString());
+      setMapeamento(savedState.mapeamento.join(';'));
+      setNumCelulasPorRegiao(savedState.numCelulasPorRegiao.join(';'));
+      setFonteNeutrons(savedState.fonteNeutrons.join(';'));
+      setCoeficientesDifusao(savedState.coeficientesDifusao.join(';'));
+      setChoquesMacroscopicos(savedState.choquesMacroscopicos.join(';'));
+      setEspessura(savedState.espessura.join(';'));
+      setStepGraphic(savedState.stepGraphic.toString());
+      setStepTable(savedState.stepTable.toString());
+      setContornoDir(savedState.contornoDir);
+      setContornoEsq(savedState.contornoEsq);
+      setIncidenciaDir(savedState.incidenciaDir);
+      setIncidenciaEsq(savedState.incidenciaEsq);
+      setHasGrafic(savedState.hasGrafic);
+      setAdvancedOptions(savedState.advancedOptions);
+      setNoGamma(savedState.nogamma);
+      setFilterPoint(savedState.filterPoint.toString());
     }
-    return 0;
-  }
-  function calcEspessurasPorRegiao() {
-    const { numRegioes, numCelulasPorRegiao, espessura} = result;
-    const espsPorCels = [];
-    for (let i = 0; i < numRegioes; i++) {
-      const espPorCel = espessura[i] / numCelulasPorRegiao[i];
-      espsPorCels.push(espPorCel);
-    }
-    return espsPorCels;
-  }
-  return (
-    <BrowserRouter basename="/ic_difusao_site">
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/relatorio" element={<Relatorio />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  }, [initialState]);
 
-  function Home(){
-    const navigate = useNavigate();
-    const [numRegioes, setNumRegioes] = useState("");
-    const [zonasMateriais, setZonasMateriais] = useState("");
-    const [mapeamento, setMapeamento] = useState("");
-    const [numCelulasPorRegiao, setNumCelulasPorRegiao] = useState("");
-    const [fonteNeutrons, setFonteNeutrons] = useState("");
-    const [coeficientesDifusao, setCoeficientesDifusao] = useState("");
-    const [choquesMacroscopicos, setChoquesMacroscopicos] = useState("");
-    const [espessura, setEspessura] = useState("");
-    const [stepGraphic, setStepGraphic] = useState("1");
-    const [stepTable, setStepTable] = useState("1");
-    const {validated, setValidated, runAll} = useValidation();
-    const [err, setErr] = useState(null)
-    const [contornoDir, setContornoDir] = useState("0;0")
-    const [contornoEsq, setContornoEsq] = useState("0;0")
-    const [incidenciaDir, setIncidenciaDir] = useState(0)
-    const [incidenciaEsq, setIncidenciaEsq] = useState(0)
-    const [hasGrafic, setHasGrafic] = useState(true)
-    const [advancedOptions, setAdvancedOptions] = useState(false)
-    const [noGamma, setNoGamma] = useState(false)
-    const [filterPoint, setFilterPoint] = useState("0")
     const arrayFields = [
       {
         key: 'mapeamento',
@@ -130,34 +153,45 @@ function App() {
         setter: setEspessura,
       },
     ];
-    const onSubmit = () => {
-      try {
-        setResult(runAll({
-          numRegioes,
-          zonasMateriais,
-          mapeamento,
-          numCelulasPorRegiao,
-          fonteNeutrons,
-          coeficientesDifusao,
-          choquesMacroscopicos,
-          espessura,
-          stepGraphic,
-          stepTable,
-          advancedOptions,
-          filterPoint
-        }));
-        setResult(result => ({
-          ...result, 
-          hasGrafic: hasGrafic,
-          advancedOptions: advancedOptions,
-          filterPoint: filterPoint,
-          nogamma: noGamma
-        }));
-      } catch (err) {
-        console.log(err);
-        setErr(err);
-      }
-    };
+    function getComprimento() {
+    if(result != null){
+      return result.comprimento
+    }
+    return 0;
+  }
+  const onSubmit = () => {
+    try {
+      const newResult = runAll({
+        numRegioes,
+        zonasMateriais,
+        mapeamento,
+        numCelulasPorRegiao,
+        fonteNeutrons,
+        coeficientesDifusao,
+        choquesMacroscopicos,
+        espessura,
+        stepGraphic,
+        stepTable,
+        advancedOptions,
+        filterPoint
+      });
+
+      setResult({
+        ...newResult,
+        hasGrafic,
+        advancedOptions,
+        filterPoint: Number(filterPoint),
+        nogamma: noGamma,
+        contornoDir,
+        contornoEsq,
+        incidenciaDir,
+        incidenciaEsq
+      });
+      setCCActive(true);
+    } catch (err) {
+      setErr(err);
+    }
+  };
     const generateVectors = () => {
       const vectorA = [];
       const vectorB = [];
@@ -221,10 +255,10 @@ function App() {
     
       const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
     
-      const esps = [];
+      const newEsps = [];
       let pos = 0;
       espPorReg.forEach((esp) => {
-        esps.push(pos);
+        newEsps.push(pos);
         pos += esp;
       });
       setResult(result => ({
@@ -234,21 +268,35 @@ function App() {
         contornoEsq: contornoEsq,  
         incidenciaEsq: incidenciaEsq
       }));
-      console.log(vectorA);
-      console.log(vectorB);
-      console.log(vectorFonte);
-      console.log(solutions);
-      console.log(result);
-      setVector_solutions(solutions);
-      setEsps(esps);
-  
+      return {solutions, newEsps}
     };
-    const solveProblem = async () => {
-      setValidated(false);
-      generateVectors();
-      navigate("/relatorio");
-    }
-    return (
+
+
+  const solveProblem = async () => {
+  setValidated(false);
+  const { solutions, newEsps} = generateVectors();
+  console.log(solutions)
+  await new Promise(resolve => setTimeout(resolve, 0));
+    navigate("/relatorio", { 
+      state: { 
+        result: {
+          ...result,
+          hasGrafic,
+          advancedOptions,
+          filterPoint: Number(filterPoint),
+          nogamma: noGamma,
+          contornoDir,
+          contornoEsq,
+          incidenciaDir,
+          incidenciaEsq
+        },
+        vector_solutions: solutions,
+        esps: newEsps
+      } 
+    });
+  };
+
+return (
       <div className="App">
         <header className="App-header">
           <nav>
@@ -331,7 +379,7 @@ function App() {
             onClick = {onSubmit}
             err = {err}>
             </ContinueButton>
-            { (result != null) && (
+            { (cc_active) && (
             <ContornoModal
             contornoDir = {contornoDir}
             setContornoDir = {setContornoDir}
@@ -350,10 +398,18 @@ function App() {
         </article>
       </div>
     );
-  }
-  function Relatorio(){
-    const [graph, setGraph] = useState("");
+}
+
+function Relatorio({ initialState }) {
+  const [result, setResult] = useState(initialState?.result);
+  const [vector_solutions, setVector_solutions] = useState(initialState?.vector_solutions || []);
+  const [esps, setEsps] = useState(initialState?.esps || []);
+  const [graph, setGraph] = useState("");
+  const pdfRef = useRef();
+  const navigate = useNavigate();
+
     useEffect(() => {
+      console.log(initialState)
       if (!graph) {
         (async () => {
           const chartHTML = await createGraphics();
@@ -361,12 +417,81 @@ function App() {
         })();
       }
     }, [graph]);
-    const pdfRef = useRef();
-    const navigate = useNavigate();
-    const Back = () => {
-      navigate("/");
-      window.location.reload();
-    }
+
+  const getComprimento = () => result?.comprimento || 0;
+
+  const calcEspessurasPorRegiao = () => {
+    if (!result) return [];
+    return result.espessura.map((e, i) => 
+      e / result.numCelulasPorRegiao[i]
+    );
+  };
+
+    const createGraphics = async () => {
+      if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+    
+      try {
+        const dataStep = (array, step) => {
+          return array
+            .map((value, index) => ({ index, value }))
+            .filter((_, i) => i % step === 0 || i === array.length - 1);
+        };
+    
+        const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
+    
+        const data = stepData.map((info) => ({
+          x: esps[info.index].toFixed(5),
+          y: info.value.toFixed(5),
+        }));
+    
+        const response = await api.post(
+          "chart",
+          {
+            version: "2",
+            backgroundColor: "transparent",
+            width: 500,
+            height: 300,
+            devicePixelRatio: 1.0,
+            format: "png",
+            chart: {
+              type: "scatter",
+              data: {
+                datasets: [
+                  {
+                    label: "Ponto da malha de discretização",
+                    borderColor: "rgb(255, 99, 132)",
+                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                    data: data,
+                  },
+                ],
+              },
+              options: {
+                title: {
+                  display: true,
+                  text: "Fluxo de Nêutrons X Posição",
+                },
+              },
+            },
+          },
+          { responseType: "arraybuffer" }
+        );
+    
+        const bytes = new Uint8Array(response.data);
+        const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
+        const base64ImageString = btoa(binary);
+        const srcValue = "data:image/png;base64," + base64ImageString;
+    
+        return `
+          <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
+          <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+  
+        `;
+      } catch (error) {
+        console.error("Erro ao gerar o gráfico:", error);
+        return `<p>Erro ao gerar o gráfico</p>`;
+      }
+    };
+
     const exportPDF = () => {
       const element = pdfRef.current;
       const opt = {
@@ -482,79 +607,22 @@ function App() {
         </table>
       `;
     };
-    const createGraphics = async () => {
-      if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
-    
-      try {
-        const dataStep = (array, step) => {
-          return array
-            .map((value, index) => ({ index, value }))
-            .filter((_, i) => i % step === 0 || i === array.length - 1);
-        };
-    
-        const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
-    
-        const data = stepData.map((info) => ({
-          x: esps[info.index].toFixed(5),
-          y: info.value.toFixed(5),
-        }));
-    
-        const response = await api.post(
-          "chart",
-          {
-            version: "2",
-            backgroundColor: "transparent",
-            width: 500,
-            height: 300,
-            devicePixelRatio: 1.0,
-            format: "png",
-            chart: {
-              type: "scatter",
-              data: {
-                datasets: [
-                  {
-                    label: "Ponto da malha de discretização",
-                    borderColor: "rgb(255, 99, 132)",
-                    backgroundColor: "rgba(255, 99, 132, 0.2)",
-                    data: data,
-                  },
-                ],
-              },
-              options: {
-                title: {
-                  display: true,
-                  text: "Fluxo de Nêutrons X Posição",
-                },
-              },
-            },
-          },
-          { responseType: "arraybuffer" }
-        );
-    
-        const bytes = new Uint8Array(response.data);
-        const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
-        const base64ImageString = btoa(binary);
-        const srcValue = "data:image/png;base64," + base64ImageString;
-    
-        return `
-          <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
-          <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
-  
-        `;
-      } catch (error) {
-        console.error("Erro ao gerar o gráfico:", error);
-        return `<p>Erro ao gerar o gráfico</p>`;
-      }
-    };
-    if(result == null){
-       Back();
-       return "";
+    const Back = () => {
+      navigate("/");
+      window.location.reload();
     }
+  const BackwithData = () => {
+    navigate("/", { 
+      state: { result, vector_solutions, esps },
+      replace: true
+    });
+  };
 
     return(
       <div>
         <div style={{margin: '5vh'}}>
         <input type='button' value={"Voltar"} className='Continue-button' onClick={Back}/>
+        <input type='button' value={"Voltar com dados anteriores"} className='Continue-button' onClick={BackwithData}/>
           <input type='button' value={"Baixar PDF"} className='Continue-button' onClick={exportPDF}/>
         </div>
         <div
@@ -756,7 +824,6 @@ function App() {
         </div>
       </div>
     );
-  }
 }
 
 export default App;
