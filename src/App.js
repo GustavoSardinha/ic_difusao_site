@@ -22,6 +22,10 @@ const router = createBrowserRouter([
     path: "/relatorio",
     element: <RelatorioWrapper />,
   },
+  {
+    path: "/reconstrucao",
+    element: <ReconstrucaoWrapper />,
+  },
 ], { basename: "/ic_difusao_site" });
 
 function HomeWrapper() {
@@ -33,7 +37,10 @@ function RelatorioWrapper() {
   const location = useLocation();
   return <Relatorio initialState={location.state} />;
 }
-
+function ReconstrucaoWrapper() {
+  const location = useLocation();
+  return <Reconstrucao initialState={location.state} />;
+}
 function App() {
   return <RouterProvider router={router} />;
 }
@@ -617,13 +624,20 @@ function Relatorio({ initialState }) {
       replace: true
     });
   };
-
+  const Reconstrucition = () => {
+      navigate("/Reconstrucao", { 
+      state: { result, vector_solutions, esps }
+    });
+  }
     return(
       <div>
         <div style={{margin: '5vh'}}>
-        <input type='button' value={"Voltar"} className='Continue-button' onClick={Back}/>
-        <input type='button' value={"Voltar com dados anteriores"} className='Continue-button' onClick={BackwithData}/>
+          <input type='button' value={"Voltar"} className='Continue-button' onClick={Back}/>
+          <input type='button' value={"Voltar com dados anteriores"} className='Continue-button' onClick={BackwithData}/>
           <input type='button' value={"Baixar PDF"} className='Continue-button' onClick={exportPDF}/>
+          {(!result.nogamma) && (
+            <input type='button' value={"Reconstrução analítica"} className='Continue-button' onClick={Reconstrucition}/>
+          )}
         </div>
         <div
           ref={pdfRef}
@@ -826,4 +840,59 @@ function Relatorio({ initialState }) {
     );
 }
 
+function Reconstrucao({initialState}){
+  const [result, setResult] = useState(initialState?.result);
+  const [vector_solutions, setVector_solutions] = useState(initialState?.vector_solutions || []);
+  const [esps, setEsps] = useState(initialState?.esps || []);
+  const [solution_consts, setSolutionsConst] = useState([]);
+
+    useEffect(() => {
+      generateConstants();
+    }, []);
+
+  function generateConstants(){
+      const sol_const = [];
+      console.log(vector_solutions);
+      console.log(result);
+        const {
+        numRegioes,
+        mapeamento,
+        numCelulasPorRegiao,
+        fonteNeutrons,
+        coeficientesDifusao,
+        choquesMacroscopicos,
+        espessura,
+        comprimento,
+        nogamma
+      } = result;
+      
+      let cells = 0;
+      for(let i = 0; i < numRegioes; i++){
+        const h = espessura[i]/numCelulasPorRegiao[i];
+        const L = Math.sqrt(coeficientesDifusao[i]/choquesMacroscopicos[i]);
+        for(let j = cells; j < cells + numCelulasPorRegiao[i]; j++){
+          sol_const.push(((vector_solutions[j] - fonteNeutrons[i]/choquesMacroscopicos[i])*(1 - Math.pow(Math.E, (- h/L)))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
+          sol_const.push(- ((vector_solutions[j + 1] - fonteNeutrons[i]/choquesMacroscopicos[i])*(1 - Math.pow(Math.E, (h/L)))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
+        }
+        cells += numCelulasPorRegiao[i];
+      }
+
+      console.log(sol_const);
+    return(
+        <div>
+          {sol_const.join("  ")}
+        </div>
+    
+    );
+  }
+  return(
+    <div>
+      {generateConstants()}
+    </div>
+    
+  );
+
+
+
+}
 export default App;
