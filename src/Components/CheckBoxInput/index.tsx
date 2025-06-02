@@ -1,8 +1,12 @@
 import React from "react";
 import "../../Styles/CheckBox/checkbox.css";
 
-
-function CheckBoxInput(props){
+interface CheckBoxInputProps{
+    onChange: (val: boolean) => void;
+    value: boolean;
+    text: string;
+}
+function CheckBoxInput(props: CheckBoxInputProps){
     return(
     <div className="Check-Container">
         <input

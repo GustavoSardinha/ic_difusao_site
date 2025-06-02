@@ -1,31 +1,54 @@
 import { useState } from 'react';
 
-export function useValidation() {
-  const [validated, setValidated] = useState(false);
+interface RunAllParams {
+  numRegioes: string;
+  zonasMateriais: string;
+  mapeamento: string;
+  numCelulasPorRegiao: string;
+  fonteNeutrons: string;
+  coeficientesDifusao: string;
+  choquesMacroscopicos: string;
+  espessura: string;
+  stepGraphic: number | string;
+  stepTable: number | string;
+  advancedOptions?: boolean;
+  filterPoint?: number | string;
+}
 
-  function sum(data){
-    let sum = 0;
-    data.forEach((val) => {
-      sum += val;
-    });
-    return sum;
+interface RunAllResult {
+  numRegioes: number;
+  zonasMateriais: number;
+  mapeamento: number[];
+  numCelulasPorRegiao: number[];
+  fonteNeutrons: number[];
+  coeficientesDifusao: number[];
+  choquesMacroscopicos: number[];
+  espessura: number[];
+  comprimento: number;
+  stepGraphic: number | string;
+  stepTable: number | string;
+}
+
+export function useValidation() {
+  const [validated, setValidated] = useState<boolean | null>(false);
+
+  function sum(data: number[]): number {
+    return data.reduce((acc, val) => acc + val, 0);
   }
 
-  const validateIntForm = (field, fieldName, expectedLength, unit) => {
+  function validateIntForm(field: string, fieldName: string, expectedLength: number, unit: string): number[] {
     if (!field) throw new Error(`O valor fornecido para *${fieldName}* está vazio.`);
     const parts = field.split(";");
     if (parts.length !== expectedLength)
-      throw new Error(
-        `O valor fornecido para *${fieldName}* deve ter ${expectedLength} valores (${unit}).`
-      );
+      throw new Error(`O valor fornecido para *${fieldName}* deve ter ${expectedLength} valores (${unit}).`);
     const nums = parts.map((v) => parseInt(v, 10));
     nums.forEach((n) => {
       if (isNaN(n) || n < 0) throw new Error(`*${fieldName}* inválido ou negativo.`);
     });
     return nums;
-  };
+  }
 
-  const validateFloatForm = (field, fieldName, expectedLength, unit) => {
+  function validateFloatForm(field: string, fieldName: string, expectedLength: number, unit: string): number[] {
     if (!field) throw new Error(`O valor fornecido para *${fieldName}* está vazio.`);
     const nums = field.split(";").map(Number);
     if (nums.length !== expectedLength || nums.some(isNaN))
@@ -35,39 +58,41 @@ export function useValidation() {
     if (nums.some((n) => n !== 0 && n < 0.0001))
       throw new Error(`*${fieldName}* muito pequeno.`);
     return nums;
-  };
+  }
 
-  const validateNoZeros = (arr, fieldName) => {
+  function validateNoZeros(arr: number[], fieldName: string): void {
     if (arr.some((n) => n === 0))
       throw new Error(`O valor fornecido para *${fieldName}* não pode ser zero.`);
-  };
+  }
 
-  const validateSteps = (value, fieldName, limit, limitName) => {
+  function validateSteps(value: number | string | undefined, fieldName: string, limit: number, limitName: string): void {
     if (value === "" || value == null)
       throw new Error(`O campo *${fieldName}* não pode estar em branco.`);
-    if (value < 1) throw new Error(`*${fieldName}* deve ser no mínimo 1.`);
-    if (value > limit)
+    const numericValue = Number(value);
+    if (isNaN(numericValue)) throw new Error(`*${fieldName}* deve ser um número.`);
+    if (numericValue < 1) throw new Error(`*${fieldName}* deve ser no mínimo 1.`);
+    if (numericValue > limit)
       throw new Error(`O *${fieldName}* não pode ultrapassar ${limitName} (${limit}).`);
-  };
+  }
 
-  function runAll({
-    numRegioes,
-    zonasMateriais,
-    mapeamento,
-    numCelulasPorRegiao,
-    fonteNeutrons,
-    coeficientesDifusao,
-    choquesMacroscopicos,
-    espessura,
-    stepGraphic,
-    stepTable,
-    advancedOptions,
-    filterPoint
-  }) {
-    // limpa validated anterior
+  function runAll(params: RunAllParams): RunAllResult {
     setValidated(null);
 
-    // começa a validação
+    const {
+      numRegioes,
+      zonasMateriais,
+      mapeamento,
+      numCelulasPorRegiao,
+      fonteNeutrons,
+      coeficientesDifusao,
+      choquesMacroscopicos,
+      espessura,
+      stepGraphic,
+      stepTable,
+      advancedOptions,
+      filterPoint,
+    } = params;
+
     const r = parseInt(numRegioes, 10);
     if (isNaN(r) || r <= 0)
       throw new Error("*Número de Regiões* inválido (deve ser inteiro > 0).");
@@ -82,29 +107,14 @@ export function useValidation() {
       throw new Error("Índice do *Mapeamento* deve ser ≤ Número de Zonas.");
     validateNoZeros(mapArr, "Mapeamento");
 
-    const cellsArr = validateIntForm(
-      numCelulasPorRegiao,
-      "Número de Células por Região",
-      r,
-      "regiões"
-    );
+    const cellsArr = validateIntForm(numCelulasPorRegiao, "Número de Células por Região", r, "regiões");
     validateNoZeros(cellsArr, "Número de Células por Região");
 
     const fonteArr = validateFloatForm(fonteNeutrons, "Fonte de Nêutrons", r, "regiões");
-    const diffArr = validateFloatForm(
-      coeficientesDifusao,
-      "Coeficientes de Difusão",
-      z,
-      "zonas"
-    );
+    const diffArr = validateFloatForm(coeficientesDifusao, "Coeficientes de Difusão", z, "zonas");
     validateNoZeros(diffArr, "Coeficientes de Difusão");
 
-    const chocArr = validateFloatForm(
-      choquesMacroscopicos,
-      "Seções de Choque Macroscópicas",
-      z,
-      "zonas"
-    );
+    const chocArr = validateFloatForm(choquesMacroscopicos, "Seções de Choque Macroscópicas", z, "zonas");
     validateNoZeros(chocArr, "Seções de Choque Macroscópicas");
 
     const espArr = validateFloatForm(espessura, "Espessura de cada Região", r, "regiões");
@@ -112,12 +122,14 @@ export function useValidation() {
 
     const totalLength = sum(espArr);
 
-    validateSteps(Number(stepGraphic), "Passo no Gráfico", sum(cellsArr), "Número de Células");
-    validateSteps(Number(stepTable), "Passo na Tabela", sum(cellsArr), "Número de Células");
-    if(advancedOptions){
-      validateSteps(Number(filterPoint), "Índice na malha de discretização", sum(cellsArr), "Número de Células")
+    validateSteps(stepGraphic, "Passo no Gráfico", sum(cellsArr), "Número de Células");
+    validateSteps(stepTable, "Passo na Tabela", sum(cellsArr), "Número de Células");
+
+    if (advancedOptions) {
+      validateSteps(filterPoint, "Índice na malha de discretização", sum(cellsArr), "Número de Células");
     }
-    const result = {
+
+    const result: RunAllResult = {
       numRegioes: r,
       zonasMateriais: z,
       mapeamento: mapArr,

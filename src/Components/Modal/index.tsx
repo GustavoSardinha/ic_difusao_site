@@ -1,8 +1,18 @@
-import React from "react";
+import React, { ReactNode, ReactElement } from 'react';
 import "../../Styles/Modal/Modal.css";
 
-function Modal({ icon, title, msgAlert, exAlert, onClick }) { 
-  function mark(text) {
+interface ModalProps {
+  icon: string;
+  title: string;
+  msgAlert?: string;
+  exAlert?: string;
+  onClick: () => void;
+}
+
+function Modal({ icon, title, msgAlert, exAlert, onClick }: ModalProps) {
+  function mark(text?: string): (string | React.ReactElement)[] {
+    if(text == undefined)
+      return [];
     return text.split("*").map((segment, i) =>
       i % 2 === 1 ? <strong key={i}>{segment}</strong> : segment
     );
@@ -27,6 +37,5 @@ function Modal({ icon, title, msgAlert, exAlert, onClick }) {
     </div>
   );
 }
-
 
 export default Modal;
