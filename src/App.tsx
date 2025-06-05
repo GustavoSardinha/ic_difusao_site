@@ -891,11 +891,12 @@ function Reconstrucao({initialState}: HomeWrapperProps){
   const [vector_solutions, setVector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
   const [esps, setEsps] = useState<number[]>(initialState?.esps || []);
   const [solution_consts, setSolutionsConst] = useState<number[]>([]);
+  const [filterPoint, setFilterPoint] = useState<string>("");
 
   useEffect(() => {
     if(solution_consts.length === 0)
       generateConstants();
-      fluxFunction(2);
+      fluxFunction(4.2);
   }, [solution_consts]);
 
   function generateConstants(): void {
@@ -917,16 +918,16 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       const h = espessura[i];
       const zona = mapeamento[i];
       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]);
-      sol_const.push((((vector_solutions[cells] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1])*(1 - Math.pow(Math.E, (- h/L))))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
+      sol_const.push((((vector_solutions[cells + numCelulasPorRegiao[i]] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1]) - (vector_solutions[cells] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1])*(Math.pow(Math.E, (- h/L))))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
+      sol_const.push(((- (vector_solutions[cells + numCelulasPorRegiao[i]] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1]) + (vector_solutions[cells] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1])*(Math.pow(Math.E, (h/L))))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
       cells += numCelulasPorRegiao[i];
-      sol_const.push(- (((vector_solutions[cells] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1])*(1 - Math.pow(Math.E, (h/L))))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
     }
 
     setSolutionsConst(sol_const);
   }
   
-  function fluxFunction(x: number): void {
-    if (!result) return;
+  function fluxFunction(x: number): number {
+    if (!result) return -1;
     
     const {
       numRegioes,
@@ -953,13 +954,27 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       const zona = mapeamento[numReg];
       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]);
       const flux = solution_consts[2*numReg]*Math.pow(Math.E, dx/L) + solution_consts[2*numReg + 1]*Math.pow(Math.E, -dx/L) + fonteNeutrons[numReg]/choquesMacroscopicos[zona - 1];
-      console.log(flux);
+      return flux;
     }
+    return -1;
   }
   
   return(
     <div>
-      {solution_consts.join("  ")}
+      <FormInput
+      label='Digite um ponto para ser filtrado'
+      placeholder='Informe a posição em cm'
+      value={filterPoint}
+      onChange={setFilterPoint}
+      ></FormInput>
+      <div>
+        {(fluxFunction(Number(filterPoint)) == -1) && (
+          <p>O ponto filtrado está fora do domínio</p>
+        )}
+        {(fluxFunction(Number(filterPoint)) >= 0) && (
+          <p>O valor em {filterPoint} é {fluxFunction(Number(filterPoint))}</p>
+        )}
+      </div>
     </div>
   );
 }
