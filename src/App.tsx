@@ -961,18 +961,19 @@ function Reconstrucao({initialState}: HomeWrapperProps){
   
   return(
     <div>
-      <FormInput
+      <ArrayFormInput
       label='Digite um ponto para ser filtrado'
       placeholder='Informe a posição em cm'
       value={filterPoint}
-      onChange={setFilterPoint}
-      ></FormInput>
-      <div>
+      msgAlert='Informe um ponto do domínio para calcular o fluxo'
+      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterPoint(event.target.value)}
+      ></ArrayFormInput>
+      <div style={{justifyContent: 'center', alignItems: 'center'}}>
         {(fluxFunction(Number(filterPoint)) == -1) && (
-          <p>O ponto filtrado está fora do domínio</p>
+          <p style={{textAlign: 'center'}}>O ponto filtrado está fora do domínio</p>
         )}
         {(fluxFunction(Number(filterPoint)) >= 0) && (
-          <p>O valor em {filterPoint} é {fluxFunction(Number(filterPoint))}</p>
+          <p style={{textAlign: 'center'}}>O valor em {filterPoint} é {fluxFunction(Number(filterPoint))}</p>
         )}
       </div>
     </div>
