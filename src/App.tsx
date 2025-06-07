@@ -939,18 +939,24 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       comprimento,
     } = result;
     
-    let size = espessura[0];
+    let size = 0;
+    let numReg = numRegioes - 1;
     if((x >= 0) && (x <= comprimento)){
-      let numReg = numRegioes - 1;
       for(let i = 0; i < numRegioes; i++){
-        if(size < x)
+        if(size < x){
           size += espessura[i];
-        else{
-          numReg = i;
-          break;
+          if(size >= x){
+            numReg = i;
+            break;
+          }
         }
       }
-      const dx = x - (size - espessura[numReg]);
+      let dx = x;
+      if(espessura[numReg] != null)
+        dx = x - (size - espessura[numReg]);
+      console.log(size)
+      console.log(espessura[numReg])
+      console.log(dx)
       const zona = mapeamento[numReg];
       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]);
       const flux = solution_consts[2*numReg]*Math.pow(Math.E, dx/L) + solution_consts[2*numReg + 1]*Math.pow(Math.E, -dx/L) + fonteNeutrons[numReg]/choquesMacroscopicos[zona - 1];
