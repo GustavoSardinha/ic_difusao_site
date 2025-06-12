@@ -406,7 +406,7 @@ function Home({ initialState }: HomeWrapperProps) {
           )}
           <FormInput
             label="Passo da malha de discretização no tabela"
-            placeholder="Informe o passo da tebela"
+            placeholder="Informe o passo da tabela"
             onChange={(value: string) => setStepTable(value)}
             value={stepTable}
           />
@@ -923,7 +923,7 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       sol_const.push(((- (vector_solutions[cells + numCelulasPorRegiao[i]] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1]) + (vector_solutions[cells] - fonteNeutrons[i]/choquesMacroscopicos[zona - 1])*(Math.pow(Math.E, (h/L))))/(Math.pow(Math.E, h/L) - Math.pow(Math.E, (-h/L)))));
       cells += numCelulasPorRegiao[i];
     }
-
+    console.log(sol_const);
     setSolutionsConst(sol_const);
   }
   function findAPoint(x: number): number[]{
@@ -970,9 +970,6 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       let dx = x;
       if(espessura[regInfos[0]] != null)
         dx = x - (regInfos[1] - espessura[regInfos[0]]);
-      console.log(regInfos[1])
-      console.log(espessura[regInfos[0]])
-      console.log(dx)
       const zona = mapeamento[regInfos[0]];
       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]);
       const flux = solution_consts[2*regInfos[0]]*Math.pow(Math.E, dx/L) + solution_consts[2*regInfos[0] + 1]*Math.pow(Math.E, -dx/L) + fonteNeutrons[regInfos[0]]/choquesMacroscopicos[zona - 1];
