@@ -992,14 +992,16 @@ function Reconstrucao({initialState}: HomeWrapperProps){
     
     let absRate = 0;
     for(let i = regInfosA[0]; i <= regInfosB[0]; i++){
+      console.log(regInfosA);
+      console.log(regInfosB);
       const zona = mapeamento[i];
       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]);
       let dxa = 0;
       let dxb = espessura[i];
       if(i == regInfosA[0])
-        dxa = a - regInfosA[1];
+        dxa = a - (regInfosA[1] - espessura[i]);
       if(i == regInfosB[0])
-        dxb = b - regInfosB[1];
+        dxb = b - (regInfosB[1] - espessura[i]);
       console.log(dxa);
       console.log(dxb);
       absRate += L*choquesMacroscopicos[zona - 1]*(solution_consts[2*i]*(Math.pow(Math.E, dxb/L) - Math.pow(Math.E, dxa/L)) - solution_consts[2*i + 1]*(Math.pow(Math.E, - dxb/L) - Math.pow(Math.E, - dxa/L))) + fonteNeutrons[i]*(dxb - dxa)
