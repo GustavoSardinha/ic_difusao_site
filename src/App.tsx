@@ -508,8 +508,9 @@ function Relatorio({ initialState }: HomeWrapperProps) {
               datasets: [
                 {
                   label: "Ponto da malha de discretização",
-                  borderColor: "rgb(255, 99, 132)",
-                  backgroundColor: "rgba(255, 99, 132, 0.2)",
+                  borderColor: "rgb(255, 99, 132, 0.0)",
+                  backgroundColor: "rgba(255, 99, 132, 0.8)",
+                  pointRadius: 1.5,
                   data: data,
                 },
               ],
@@ -1010,6 +1011,7 @@ function Reconstrucao({initialState}: HomeWrapperProps){
   }
   return(
     <div>
+      <p>{solution_consts.join(" ")}</p>
       <ArrayFormInput
       label='Digite um ponto para ser filtrado'
       placeholder='Informe a posição em cm'
