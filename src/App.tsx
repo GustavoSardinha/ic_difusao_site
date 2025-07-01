@@ -12,6 +12,8 @@ import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import CheckBoxInput from './Components/CheckBoxInput';
 import main_img from './img/logo_uerj.png';
 import logo from './img/atom.png';
+import Plot from 'react-plotly.js';
+import PlotComponent from './Components/AnaliticalGraphics/PlotComponent';
 
 interface ResultState {
   numRegioes: number;
@@ -900,7 +902,9 @@ function Reconstrucao({initialState}: HomeWrapperProps){
       generateConstants();
       fluxFunction(4.2);
   }, [solution_consts]);
-
+  function getComprimento(): number{
+    return Number(result?.comprimento);
+  }
   function generateConstants(): void {
     const sol_const: number[] = [];
     if (!result) return;
@@ -1010,7 +1014,11 @@ function Reconstrucao({initialState}: HomeWrapperProps){
   }
   return(
     <div>
-      <p>{solution_consts.join(" ")}</p>
+      <PlotComponent 
+      f = {(x) => {return fluxFunction(x)}}
+      L = {1000}
+      range={[0, getComprimento()]}
+        ></PlotComponent>
       <ArrayFormInput
       label='Digite um ponto para ser filtrado'
       placeholder='Informe a posição em cm'

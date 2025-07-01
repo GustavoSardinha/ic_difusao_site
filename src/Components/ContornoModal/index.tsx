@@ -22,8 +22,15 @@ interface ContornoModalProps {
 }
 
 function ContornoModal(props: ContornoModalProps) {
-  const [disabledEsq, setDisabledEsq] = useState(true);
-  const [disabledDir, setDisabledDir] = useState(true);
+  const isZeroCase = (value: string) =>
+    value === "0;0" || value === "0;99999999999999999999";
+  const [disabledEsq, setDisabledEsq] = useState(
+    () => isZeroCase(props.contornoEsq)
+  );
+  const [disabledDir, setDisabledDir] = useState(
+    () => isZeroCase(props.contornoDir)
+  );
+
 
   function verifyCase(
     element: string,
