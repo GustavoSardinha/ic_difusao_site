@@ -25,6 +25,8 @@ const PlotComponent: React.FC<PlotCompProps> = ({
 
   return (
     <Plot
+      useResizeHandler={true}
+      style={{ width: '100%', height: '100%' }}
       data={[
         {
           x,
@@ -34,8 +36,7 @@ const PlotComponent: React.FC<PlotCompProps> = ({
         },
       ]}
       layout={{
-        width: 700,
-        height: 400,
+        autosize: true,
         title: 'Zoom e Pan com Plotly',
         xaxis: { title: 'x' },
         yaxis: { title: 'f(x)' },
