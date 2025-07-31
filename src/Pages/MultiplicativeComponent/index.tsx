@@ -266,6 +266,7 @@ const generateVectors = () => {
     setValidated(false);
     const { newEsps} = generateVectors();
     console.log(solutions);
+    console.log(newEsps);
     /*await new Promise(resolve => setTimeout(resolve, 0));
     navigate("/relatorio", { 
       state: { 
@@ -418,4 +419,7 @@ const generateVectors = () => {
   );
 }
 
+function f(){
+  return 5;
+}
 export default MultiplicativeComponent;
