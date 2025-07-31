@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ic_difusao_site/static/css/main.b569c264.css",
-    "main.js": "/ic_difusao_site/static/js/main.26cf7e62.js",
+    "main.js": "/ic_difusao_site/static/js/main.f1e70bd1.js",
     "static/js/453.e58cd836.chunk.js": "/ic_difusao_site/static/js/453.e58cd836.chunk.js",
     "static/media/alert.png": "/ic_difusao_site/static/media/alert.eafa5ac728b47ade6d79.png",
     "static/media/logo_uerj.png": "/ic_difusao_site/static/media/logo_uerj.e7f534b931e54bd81b75.png",
@@ -9,11 +9,11 @@
     "static/media/error.png": "/ic_difusao_site/static/media/error.7f8fc3b751bda0faf017.png",
     "index.html": "/ic_difusao_site/index.html",
     "main.b569c264.css.map": "/ic_difusao_site/static/css/main.b569c264.css.map",
-    "main.26cf7e62.js.map": "/ic_difusao_site/static/js/main.26cf7e62.js.map",
+    "main.f1e70bd1.js.map": "/ic_difusao_site/static/js/main.f1e70bd1.js.map",
     "453.e58cd836.chunk.js.map": "/ic_difusao_site/static/js/453.e58cd836.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.b569c264.css",
-    "static/js/main.26cf7e62.js"
+    "static/js/main.f1e70bd1.js"
   ]
 }
