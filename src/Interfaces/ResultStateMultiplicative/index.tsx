@@ -7,6 +7,10 @@ interface ResultStateMultiplicative extends ResultState{
   Ni: number;
   potencia: number;
   energia: number;
+  Lkeff: number;
+  Lfluxo: number;
+  keff: number;
+  solutions: number[];
 }
 
 export default ResultStateMultiplicative;

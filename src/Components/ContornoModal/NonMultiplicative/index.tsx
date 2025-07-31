@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import "../../Styles/Modal/Modal.css";
-import "../../Styles/Modal/Contorno.css";
-import "../../Styles/FormInput/Input.css";
-import FormInput from "../FormInput";
+import "../../../Styles/Modal/Modal.css";
+import "../../../Styles/Modal/Contorno.css";
+import "../../../Styles/FormInput/Input.css";
+import FormInput from "../../FormInput";
 
 interface ContornoModalProps {
   contornoEsq: string;

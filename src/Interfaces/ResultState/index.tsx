@@ -14,8 +14,6 @@ interface ResultState {
   filterPoint: number;
   contornoDir: string;
   contornoEsq: string;
-  incidenciaDir: number;
-  incidenciaEsq: number;
 }
 
 export default ResultState;

@@ -1,11 +1,11 @@
-import { useState, useEffect} from 'react';
+import { useState, useEffect, use} from 'react';
 import {useNavigate } from 'react-router-dom';
 import '../../Styles/App.css';
 import FormInput from '../../Components/FormInput';
 import ArrayFormInput from '../../Components/ArrayFormInput';
 import { useValidation } from '../../Hooks/useValidationMultiplicative';
 import ContinueButton from '../../Components/ContinueButton';
-import ContornoModal from '../../Components/ContornoModal';
+import ContornoModal from '../../Components/ContornoModal/Multiplicative';
 import { thomasSimetrico } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
@@ -32,8 +32,6 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const [stepTable, setStepTable] = useState<string>(initialState?.result?.stepTable?.toString() || "1");
   const [contornoDir, setContornoDir] = useState<string>(initialState?.result?.contornoDir || "0;0");
   const [contornoEsq, setContornoEsq] = useState<string>(initialState?.result?.contornoEsq || "0;0");
-  const [incidenciaDir, setIncidenciaDir] = useState<number>(initialState?.result?.incidenciaDir || 0);
-  const [incidenciaEsq, setIncidenciaEsq] = useState<number>(initialState?.result?.incidenciaEsq || 0);
   const [hasGrafic, setHasGrafic] = useState<boolean>(initialState?.result?.hasGrafic ?? true);
   const [advancedOptions, setAdvancedOptions] = useState<boolean>(initialState?.result?.advancedOptions || false);
   const [noGamma, setNoGamma] = useState<boolean>(initialState?.result?.nogamma || false);
@@ -41,7 +39,16 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const [Ni, setNi] = useState<string>((initialState?.result as ResultStateMultiplicative)?.Ni?.toString() || "");
   const [potencia, setPotencia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.potencia?.toString() || "");
   const [energia, setEnergia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.energia?.toString() || "");
+  const [Lkeff, setLkeff] = useState<number>(
+    (initialState?.result as ResultStateMultiplicative)?.Lkeff ?? 1e-6
+  );
 
+  const [Lfluxo, setfluxo] = useState<number>(
+    (initialState?.result as ResultStateMultiplicative)?.Lfluxo ?? 1e-6
+  );
+  const [solutions, setSolutions] = useState<number[]>(
+    (initialState?.result as ResultStateMultiplicative)?.solutions ?? []
+  );
 
   const [filterPoint, setFilterPoint] = useState<string>(initialState?.result?.filterPoint?.toString() || "0");
   const [err, setErr] = useState<Error | null>(null);
@@ -64,8 +71,6 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       setStepTable(savedState.stepTable.toString());
       setContornoDir(savedState.contornoDir);
       setContornoEsq(savedState.contornoEsq);
-      setIncidenciaDir(savedState.incidenciaDir);
-      setIncidenciaEsq(savedState.incidenciaEsq);
       setHasGrafic(savedState.hasGrafic);
       setAdvancedOptions(savedState.advancedOptions);
       setNoGamma(savedState.nogamma);
@@ -172,100 +177,94 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
         nogamma: noGamma,
         contornoDir,
         contornoEsq,
-        incidenciaDir,
-        incidenciaEsq
       });
       setCCActive(true);
     } catch (err) {
       setErr(err as Error);
     }
   };
-  /*
-  const generateVectors = () => {
-    const vectorA: number[] = [];
-    const vectorB: number[] = [];
-    const vectorFonte: number[] = [];
-    
-    if (!result) return { solutions: [], newEsps: [] };
-    
-    const {
-      numRegioes,
-      mapeamento,
-      numCelulasPorRegiao,
-      coeficientesDifusao,
-      choquesMacroscopicosAbs,
-      choquesMacroscopicosFis,
-      Ni,
-      espessura,
-      potencia,
-      energia,
-      comprimento,
-      nogamma
-    } = result;
-    
-    let xsx: number[] = [];
-    let s: number[] = [];
-    let nm = 0;
-    let cond_left = contornoEsq.split(";").map(Number);
-    let cond_right = contornoDir.split(";").map(Number);
-    let espPorReg: number[] = [];
-    
+const generateVectors = () => {
+  if (!result) return { solu: [], newEsps: [] };
+
+  const {
+    numRegioes,
+    mapeamento,
+    numCelulasPorRegiao,
+    coeficientesDifusao,
+    choquesMacroscopicosAbs,
+    choquesMacroscopicosFis,
+    Ni,
+    espessura,
+    nogamma,
+    noNi,
+    solutions: solResult = [],   // valor padrão
+  } = result;
+
+  const vectorA: number[] = [];
+  const vectorB: number[] = [];
+  const vectorFonte: number[] = [];
+  const xsx: number[] = [];
+  const s: number[] = [];
+  let nm = 0;
+  let keff = 1;
+  let keffAnt = 0;
+  let sol_ant = 0;
+
+  const cond_left = contornoEsq.split(";").map(Number);
+  const cond_right = contornoDir.split(";").map(Number);
+  const espPorReg: number[] = [];
+  let niValor = noNi ? Number(Ni) : 1;
+  while( (Math.abs(keff - keffAnt)/keff > Lkeff) && (Math.abs((solResult[0] ?? 1) - sol_ant)/(solResult[0] ?? 1) > Lfluxo)){
     for (let regioes = 0; regioes < numRegioes; regioes++) {
-      const indice_mapeamento = mapeamento[regioes] - 1;
-      const coef_difusao = coeficientesDifusao[indice_mapeamento];
-      const coef_choque_macro = choquesMacroscopicos[indice_mapeamento];
-      const fonte = fonteNeutrons[regioes];
+      const idx = mapeamento[regioes] - 1;
+      const D = coeficientesDifusao[idx];
+      const Σa = choquesMacroscopicosAbs[idx];
+      const Σf = choquesMacroscopicosFis[idx];
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-      const xL = Math.sqrt(coef_difusao/coef_choque_macro);
-      const z = h / (2 * xL);
-      let gamma = nogamma ? 1 : Math.tanh(z)/z;
-    
+
       for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
         nm++;
         espPorReg.push(h);
-        vectorB.push((coef_difusao/(gamma*h)) - coef_choque_macro * h * gamma/ 4);
-        xsx.push(coef_choque_macro * h * gamma/ 4);
-        s.push(fonte * h * gamma / 2);                        
+        vectorB.push(D/h);
+        xsx.push((Σa * h) / 2);
+        s.push( (niValor/keff) * ((Σf * h) / 2) * (solResult[j] ?? 1) );
       }
     }
-    
-    espPorReg.push(comprimento);
 
-    vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
-    vectorFonte.push(s[0] + Number(incidenciaEsq) * Number(cond_left[0]));
-    
-    for (let i = 1; i < nm; i++) {
-      vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
-      vectorFonte.push(s[i] + s[i - 1]);
-    }
-    
-    vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
-    vectorFonte.push(s[nm - 1] + Number(incidenciaDir) * Number(cond_right[0]));
-    
-    const solutions = thomasSimetrico(vectorA, vectorB, vectorFonte);
-    
-    const newEsps: number[] = [];
+      vectorA.push(vectorB[0] + xsx[0] + Number(cond_left[1]));
+      vectorFonte.push(s[0]);
+      
+      for (let i = 1; i < nm; i++) {
+        vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
+      }
+      
+      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
+      vectorFonte.push(s[nm - 1]);
+      keffAnt = keff;
+      sol_ant = (solResult[0] ?? 1);
+      console.log(vectorA);
+      console.log(vectorB);
+      console.log(vectorFonte);
+      const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
+      const h1 = espessura[0] / numCelulasPorRegiao[0];
+      keff = ((niValor)*choquesMacroscopicosFis[0]*h1/2)/(- vectorB[0]*solu[1] + solu[0]*vectorA[0]);
+      setSolutions(solu);
+  }
+  const newEsps: number[] = [];
     let pos = 0;
     espPorReg.forEach((esp) => {
       newEsps.push(pos);
       pos += esp;
     });
     
-    setResult(result => ({
-      ...result!, 
-      contornoDir,   
-      incidenciaDir, 
-      contornoEsq,  
-      incidenciaEsq
-    }));
-    
-    return {solutions, newEsps};
-  };
-*/
-  /*const solveProblem = async () => {
+  return { newEsps };
+};
+
+  const solveProblem = async () => {
     setValidated(false);
-    const { solutions, newEsps} = generateVectors();
-    await new Promise(resolve => setTimeout(resolve, 0));
+    const { newEsps} = generateVectors();
+    console.log(solutions);
+    /*await new Promise(resolve => setTimeout(resolve, 0));
     navigate("/relatorio", { 
       state: { 
         result: {
@@ -276,14 +275,13 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
           nogamma: noGamma,
           contornoDir,
           contornoEsq,
-          incidenciaDir,
-          incidenciaEsq
         },
         vector_solutions: solutions,
         esps: newEsps
       } 
     });
-  };*/
+    */
+  };
 
   return (
     <div className="App">
@@ -404,22 +402,18 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
               setContornoDir = {setContornoDir}
               contornoEsq = {contornoEsq}
               setContornoEsq = {setContornoEsq}
-              incidenciaDir = {incidenciaDir}
-              setIncidenciaDir = {setIncidenciaDir}
-              incidenciaEsq = {incidenciaEsq}
-              setIncidenciaEsq = {setIncidenciaEsq}
               L = {getComprimento()}
-              successFunc = {f}
+              successFunc = {solveProblem}
+              Lkeff={Lkeff}
+              setLKeff={setLkeff}
+              Lfluxo={Lfluxo}
+              setLfluxo={setfluxo}
             />
           )}
         </div>
       </article>
     </div>
   );
-}
-function f(){
-
-
 }
 
 export default MultiplicativeComponent;
