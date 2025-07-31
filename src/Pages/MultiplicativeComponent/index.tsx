@@ -245,6 +245,8 @@ const generateVectors = () => {
       console.log(vectorA);
       console.log(vectorB);
       console.log(vectorFonte);
+      console.log(keff);
+      console.log(solResult);
       const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
       const h1 = espessura[0] / numCelulasPorRegiao[0];
       keff = ((niValor)*choquesMacroscopicosFis[0]*h1/2)/(- vectorB[0]*solu[1] + solu[0]*vectorA[0]);
