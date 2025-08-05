@@ -6,7 +6,7 @@ import ArrayFormInput from '../../Components/ArrayFormInput';
 import { useValidation } from '../../Hooks/useValidationMultiplicative';
 import ContinueButton from '../../Components/ContinueButton';
 import ContornoModal from '../../Components/ContornoModal/Multiplicative';
-import { thomasSimetrico } from '../../Services/numericalMath';
+import { thomasSimetrico, desvioRelativo } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
@@ -39,11 +39,11 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const [Ni, setNi] = useState<string>((initialState?.result as ResultStateMultiplicative)?.Ni?.toString() || "");
   const [potencia, setPotencia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.potencia?.toString() || "");
   const [energia, setEnergia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.energia?.toString() || "");
-  const [Lkeff, setLkeff] = useState<number>(
+  const [Lkeff, setLkeff] = useState<string>(
     (initialState?.result as ResultStateMultiplicative)?.Lkeff ?? 1e-6
   );
 
-  const [Lfluxo, setfluxo] = useState<number>(
+  const [Lfluxo, setfluxo] = useState<string>(
     (initialState?.result as ResultStateMultiplicative)?.Lfluxo ?? 1e-6
   );
   const [solutions, setSolutions] = useState<number[]>(
@@ -55,6 +55,9 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   
   const { validated, setValidated, runAll } = useValidation();
   const [cc_active, setCCActive] = useState<boolean>(false);
+
+  const [msgErro, setMsgErro] = useState<string>("");
+  const [showModal, setShowModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (initialState?.result) {
@@ -114,7 +117,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       label: 'Seções de Choque Macroscópicas de Absorção:',
       placeholder: 'Informe os valores das seções de choque macroscópicas.',
       msgAlert:
-        'Para informar os valores dos choques macroscópicos corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
+        'Para informar os valores das seções choques macroscópicos de absorção corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
       exAlert: 'Exemplo: 0.7;3;4.2;1',
       value: choquesMacroscopicosAbs,
       setter: setChoquesMacroscopicosAbs,
@@ -124,7 +127,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       label: 'Seções de Choque Macroscópicas de Fissão:',
       placeholder: 'Informe os valores das seções de choque macroscópicas.',
       msgAlert:
-        'Para informar os valores dos choques macroscópicos corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
+        'Para informar os valores das seções choques macroscópicos fissão corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
       exAlert: 'Exemplo: 0.7;3;4.2;1',
       value: choquesMacroscopicosFis,
       setter: setChoquesMacroscopicosFis,
@@ -194,6 +197,7 @@ const generateVectors = () => {
     choquesMacroscopicosAbs,
     choquesMacroscopicosFis,
     Ni,
+    comprimento,
     espessura,
     nogamma,
     noNi,
@@ -213,8 +217,13 @@ const generateVectors = () => {
   const cond_left = contornoEsq.split(";").map(Number);
   const cond_right = contornoDir.split(";").map(Number);
   const espPorReg: number[] = [];
+  let solu;
+  let keffs = [keff];
   let niValor = noNi ? Number(Ni) : 1;
-  while( (Math.abs(keff - keffAnt)/keff > Lkeff) && (Math.abs((solResult[0] ?? 1) - sol_ant)/(solResult[0] ?? 1) > Lfluxo)){
+  for(let i = 0; i < nm + 1; i++){
+    solResult.push(1);
+  }
+  while(desvioRelativo(keff, keffAnt) > Number(Lkeff)){
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const idx = mapeamento[regioes] - 1;
       const D = coeficientesDifusao[idx];
@@ -236,20 +245,23 @@ const generateVectors = () => {
       
       for (let i = 1; i < nm; i++) {
         vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
+        vectorFonte.push(s[i] + s[i - 1]);
       }
       
       vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
       vectorFonte.push(s[nm - 1]);
       keffAnt = keff;
-      sol_ant = (solResult[0] ?? 1);
-      console.log(vectorA);
-      console.log(vectorB);
-      console.log(vectorFonte);
-      console.log(keff);
-      console.log(solResult);
-      const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
-      const h1 = espessura[0] / numCelulasPorRegiao[0];
-      keff = ((niValor)*choquesMacroscopicosFis[0]*h1/2)/(- vectorB[0]*solu[1] + solu[0]*vectorA[0]);
+      solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
+      let somaAtual = 0;
+      let somaAnt = 0;
+      for(let i = 0; i < vectorFonte.length; i++){
+        sol_ant = (solResult[i] ?? 1);
+        somaAnt += vectorFonte[i];
+        somaAtual += vectorFonte[i]*(solu[i]/sol_ant);
+        solResult[i] = solu[i];
+      }
+      keff = keffAnt*(somaAtual/somaAnt);
+      keffs.push(keff);
       setSolutions(solu);
   }
   const newEsps: number[] = [];
@@ -258,16 +270,37 @@ const generateVectors = () => {
       newEsps.push(pos);
       pos += esp;
     });
-    
-  return { newEsps };
-};
+    newEsps.push(comprimento);
 
+  return { solu, newEsps, keffs };
+};
+const valitadionContorno = async () => {
+  try{
+    const lkeff = Number(Lkeff);
+    const lfluxo = Number(Lfluxo);
+    if (!Number.isFinite(lkeff) || lkeff === 0) {
+      throw new Error("Valor inválido para critério de parada de keff");
+    }
+    if (!Number.isFinite(lfluxo) || lfluxo === 0) {
+      throw new Error("Valor inválido para critério de parada do fluxo");
+    }
+    await solveProblem();
+  }
+catch (e) {
+  if (e instanceof Error) {
+    setMsgErro(e.message);
+  } else {
+    setMsgErro("Erro inesperado");
+  }
+  setShowModal(true);
+}
+}
   const solveProblem = async () => {
     setValidated(false);
-    const { newEsps} = generateVectors();
+    const {solu, newEsps, keffs} = generateVectors();
     console.log(solutions);
     console.log(newEsps);
-    /*await new Promise(resolve => setTimeout(resolve, 0));
+    await new Promise(resolve => setTimeout(resolve, 0));
     navigate("/relatorio", { 
       state: { 
         result: {
@@ -279,11 +312,11 @@ const generateVectors = () => {
           contornoDir,
           contornoEsq,
         },
-        vector_solutions: solutions,
-        esps: newEsps
+        vector_solutions: solu,
+        esps: newEsps,
+        vector_keffs: keffs,
       } 
     });
-    */
   };
 
   return (
@@ -339,7 +372,7 @@ const generateVectors = () => {
           />
           {(noNi) && (
             <FormInput
-              label="Informe o número de neutrôns gerados por fissão:"
+              label="Informe o número de nêutrons gerados por fissão:"
               placeholder="Informe um valor para ν"
               onChange={(value: string) => setNi(value)}
               value={Ni}
@@ -406,11 +439,14 @@ const generateVectors = () => {
               contornoEsq = {contornoEsq}
               setContornoEsq = {setContornoEsq}
               L = {getComprimento()}
-              successFunc = {solveProblem}
+              successFunc = {valitadionContorno}
               Lkeff={Lkeff}
               setLKeff={setLkeff}
               Lfluxo={Lfluxo}
               setLfluxo={setfluxo}
+              msgErroDialog={msgErro}
+              showModal ={showModal}
+              setShowModal={setShowModal}
             />
           )}
         </div>
@@ -419,7 +455,4 @@ const generateVectors = () => {
   );
 }
 
-function f(){
-  return 5;
-}
 export default MultiplicativeComponent;

@@ -19,7 +19,7 @@ function HomeComponent() {
           <div className="Title-container">
             
             <h1 className="App-title">
-              Difusão de Partículas Neutras Unidimensional
+              Difusão Unidimensional de Partículas Neutras
             </h1>
           </div>
           <section className="cards">

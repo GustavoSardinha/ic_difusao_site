@@ -7,10 +7,11 @@ import api from '../../Services/API/quickchart';
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import main_img from '../../img/logo_uerj.png';
 import ResultStateNonMultiplicative from '../../Interfaces/ResultStaeNonMultiplicative';
+import ResultStateMultiplicative from '../../Interfaces/ResultStateMultiplicative';
 
 
 function ReportComponent({ initialState }: HomeWrapperProps) {
-  const [result, setResult] = useState<ResultStateNonMultiplicative | null>((initialState?.result as ResultStateNonMultiplicative) || null);
+  const [result, setResult] = useState<ResultState | null>(initialState?.result || null);
   const [vector_solutions, setVector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
   const [esps, setEsps] = useState<number[]>(initialState?.esps || []);
   const [graph, setGraph] = useState<string>("");
@@ -116,25 +117,32 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
     html2pdf().set(opt).from(element).save();
   }; 
   
-  const showCondicoesdeContorno = (value: string, index: string, inten: number): ReactNode => {
-    const infos = value.split(";");
-    if (infos.length !== 2) return "erro";
-  
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#0056b3' }}>
-          α_{index} = {infos[0]}
-        </span>
-        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#0056b3' }}>
-          β_{index} = {infos[1]}
-        </span>
-        <span style={{ fontSize: '16px', fontWeight: 'bold', color: '#0056b3' }}>
+const showCondicoesdeContorno = (
+  value: string,
+  index: string,
+  inten?: number
+): ReactNode => {
+  const infos = value.split(";");
+  if (infos.length !== 2) return <>Erro ao ler contorno</>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <span style={{ fontSize: "16px", fontWeight: "bold", color: "#0056b3" }}>
+        α_{index} = {infos[0]}
+      </span>
+      <span style={{ fontSize: "16px", fontWeight: "bold", color: "#0056b3" }}>
+        β_{index} = {infos[1]}
+      </span>
+
+      {typeof inten === "number" && (
+        <span style={{ fontSize: "16px", fontWeight: "bold", color: "#0056b3" }}>
           I_{index} = {inten}
         </span>
-      </div>
-    );
-  };
-  
+      )}
+    </div>
+  );
+};
+
   function generateSection(title: string, value: string | number): ReactNode {
     return (
       <div
@@ -320,20 +328,30 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
               result?.numCelulasPorRegiao.join(' ') || ""
             )}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-            {generateSection('Fonte de Nêutrons', result?.fonteNeutrons.join(' ') || "")}
-            {generateSection(
-              'Coeficientes de Difusão',
-              result?.coeficientesDifusao.join(' ') || ""
-            )}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
-            {generateSection(
-              'Seções de Choque Macroscópicas',
-              result?.choquesMacroscopicos.join(' ') || ""
-            )}
-            {generateSection('Espessura de cada Região', result?.espessura.join(' ') || "")}
-          </div>
+          {result && 'fonteNeutrons' in result && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+                {generateSection('Fonte de Nêutrons', (result as ResultStateNonMultiplicative).fonteNeutrons.join(' '))}
+                {generateSection('Coeficientes de Difusão', result.coeficientesDifusao.join(' '))}
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+                {generateSection('Seções de Choque Macroscópicas', (result as ResultStateNonMultiplicative).choquesMacroscopicos.join(' '))}
+              </div>
+            </>
+          )}
+          {result && 'choquesMacroscopicosFis' in result && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+                {generateSection('Seções de Choque Macroscópicas de Absorção', (result as ResultStateMultiplicative).choquesMacroscopicosAbs.join(' '))}
+                {generateSection('Coeficientes de Difusão', result.coeficientesDifusao.join(' '))}
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+                {generateSection('Seções de Choque Macroscópicas de Fissão', (result as ResultStateMultiplicative).choquesMacroscopicosFis.join(' '))}
+              </div>
+            </>
+          )}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15, pageBreakInside: 'avoid', breakInside: 'avoid-page' }}>
             {generateSection('Comprimento Total', getComprimento().toString())}
             {generateSection(
@@ -382,8 +400,18 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
                   Esquerda: <br></br> x = 0
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                  {showCondicoesdeContorno(result?.contornoEsq || "", '0', result?.incidenciaEsq || 0)}
+                  { result && 'incidenciaEsq' in result
+                    ? showCondicoesdeContorno(
+                        result.contornoEsq,
+                        '0',
+                        (result as ResultStateNonMultiplicative).incidenciaEsq
+                      )
+                    : showCondicoesdeContorno(
+                        result?.contornoEsq || '',
+                        '0'
+                      )}
                 </div>
+
               </div>
               <div
                 style={{
@@ -404,7 +432,16 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
                   Direita: <br></br>x = {result?.comprimento || 0}
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                  {showCondicoesdeContorno(result?.contornoDir || "", 'L', result?.incidenciaDir || 0)}
+                  { result && 'incidenciaDir' in result
+                    ? showCondicoesdeContorno(
+                        result.contornoDir,
+                        '0',
+                        (result as ResultStateNonMultiplicative).incidenciaDir
+                      )
+                    : showCondicoesdeContorno(
+                        result?.contornoEsq || '',
+                        '0'
+                      )}
                 </div>
               </div>
             </div>

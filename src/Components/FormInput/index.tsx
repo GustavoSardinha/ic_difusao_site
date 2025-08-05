@@ -1,13 +1,6 @@
 import React from "react";
 import "../../Styles/FormInput/Input.css";
-
-interface FormInputProps {
-  label: string;
-  placeholder?: string;
-  value: string;
-  disabled?: boolean;
-  onChange: (value: string) => void;
-}
+import FormInputProps from "./interface/FormInputProps";
 
 function FormInput(props: FormInputProps) {
   function onChanged(event: React.ChangeEvent<HTMLInputElement>) {

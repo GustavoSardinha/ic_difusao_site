@@ -25,3 +25,7 @@ export function thomasSimetrico(diag, off, rhs) {
   
     return x;
 }
+
+export function desvioRelativo(value, valueAnt){
+    return Math.abs(value - valueAnt)/value;
+}

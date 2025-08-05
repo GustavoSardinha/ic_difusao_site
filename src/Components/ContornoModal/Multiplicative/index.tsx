@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import "../../../Styles/Modal/Modal.css";
 import "../../../Styles/Modal/Contorno.css";
 import "../../../Styles/FormInput/Input.css";
-import FormInput from "../../FormInput";
+import FormInputNoMask from "../../FormInput/NoMask";
+import Modal from "../../Modal";
+import AlertIcon from "../../../img/icons/error.png";
 
 interface ContornoModalProps {
   contornoEsq: string;
@@ -11,15 +13,16 @@ interface ContornoModalProps {
   setContornoDir: (value: string) => void;
   L: number;
   successFunc: () => void;
-  Lkeff: number;
-  setLKeff: (value: number) => void
-  Lfluxo: number;
-  setLfluxo: (value: number) => void;
-
+  Lkeff: string;
+  setLKeff: (value: string) => void
+  Lfluxo: string;
+  setLfluxo: (value: string) => void;
+  msgErroDialog: string;
+  showModal: boolean;
+  setShowModal: (value: boolean) => void;
 }
 
 function ContornoModal(props: ContornoModalProps) {
-
   return (
     <div className="Modal-overlay Modal-overlayC">
       <h2 className="Title">Condições de Contorno</h2>
@@ -34,7 +37,7 @@ function ContornoModal(props: ContornoModalProps) {
               onChange={(event) => {props.setContornoEsq(event.target.value)}}>
               <option value="0;0">Reflexiva</option>
               <option value="0;99999999999999999999">Fluxo escalar nulo</option>
-              <option value="1.33333333333;0.66666666666">Vácuo</option>
+              <option value="0.5;0.5">Vácuo</option>
             </select>
           </div>
           <div className="Col-container">
@@ -47,28 +50,28 @@ function ContornoModal(props: ContornoModalProps) {
             >
               <option value="0;0">Reflexiva</option>
               <option value="0;99999999999999999999">Fluxo escalar nulo</option>
-              <option value="1.33333333333;0.66666666666">Vácuo</option>
+              <option value="0.5;0.5">Vácuo</option>
             </select>
           </div>
         </div>
         <div>
             <div>
                 <p className="Subtitle">Critério de parada para keff</p>
-                <FormInput
+                <FormInputNoMask
                     disabled={false}
                     label=""
                     placeholder={`Informe o críterio de parada para keff:`}
-                    onChange={(value) => props.setLKeff(Number(value))}
+                    onChange={(value) => props.setLKeff(value)}
                     value={String(props.Lkeff)}
                 />
             </div>
             <div>
                 <p className="Subtitle">Critério de parada para fluxo</p>
-                <FormInput
+                <FormInputNoMask
                     disabled={false}
                     label=""
                     placeholder={`Informe o críterio de parada para o fluxo:`}
-                    onChange={(value) => props.setLfluxo(Number(value))}
+                    onChange={(value) => props.setLfluxo(value)}
                     value={String(props.Lfluxo)}
                 />
             </div>
@@ -82,6 +85,15 @@ function ContornoModal(props: ContornoModalProps) {
           />
         </div>
       </div>
+      {props.showModal && (
+        <Modal
+          title="ATENÇÃO!"
+          icon={AlertIcon}
+          msgAlert={props.msgErroDialog}
+          exAlert={""}
+          onClick={() => props.setShowModal(false)}
+        />
+      )}
     </div>
   );
 }
