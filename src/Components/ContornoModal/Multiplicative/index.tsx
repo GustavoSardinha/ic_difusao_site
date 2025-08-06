@@ -5,6 +5,8 @@ import "../../../Styles/FormInput/Input.css";
 import FormInputNoMask from "../../FormInput/NoMask";
 import Modal from "../../Modal";
 import AlertIcon from "../../../img/icons/error.png";
+import CheckBoxInput from "../../CheckBoxInput";
+import FormInput from "../../FormInput";
 
 interface ContornoModalProps {
   contornoEsq: string;
@@ -20,6 +22,10 @@ interface ContornoModalProps {
   msgErroDialog: string;
   showModal: boolean;
   setShowModal: (value: boolean) => void;
+  criterioParada: boolean;
+  setCriterioParada: (value: boolean) => void;
+  passos: number;
+  setPassos: (value: number) => void;
 }
 
 function ContornoModal(props: ContornoModalProps) {
@@ -55,6 +61,12 @@ function ContornoModal(props: ContornoModalProps) {
           </div>
         </div>
         <div>
+          <CheckBoxInput
+            text = {"Critério de parada fixo"}
+            value = {props.criterioParada}
+            onChange = {props.setCriterioParada}
+          />
+          {(!props.criterioParada) && (
             <div>
                 <p className="Subtitle">Critério de parada para keff</p>
                 <FormInputNoMask
@@ -64,8 +76,6 @@ function ContornoModal(props: ContornoModalProps) {
                     onChange={(value) => props.setLKeff(value)}
                     value={String(props.Lkeff)}
                 />
-            </div>
-            <div>
                 <p className="Subtitle">Critério de parada para fluxo</p>
                 <FormInputNoMask
                     disabled={false}
@@ -75,6 +85,20 @@ function ContornoModal(props: ContornoModalProps) {
                     value={String(props.Lfluxo)}
                 />
             </div>
+          )}
+          {(props.criterioParada) && (
+            <div>
+              <p className="Subtitle">Número fixo de passos</p>
+              <FormInput
+                disabled={false}
+                label=""
+                placeholder={`Informe o número fixo de passos:`}
+                onChange={(value) => props.setPassos(Number(value))}
+                value={String(props.passos)}
+              ></FormInput>
+            </div>
+          )
+          }
         </div>
         <div className="Button-container">
           <input

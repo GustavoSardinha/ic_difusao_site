@@ -12,7 +12,7 @@ import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
 import ArrayField from '../../Interfaces/ArrayField';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
-import ResultStateMultiplicative from '../../Interfaces/ResultStateMultiplicative';
+import {ResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
 import FormInputWithAlert from '../../Components/FormInputWithAlert';
 
 
@@ -58,6 +58,9 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
 
   const [msgErro, setMsgErro] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
+
+  const [criterioParada, setCriterioParada] = useState<boolean>(false);
+  const [passos, setPassos] = useState<number>(1);
 
   useEffect(() => {
     if (initialState?.result) {
@@ -201,14 +204,12 @@ const generateVectors = () => {
     espessura,
     nogamma,
     noNi,
-    solutions: solResult = [],   // valor padrão
+    solutions: solResult = [],   
   } = result;
 
   const vectorA: number[] = [];
   const vectorB: number[] = [];
-  const vectorFonte: number[] = [];
   const xsx: number[] = [];
-  const s: number[] = [];
   let nm = 0;
   let keff = 1;
   let keffAnt = 0;
@@ -219,11 +220,38 @@ const generateVectors = () => {
   const espPorReg: number[] = [];
   let solu;
   let keffs = [keff];
+  let fluxoMedio = 1;
+  let fluxoMedioAnt = 0;
   let niValor = noNi ? Number(Ni) : 1;
   for(let i = 0; i < nm + 1; i++){
     solResult.push(1);
   }
-  while(desvioRelativo(keff, keffAnt) > Number(Lkeff)){
+  for (let regioes = 0; regioes < numRegioes; regioes++) {
+    const idx = mapeamento[regioes] - 1;
+    const D = coeficientesDifusao[idx];
+    const Σa = choquesMacroscopicosAbs[idx];
+    const Σf = choquesMacroscopicosFis[idx];
+    const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+
+    for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
+      nm++;
+      espPorReg.push(h);
+      vectorB.push(D/h);
+      xsx.push((Σa * h) / 2);
+    }
+  }
+
+  vectorA.push(vectorB[0] + xsx[0] + Number(cond_left[1]));
+      
+  for (let i = 1; i < nm; i++) {
+    vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
+  }
+      
+  vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
+  let numPassos = 0;
+   while((desvioRelativo(keff, keffAnt) > Number(Lkeff)) && (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))){
+    const vectorFonte: number[] = [];
+    const s: number[] = [];
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const idx = mapeamento[regioes] - 1;
       const D = coeficientesDifusao[idx];
@@ -232,37 +260,34 @@ const generateVectors = () => {
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
 
       for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
-        nm++;
-        espPorReg.push(h);
-        vectorB.push(D/h);
-        xsx.push((Σa * h) / 2);
         s.push( (niValor/keff) * ((Σf * h) / 2) * (solResult[j] ?? 1) );
       }
     }
-
-      vectorA.push(vectorB[0] + xsx[0] + Number(cond_left[1]));
-      vectorFonte.push(s[0]);
-      
-      for (let i = 1; i < nm; i++) {
-        vectorA.push(vectorB[i] + vectorB[i - 1] + xsx[i] + xsx[i - 1]);
-        vectorFonte.push(s[i] + s[i - 1]);
-      }
-      
-      vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
-      vectorFonte.push(s[nm - 1]);
-      keffAnt = keff;
-      solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
-      let somaAtual = 0;
-      let somaAnt = 0;
-      for(let i = 0; i < vectorFonte.length; i++){
-        sol_ant = (solResult[i] ?? 1);
-        somaAnt += vectorFonte[i];
-        somaAtual += vectorFonte[i]*(solu[i]/sol_ant);
-        solResult[i] = solu[i];
-      }
-      keff = keffAnt*(somaAtual/somaAnt);
-      keffs.push(keff);
-      setSolutions(solu);
+    vectorFonte.push(s[0]);
+    for (let i = 1; i < nm; i++) {
+      vectorFonte.push(s[i] + s[i - 1]);
+    }
+    vectorFonte.push(s[nm - 1]);
+    keffAnt = keff;
+    solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
+    let somaAtual = 0;
+    let somaAnt = 0;
+    fluxoMedioAnt = fluxoMedio;
+    fluxoMedio = 0;
+    for(let i = 0; i < vectorFonte.length; i++){
+      sol_ant = (solResult[i] ?? 1);
+      somaAnt += vectorFonte[i];
+      somaAtual += vectorFonte[i]*(solu[i]/sol_ant);
+      fluxoMedio += solu[i]/solu.length;
+      solResult[i] = solu[i];
+    }
+    keff = keffAnt*(somaAtual/somaAnt);
+    keffs.push(keff);
+    setSolutions(solu);
+    numPassos++;
+    if(criterioParada)
+      if(numPassos >= passos)
+        break;
   }
   const newEsps: number[] = [];
     let pos = 0;
@@ -327,11 +352,10 @@ catch (e) {
         </nav>
       </header>
       <article className="App-body">
-        <div className="App-container">
-          <img src={main_img} className="Main-img" alt="logo" />
+        <div className="App-Container">
           <div className="Title-container">
             <h1 className="App-title">
-              Difusão de Partículas Neutras Unidimensional
+              Meios Multiplicativos
             </h1>
           </div>
           <CheckBoxInput
@@ -447,6 +471,10 @@ catch (e) {
               msgErroDialog={msgErro}
               showModal ={showModal}
               setShowModal={setShowModal}
+              criterioParada={criterioParada}
+              setCriterioParada={setCriterioParada}
+              passos={passos}
+              setPassos={setPassos}
             />
           )}
         </div>

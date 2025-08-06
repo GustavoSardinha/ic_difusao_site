@@ -6,8 +6,9 @@ import '../../Styles/App.css';
 import api from '../../Services/API/quickchart';
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import main_img from '../../img/logo_uerj.png';
-import ResultStateNonMultiplicative from '../../Interfaces/ResultStaeNonMultiplicative';
-import ResultStateMultiplicative from '../../Interfaces/ResultStateMultiplicative';
+import {ResultStateNonMultiplicative, isResultStateNonMultiplicative} from '../../Interfaces/ResultStateNonMultiplicative';
+import {ResultStateMultiplicative, isResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
+
 
 
 function ReportComponent({ initialState }: HomeWrapperProps) {
@@ -236,10 +237,18 @@ const showCondicoesdeContorno = (
   }
   
   const BackwithData = () => {
-    navigate("/", { 
-      state: { result, vector_solutions, esps },
-      replace: true
-    });
+    if(isResultStateNonMultiplicative(result)){
+      navigate("/naomultiplicativo", { 
+        state: { result, vector_solutions, esps },
+        replace: true
+      });
+    }
+    else{
+      navigate("/multiplicativo", { 
+        state: { result, vector_solutions, esps },
+        replace: true
+      });
+    }
   };
   
   const Reconstrucition = () => {
@@ -254,7 +263,7 @@ const showCondicoesdeContorno = (
         <input type='button' value={"Voltar"} className='Continue-button' onClick={Back}/>
         <input type='button' value={"Voltar com dados anteriores"} className='Continue-button' onClick={BackwithData}/>
         <input type='button' value={"Baixar PDF"} className='Continue-button' onClick={exportPDF}/>
-        {(!result?.nogamma) && (
+        {(!result?.nogamma && isResultStateNonMultiplicative(result)) && (
           <input type='button' value={"Reconstrução analítica"} className='Continue-button' onClick={Reconstrucition}/>
         )}
       </div>
@@ -328,7 +337,7 @@ const showCondicoesdeContorno = (
               result?.numCelulasPorRegiao.join(' ') || ""
             )}
           </div>
-          {result && 'fonteNeutrons' in result && (
+          {isResultStateNonMultiplicative(result) && (
             <>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
                 {generateSection('Fonte de Nêutrons', (result as ResultStateNonMultiplicative).fonteNeutrons.join(' '))}
@@ -400,7 +409,7 @@ const showCondicoesdeContorno = (
                   Esquerda: <br></br> x = 0
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                  { result && 'incidenciaEsq' in result
+                  { isResultStateNonMultiplicative(result)
                     ? showCondicoesdeContorno(
                         result.contornoEsq,
                         '0',
@@ -432,7 +441,7 @@ const showCondicoesdeContorno = (
                   Direita: <br></br>x = {result?.comprimento || 0}
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
-                  { result && 'incidenciaDir' in result
+                  { isResultStateNonMultiplicative(result)
                     ? showCondicoesdeContorno(
                         result.contornoDir,
                         '0',

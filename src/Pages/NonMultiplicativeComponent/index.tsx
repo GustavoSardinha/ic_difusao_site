@@ -10,7 +10,7 @@ import { thomasSimetrico } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
-import ResultStateNonMultiplicative from '../../Interfaces/ResultStaeNonMultiplicative';
+import {ResultStateNonMultiplicative} from '../../Interfaces/ResultStateNonMultiplicative';
 import ArrayField from '../../Interfaces/ArrayField';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 
@@ -279,11 +279,10 @@ function NonMultiplicativeComponent({ initialState }: HomeWrapperProps) {
         </nav>
       </header>
       <article className="App-body">
-        <div className="App-container">
-          <img src={main_img} className="Main-img" alt="logo" />
+        <div className="App-Container">
           <div className="Title-container">
             <h1 className="App-title">
-              Difusão de Partículas Neutras Unidimensional
+              Meios não multiplicativos
             </h1>
           </div>
           <CheckBoxInput

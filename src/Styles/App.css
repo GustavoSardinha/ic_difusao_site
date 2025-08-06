@@ -47,6 +47,7 @@
 
 .Main-img{
   max-height: 30vh;
+  max-width: 30vh;
   pointer-events: none;
   padding: 1vh;
 }
@@ -55,11 +56,17 @@
   font-size: x-large;
 }
 .App-Container{
-  width: 100%;
+  width: 70%;
   display: flex;
   flex-direction: column;
   margin: 0 10vh;
 }
 .App-title{
   margin: 1vh 2vh;
+}
+@media (max-width: 600px) {
+  .App-Container{
+    width: 100%;
+  }
+
 }

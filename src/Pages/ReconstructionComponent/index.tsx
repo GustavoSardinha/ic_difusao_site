@@ -4,7 +4,7 @@ import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import ResultState from '../../Interfaces/ResultState';
 import ArrayFormInput from '../../Components/ArrayFormInput';
 import PlotComponent from '../../Components/AnaliticalGraphics/PlotComponent';
-import ResultStateNonMultiplicative from '../../Interfaces/ResultStaeNonMultiplicative';
+import {ResultStateNonMultiplicative} from '../../Interfaces/ResultStateNonMultiplicative';
 
 function ReconstructionComponent({initialState}: HomeWrapperProps){
   const [result, setResult] = useState<ResultStateNonMultiplicative | null>((initialState?.result as ResultStateNonMultiplicative) || null);

@@ -1,6 +1,6 @@
 import ResultState from "../ResultState";
 
-interface ResultStateMultiplicative extends ResultState{
+export interface ResultStateMultiplicative extends ResultState{
   choquesMacroscopicosAbs: number[];
   choquesMacroscopicosFis: number[];
   noNi: boolean;
@@ -13,4 +13,6 @@ interface ResultStateMultiplicative extends ResultState{
   solutions: number[];
 }
 
-export default ResultStateMultiplicative;
+export function isResultStateMultiplicative(obj: any): obj is ResultStateMultiplicative {
+  return obj && typeof obj === 'object' && 'choquesMacroscopicosFis' in obj;
+}
