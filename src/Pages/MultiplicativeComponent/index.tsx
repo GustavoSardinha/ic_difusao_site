@@ -86,7 +86,8 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
 
   const arrayFields: ArrayField[] = [
     {
-      key: 'mapeamento',
+      key
+      : 'mapeamento',
       label: 'Mapeamento:',
       placeholder: 'Digite os índices do mapeamento.',
       msgAlert:
@@ -249,26 +250,27 @@ const generateVectors = () => {
       
   vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
   let numPassos = 0;
-   while((desvioRelativo(keff, keffAnt) > Number(Lkeff)) && (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))){
+   while((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))){
     const vectorFonte: number[] = [];
     const s: number[] = [];
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const idx = mapeamento[regioes] - 1;
-      const D = coeficientesDifusao[idx];
-      const Σa = choquesMacroscopicosAbs[idx];
       const Σf = choquesMacroscopicosFis[idx];
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
 
       for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
-        s.push( (niValor/keff) * ((Σf * h) / 2) * (solResult[j] ?? 1) );
+        s.push( (niValor/keff) * ((Σf * h) / 2) );
       }
     }
-    vectorFonte.push(s[0]);
+    vectorFonte.push(s[0]* (solResult[0] ?? 1));
     for (let i = 1; i < nm; i++) {
-      vectorFonte.push(s[i] + s[i - 1]);
+      vectorFonte.push((s[i] + s[i - 1]) * (solResult[i] ?? 1));
     }
-    vectorFonte.push(s[nm - 1]);
+    vectorFonte.push(s[nm - 1]* (solResult[nm - 1] ?? 1));
     keffAnt = keff;
+    console.log(vectorA);
+    console.log(vectorB);
+    console.log(vectorFonte);
     solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
     let somaAtual = 0;
     let somaAnt = 0;
@@ -434,7 +436,7 @@ catch (e) {
             />
           )}
           <FormInput
-            label="Passo da malha de discretização no tabela:"
+            label="Passo da malha de discretização na tabela:"
             placeholder="Informe o passo da tabela"
             onChange={(value: string) => setStepTable(value)}
             value={stepTable}

@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import main_img from '../../img/logo_uerj.png';
-import logo from '../../img/atom.png';
 import '../../Styles/Home/index.css'
 
 function HomeComponent() {
@@ -8,23 +7,18 @@ function HomeComponent() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <nav>
-          <img src={logo} className="App-logo" alt="logo" />
-        </nav>
-      </header>
-      <article className="App-body">
+      <article className="App-Body">
         <div className="App-container">
           <img src={main_img} className="Main-img" alt="logo" />
           <div className="Title-container">
             
-            <h1 className="App-title">
+            <h1 className="App-Title">
               Difusão Unidimensional de Partículas Neutras
             </h1>
           </div>
           <section className="cards">
             <div className="card" onClick={() => navigate('/naomultiplicativo')}>
-              <h3>Meios Não Multiplicativos</h3>
+              <h3>Meios não Multiplicativos</h3>
               <p>Estuda a difusão sem fonte multiplicativa.</p>
             </div>
             <div className="card" onClick={() => navigate('/multiplicativo')}>

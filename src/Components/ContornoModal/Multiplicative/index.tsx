@@ -88,11 +88,11 @@ function ContornoModal(props: ContornoModalProps) {
           )}
           {(props.criterioParada) && (
             <div>
-              <p className="Subtitle">Número fixo de passos</p>
+              <p className="Subtitle">Número fixo de iterações</p>
               <FormInput
                 disabled={false}
                 label=""
-                placeholder={`Informe o número fixo de passos:`}
+                placeholder={`Informe o número fixo de iterações:`}
                 onChange={(value) => props.setPassos(Number(value))}
                 value={String(props.passos)}
               ></FormInput>

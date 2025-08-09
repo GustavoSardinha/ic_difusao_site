@@ -330,7 +330,7 @@ function NonMultiplicativeComponent({ initialState }: HomeWrapperProps) {
             />
           )}
           <FormInput
-            label="Passo da malha de discretização no tabela:"
+            label="Passo da malha de discretização na tabela:"
             placeholder="Informe o passo da tabela"
             onChange={(value: string) => setStepTable(value)}
             value={stepTable}
