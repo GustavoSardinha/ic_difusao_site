@@ -1,21 +1,22 @@
 {
   "files": {
-    "main.css": "/ic_difusao_site/static/css/main.511a6ea0.css",
-    "main.js": "/ic_difusao_site/static/js/main.f6687271.js",
+    "main.css": "/ic_difusao_site/static/css/main.fe9a4980.css",
+    "main.js": "/ic_difusao_site/static/js/main.5904b27f.js",
     "static/js/453.e58cd836.chunk.js": "/ic_difusao_site/static/js/453.e58cd836.chunk.js",
     "static/media/fundo_desktop.png": "/ic_difusao_site/static/media/fundo_desktop.da084a4e5e5713886db0.png",
     "static/media/fundo.png": "/ic_difusao_site/static/media/fundo.71262332d81b93fc2dfb.png",
     "static/media/logo_uerj.png": "/ic_difusao_site/static/media/logo_uerj.4a1787df5c1ddd1a1d25.png",
     "static/media/alert.png": "/ic_difusao_site/static/media/alert.eafa5ac728b47ade6d79.png",
+    "static/media/logomarca-uerj.png": "/ic_difusao_site/static/media/logomarca-uerj.c507510cb201ffa1c9b1.png",
     "static/media/atom.png": "/ic_difusao_site/static/media/atom.8e72605820a2e6cbb6b5.png",
     "static/media/error.png": "/ic_difusao_site/static/media/error.7f8fc3b751bda0faf017.png",
     "index.html": "/ic_difusao_site/index.html",
-    "main.511a6ea0.css.map": "/ic_difusao_site/static/css/main.511a6ea0.css.map",
-    "main.f6687271.js.map": "/ic_difusao_site/static/js/main.f6687271.js.map",
+    "main.fe9a4980.css.map": "/ic_difusao_site/static/css/main.fe9a4980.css.map",
+    "main.5904b27f.js.map": "/ic_difusao_site/static/js/main.5904b27f.js.map",
     "453.e58cd836.chunk.js.map": "/ic_difusao_site/static/js/453.e58cd836.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.511a6ea0.css",
-    "static/js/main.f6687271.js"
+    "static/css/main.fe9a4980.css",
+    "static/js/main.5904b27f.js"
   ]
 }
