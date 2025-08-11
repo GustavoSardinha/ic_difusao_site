@@ -5,7 +5,7 @@ import ResultState from '../../Interfaces/ResultState';
 import '../../Styles/App.css';
 import api from '../../Services/API/quickchart';
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
-import main_img from '../../img/logo_uerj.png';
+import main_img from '../../img/logomarca-uerj.png'
 import {ResultStateNonMultiplicative, isResultStateNonMultiplicative} from '../../Interfaces/ResultStateNonMultiplicative';
 import {ResultStateMultiplicative, isResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
 

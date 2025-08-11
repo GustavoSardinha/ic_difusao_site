@@ -8,45 +8,55 @@
     border: none;
     transition: box-shadow 0.3s ease;
     font-size: medium;
-  }
+    flex: 1; /* ocupa o espaço restante */
+    min-width: 300px; /* largura mínima para não encolher demais */
+}
   
-  .Form-Input:hover {
+.Form-Input:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-  }
-  .Input-container{
+}
+
+.Input-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: start;
     margin: 0 2vh;
-  }
-  .Input-label{
+}
+
+.Input-label {
     font-size: smaller;
-  }
-  .Input-line{
+}
+
+.Input-line {
     width: 100%;           
     box-sizing: border-box; 
     display: flex;
     flex-direction: row;
-  }
-  .Doubt-button{
+    align-items: center;
+}
+
+.Doubt-button {
+    flex-shrink: 0; /* impede encolher */
     border-radius: 50%;
-    width: 5vh;
-    height: 5vh;
+    width: 40px; /* tamanho fixo */
+    height: 40px;
     border: none;
     color: white;
     background-color: #007dc0;
-    margin: 0 0 0 2vh;
+    margin-left: 10px;
     font-weight: bold;
     font-size: large;
-    font-family:'Times New Roman', Times, serif
-  }
-  .Doubt-button:hover{
+    font-family: 'Times New Roman', Times, serif;
+}
+
+.Doubt-button:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
     background-color: #015b8bd7;
     cursor: pointer;
-  }
-  .Continue-button{
+}
+
+.Continue-button {
     background-color: #007dc0;
     color: white;
     border: none;
@@ -57,9 +67,10 @@
     border-radius: 1vh;
     font-size: large;
     font-weight: bold;
-  }
-  .Continue-button:hover{
+}
+
+.Continue-button:hover {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
     background-color: #015b8bd7;
     cursor: pointer;
-  }
+}
