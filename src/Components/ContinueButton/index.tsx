@@ -3,22 +3,22 @@ import Modal from "../Modal";
 import ErrorImg from "../../img/icons/error.png";
 
 interface ContinueButtonProps {
-  onClick: () => void;
+  onClick: (onError: (err: Error) => void) => void;
   err: Error | null; 
 }
 
 function ContinueButton(props: ContinueButtonProps) {
   const [showModal, setShowModal] = useState(false);
 
-  function handleClick() {
-    props.onClick();
-
-    if (props.err != null) {
+function handleClick() {
+  props.onClick((err: Error) => {
+    if (err != null) {
       setShowModal(true);
     } else {
       setShowModal(false);
     }
-  }
+  });
+}
 
   return (
     <div>

@@ -46,9 +46,6 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const [Lfluxo, setfluxo] = useState<string>(
     (initialState?.result as ResultStateMultiplicative)?.Lfluxo ?? 1e-6
   );
-  const [solutions, setSolutions] = useState<number[]>(
-    (initialState?.result as ResultStateMultiplicative)?.solutions ?? []
-  );
 
   const [filterPoint, setFilterPoint] = useState<string>(initialState?.result?.filterPoint?.toString() || "0");
   const [err, setErr] = useState<Error | null>(null);
@@ -155,7 +152,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     return 0;
   }
   
-  const onSubmit = () => {
+  const onSubmit = (onError: (err: Error) => void) => {
     try {
       const newResult = runAll({
         numRegioes,
@@ -188,6 +185,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       setCCActive(true);
     } catch (err) {
       setErr(err as Error);
+      onError(err as Error);
     }
   };
 const generateVectors = () => {
@@ -285,7 +283,6 @@ const generateVectors = () => {
     }
     keff = keffAnt*(somaAtual/somaAnt);
     keffs.push(keff);
-    setSolutions(solu);
     numPassos++;
     if(criterioParada)
       if(numPassos >= passos)
@@ -325,7 +322,7 @@ catch (e) {
   const solveProblem = async () => {
     setValidated(false);
     const {solu, newEsps, keffs} = generateVectors();
-    console.log(solutions);
+
     console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
     navigate("/relatorio", { 

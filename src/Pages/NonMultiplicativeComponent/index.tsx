@@ -136,7 +136,7 @@ function NonMultiplicativeComponent({ initialState }: HomeWrapperProps) {
     return 0;
   }
   
-  const onSubmit = () => {
+  const onSubmit = (onError: (err: Error) => void) => {
     try {
       const newResult = runAll({
         numRegioes,
@@ -167,6 +167,7 @@ function NonMultiplicativeComponent({ initialState }: HomeWrapperProps) {
       setCCActive(true);
     } catch (err) {
       setErr(err as Error);
+      onError(err as Error);
     }
   };
   
