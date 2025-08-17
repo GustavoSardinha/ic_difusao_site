@@ -29,3 +29,10 @@ export function thomasSimetrico(diag, off, rhs) {
 export function desvioRelativo(value, valueAnt){
     return Math.abs(value - valueAnt)/value;
 }
+export function integralNumerica(solucoes, espessura, inicio, fim){
+  let resultado = 0;
+  for(let i = inicio; i < fim; i++){
+    resultado += solucoes[i]*espessura;
+  }
+  return resultado;
+}

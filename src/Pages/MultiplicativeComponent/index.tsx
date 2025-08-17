@@ -6,7 +6,7 @@ import ArrayFormInput from '../../Components/ArrayFormInput';
 import { useValidation } from '../../Hooks/useValidationMultiplicative';
 import ContinueButton from '../../Components/ContinueButton';
 import ContornoModal from '../../Components/ContornoModal/Multiplicative';
-import { thomasSimetrico, desvioRelativo } from '../../Services/numericalMath';
+import { thomasSimetrico, desvioRelativo, integralNumerica } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
@@ -248,7 +248,7 @@ const generateVectors = () => {
       
   vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
   let numPassos = 0;
-   while((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))){
+   while(((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))) || (numPassos <= passos)){
     const vectorFonte: number[] = [];
     const s: number[] = [];
     for (let regioes = 0; regioes < numRegioes; regioes++) {
@@ -295,8 +295,45 @@ const generateVectors = () => {
       pos += esp;
     });
     newEsps.push(comprimento);
-
-  return { solu, newEsps, keffs };
+  let potencialFicitio = 0;  
+  let indice = 0;
+  let potenciais = [];
+  for (let regioes = 0; regioes < numRegioes; regioes++) {
+    const idx = mapeamento[regioes] - 1;
+    const Σf = choquesMacroscopicosFis[idx];
+    const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+    console.log(indice);
+    potencialFicitio += Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes]);
+    indice += numCelulasPorRegiao[regioes];
+  }  
+  console.log(potencialFicitio);
+  const newSolu: number[] = [];
+  if(solu != null){
+  const pot = Number(potencia) || 1; 
+    if (potencialFicitio === 0) {
+      console.warn("potencialFicitio === 0 -> mantendo solução sem reescalonamento.");
+    } else {
+      const factor = pot / potencialFicitio;
+      for (let i = 0; i < solu.length; i++) {
+        newSolu.push(solu[i] * factor);
+      }
+      solu = newSolu; 
+    }
+    let potencialNominal= 0;  
+    let indice = 0;
+    for (let regioes = 0; regioes < numRegioes; regioes++) {
+      const idx = mapeamento[regioes] - 1;
+      const Σf = choquesMacroscopicosFis[idx];
+      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+      console.log(indice);
+      let p = Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes]);
+      potencialNominal += p;
+      potenciais.push(p);
+      indice += numCelulasPorRegiao[regioes];
+    }  
+    console.log(potencialNominal);
+  }
+  return { solu, newEsps, keffs, potenciais };
 };
 const valitadionContorno = async () => {
   try{
@@ -321,8 +358,8 @@ catch (e) {
 }
   const solveProblem = async () => {
     setValidated(false);
-    const {solu, newEsps, keffs} = generateVectors();
-
+    const {solu, newEsps, keffs, potenciais} = generateVectors();
+    console.log(potenciais);
     console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
     navigate("/relatorio", { 
@@ -339,6 +376,7 @@ catch (e) {
         vector_solutions: solu,
         esps: newEsps,
         vector_keffs: keffs,
+        vector_pot: potenciais
       } 
     });
   };
@@ -445,7 +483,7 @@ catch (e) {
           />
           {((advancedOptions) && (
             <FormInput
-              label="Ponto na malha de discretização (cm):"
+              label="Ponto na malha de discretização:"
               placeholder="Digite o ponto a filtrar na malha de discretização."
               onChange={(value: string) => setFilterPoint(value)}
               value={filterPoint}

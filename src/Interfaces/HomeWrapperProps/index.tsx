@@ -4,6 +4,8 @@ interface HomeWrapperProps {
   initialState?: {
     result?: ResultState;
     vector_solutions?: number[];
+    vector_keffs?: number[];
+    vector_pot?: number[];
     esps?: number[];
   };
 }

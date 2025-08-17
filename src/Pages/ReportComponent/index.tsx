@@ -14,6 +14,8 @@ import {ResultStateMultiplicative, isResultStateMultiplicative} from '../../Inte
 function ReportComponent({ initialState }: HomeWrapperProps) {
   const [result, setResult] = useState<ResultState | null>(initialState?.result || null);
   const [vector_solutions, setVector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
+  const [vector_keffs, setVector_keffs] = useState<number[]>(initialState?.vector_keffs || []);
+  const [vector_pot, setVector_pot] = useState<number[]>(initialState?.vector_pot || []);
   const [esps, setEsps] = useState<number[]>(initialState?.esps || []);
   const [graph, setGraph] = useState<string>("");
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -230,7 +232,76 @@ const showCondicoesdeContorno = (
       </table>
     `;
   };
+  const createKeffTable = (): string => {
+    if (!vector_keffs || vector_keffs.length === 0 || !result) return "";
   
+    const dataStep = (array: number[], step: number) => {
+      return array
+        .map((value, index) => ({ index, value }))
+        .filter((_, i) => i % step === 0 || i === array.length - 1);
+    };
+  
+    const data = dataStep(vector_keffs, 1);
+  
+    return `
+      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela do Fator de Multiplicação Efetivo</h3>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+        <thead>
+          <tr>
+            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
+            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Keff</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((info) => `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
+              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  };
+  const createPotTable = (): string => {
+    if (!vector_pot || vector_pot.length === 0 || !result) return "";
+  
+    const dataStep = (array: number[], step: number) => {
+      return array
+        .map((value, index) => ({ index, value }))
+        .filter((_, i) => i % step === 0 || i === array.length - 1);
+    };
+  
+    const data = dataStep(vector_pot, 1);
+  
+    return `
+      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela de Densidade de Potências</h3>
+      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+        <thead>
+          <tr>
+            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Região</th>
+            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Densidade Potência</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((info) => `
+            <tr>
+              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
+              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  };
+  const PotenciaTotal = () => {
+    if (!vector_pot || vector_pot.length === 0 || !result) return 0;
+    let potTotal = 0;
+    for(let pot of vector_pot){
+      potTotal += pot;
+    }
+    return potTotal;
+  }
   const Back = () => {
     navigate("/");
     window.location.reload();
@@ -477,6 +548,33 @@ const showCondicoesdeContorno = (
               }}
             />
           )}
+          {isResultStateMultiplicative(result) &&(            
+            <div
+            dangerouslySetInnerHTML={{
+              __html: createPotTable()
+            }}
+            />)
+          }
+          {isResultStateMultiplicative(result) && (            
+            <div
+              style={{
+                fontSize: "25px",
+                color: "#0056b3",
+                marginBottom: "10px",
+                textAlign: "center",
+              }}
+            >
+              Potência Total: {PotenciaTotal()}
+            </div>
+          )}
+          {isResultStateMultiplicative(result) && (
+            <div
+            dangerouslySetInnerHTML={{
+              __html: createKeffTable()
+            }}
+            />
+          )
+          }
           {(result?.advancedOptions) && (
             <div
               dangerouslySetInnerHTML={{
