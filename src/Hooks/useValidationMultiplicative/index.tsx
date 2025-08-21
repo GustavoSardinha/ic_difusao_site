@@ -162,10 +162,12 @@ export function useValidation() {
         throw new Error(`O valor de *Potência gerada pelo reator* deve ser inteiro e maior que 0.`);
     }
 
-    const e = parseInt(energia, 10);
-    if (isNaN(e) || e <= 0)
-      throw new Error(`O valor de *Energia liberada por fissão* deve ser inteiro e maior que 0.`);
-
+    let e = 200;
+    if (energia !== "") {
+      e = parseInt(energia, 10);
+      if (isNaN(e) || e <= 0)
+        throw new Error(`O valor de *Energia liberada por fissão* deve ser inteiro e maior que 0.`);
+    }
     const totalLength = sum(espArr);
 
     validateSteps(stepGraphic, "Passo no Gráfico", sum(cellsArr), "Número de Células");

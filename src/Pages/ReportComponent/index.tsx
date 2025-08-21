@@ -420,7 +420,7 @@ const showCondicoesdeContorno = (
               </div>
             </>
           )}
-          {result && 'choquesMacroscopicosFis' in result && (
+          {isResultStateMultiplicative(result) && (
             <>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
                 {generateSection('Seções de Choque Macroscópicas de Absorção', (result as ResultStateMultiplicative).choquesMacroscopicosAbs.join(' '))}
@@ -439,6 +439,14 @@ const showCondicoesdeContorno = (
               calcEspessurasPorRegiao().join(' ') || ""
             )}
           </div>
+          {isResultStateMultiplicative(result) && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+                {generateSection('Potência gerada pelo reator', (result as ResultStateMultiplicative).potencia)}
+                {generateSection('Energia liberada por fissão', (result as ResultStateMultiplicative).energia)}
+              </div>
+            </>
+          )}
 
           <div style={{ padding: 20 }}>
             <h2

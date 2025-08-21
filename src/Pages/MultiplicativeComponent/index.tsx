@@ -306,6 +306,7 @@ const generateVectors = () => {
     potencialFicitio += Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes]);
     indice += numCelulasPorRegiao[regioes];
   }  
+  potencialFicitio*= Number(energia)*1.6E-13;
   console.log(potencialFicitio);
   const newSolu: number[] = [];
   if(solu != null){
@@ -326,7 +327,7 @@ const generateVectors = () => {
       const Σf = choquesMacroscopicosFis[idx];
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
       console.log(indice);
-      let p = Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes]);
+      let p = Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes])*Number(energia)*1.6E-13;
       potencialNominal += p;
       potenciais.push(p);
       indice += numCelulasPorRegiao[regioes];
@@ -450,11 +451,13 @@ catch (e) {
             />
           </div>
           <div>
-            <FormInput
+            <FormInputWithAlert
               label="Energia liberada por fissão:"
               placeholder="Informe a energia em MeV"
               onChange={(value: string) => setEnergia(value)}
               value={energia}
+              msgAlert='Se esse campo for deixado em branco, assume-se uma energia de 200 MeV.'
+              exAlert=''
             />
           </div>
           <CheckBoxInput
