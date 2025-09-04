@@ -192,8 +192,8 @@ export function useValidation() {
       validateSteps(
         filterPoint,
         "Índice na malha de discretização",
-        sum(cellsArr),
-        "Número de Células"
+        sum(cellsArr) + 1,
+        "Número de Células + 1"
       );
     }
 

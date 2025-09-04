@@ -16,6 +16,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   const [vector_solutions, setVector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
   const [vector_keffs, setVector_keffs] = useState<number[]>(initialState?.vector_keffs || []);
   const [vector_pot, setVector_pot] = useState<number[]>(initialState?.vector_pot || []);
+  const [itfluxo, setItfluxo] = useState<number>(initialState?.itfluxo || 0);
   const [esps, setEsps] = useState<number[]>(initialState?.esps || []);
   const [graph, setGraph] = useState<string>("");
   const pdfRef = useRef<HTMLDivElement>(null);
@@ -572,7 +573,7 @@ const showCondicoesdeContorno = (
                 textAlign: "center",
               }}
             >
-              Potência Total: {PotenciaTotal()}
+              Potência Total: {(PotenciaTotal()).toFixed(2)} MW
             </div>
           )}
           {isResultStateMultiplicative(result) && (
@@ -583,6 +584,21 @@ const showCondicoesdeContorno = (
             />
           )
           }
+          {isResultStateMultiplicative(result) && (
+            <div className="convergence-box">
+              <p className="convergence-text">
+                O fator de multiplicação efetivo atingiu com{" "}
+                <span className="convergence-value">{vector_keffs.length}</span>{" "}
+                {vector_keffs.length === 1 ? "iteração" : "iterações"}
+              </p>
+              <p className="convergence-text">
+                O fluxo de partículas neutras atingiu com{" "}
+                <span className="convergence-value">{itfluxo}</span>{" "}
+                {itfluxo === 1 ? "iteração" : "iterações"}
+              </p>
+            </div>
+          )}
+
           {(result?.advancedOptions) && (
             <div
               dangerouslySetInnerHTML={{

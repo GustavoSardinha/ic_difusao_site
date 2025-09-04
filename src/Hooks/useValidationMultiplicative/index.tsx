@@ -161,12 +161,17 @@ export function useValidation() {
       if (isNaN(p) || p <= 0)
         throw new Error(`O valor de *Potência gerada pelo reator* deve ser inteiro e maior que 0.`);
     }
+    else{
+      p = 200;
+    }
 
     let e = 200;
     if (energia !== "") {
       e = parseInt(energia, 10);
       if (isNaN(e) || e <= 0)
         throw new Error(`O valor de *Energia liberada por fissão* deve ser inteiro e maior que 0.`);
+    } else{
+      e = 200;
     }
     const totalLength = sum(espArr);
 
@@ -174,7 +179,7 @@ export function useValidation() {
     validateSteps(stepTable, "Passo na Tabela", sum(cellsArr), "Número de Células");
 
     if (advancedOptions) {
-      validateSteps(filterPoint, "Índice na malha de discretização", sum(cellsArr), "Número de Células");
+      validateSteps(filterPoint, "Índice na malha de discretização", sum(cellsArr) + 1, "Número de Células + 1");
     }
 
     const result: RunAllResult = {

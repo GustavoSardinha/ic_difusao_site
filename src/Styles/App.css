@@ -90,6 +90,27 @@
 .App-title{
   margin: 1vh 2vh;
 }
+.convergence-box {
+  padding: 16px;
+  border-radius: 12px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
+}
+
+.convergence-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  margin: 6px 0;
+  text-align: center;
+}
+
+.convergence-value {
+  font-weight: bold;
+  color: #2a7ae4; /* Azul para destaque */
+}
+
 @media (max-width: 600px) {
   .App-Container{
     width: 100%;

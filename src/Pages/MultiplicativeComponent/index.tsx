@@ -14,6 +14,7 @@ import ArrayField from '../../Interfaces/ArrayField';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import {ResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
 import FormInputWithAlert from '../../Components/FormInputWithAlert';
+import { number } from 'framer-motion';
 
 
 function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
@@ -172,7 +173,10 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
         advancedOptions,
         filterPoint
       }) as ResultStateMultiplicative;
-
+      if(energia == "")
+        setEnergia("200");
+      if(potencia == "")
+        setPotencia("200");
       setResult({
         ...newResult,
         hasGrafic,
@@ -209,6 +213,7 @@ const generateVectors = () => {
   const vectorA: number[] = [];
   const vectorB: number[] = [];
   const xsx: number[] = [];
+  let itfluxo: number = 0;
   let nm = 0;
   let keff = 1;
   let keffAnt = 0;
@@ -249,6 +254,8 @@ const generateVectors = () => {
   vectorA.push(vectorB[nm - 1] + xsx[nm - 1] + Number(cond_right[1]));
   let numPassos = 0;
    while(((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo))) || (numPassos <= passos)){
+    if ((desvioRelativo(fluxoMedio, fluxoMedioAnt) >  Number(Lfluxo)))
+      itfluxo++;
     const vectorFonte: number[] = [];
     const s: number[] = [];
     for (let regioes = 0; regioes < numRegioes; regioes++) {
@@ -282,7 +289,9 @@ const generateVectors = () => {
       solResult[i] = solu[i];
     }
     keff = keffAnt*(somaAtual/somaAnt);
-    keffs.push(keff);
+    if((desvioRelativo(keff, keffAnt) > Number(Lkeff))){
+      keffs.push(keff);
+    }
     numPassos++;
     if(criterioParada)
       if(numPassos >= passos)
@@ -296,21 +305,26 @@ const generateVectors = () => {
     });
     newEsps.push(comprimento);
   let potencialFicitio = 0;  
-  let indice = 0;
   let potenciais = [];
+  let indice = 1;
+  let inicio = 0;
+  let fim = 0;
   for (let regioes = 0; regioes < numRegioes; regioes++) {
     const idx = mapeamento[regioes] - 1;
     const Σf = choquesMacroscopicosFis[idx];
     const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-    console.log(indice);
-    potencialFicitio += Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes]);
+    fim = indice + numCelulasPorRegiao[regioes];
+    console.log(inicio);
+    console.log(fim);
+    potencialFicitio += Σf*integralNumerica(solu, h, inicio, fim);
     indice += numCelulasPorRegiao[regioes];
-  }  
+    inicio = fim -1;
+  } 
   potencialFicitio*= Number(energia)*1.6E-13;
   console.log(potencialFicitio);
   const newSolu: number[] = [];
   if(solu != null){
-  const pot = Number(potencia) || 1; 
+  const pot = Number(potencia)*1000 || 1; 
     if (potencialFicitio === 0) {
       console.warn("potencialFicitio === 0 -> mantendo solução sem reescalonamento.");
     } else {
@@ -321,20 +335,25 @@ const generateVectors = () => {
       solu = newSolu; 
     }
     let potencialNominal= 0;  
-    let indice = 0;
+    let indice = 1;
+    let inicio = 0;
+    let fim = 0;
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const idx = mapeamento[regioes] - 1;
       const Σf = choquesMacroscopicosFis[idx];
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-      console.log(indice);
-      let p = Σf*integralNumerica(solu, h, indice, indice + numCelulasPorRegiao[regioes])*Number(energia)*1.6E-13;
+      fim = indice + numCelulasPorRegiao[regioes];
+      console.log(inicio);
+      console.log(fim);
+      let p = Σf*integralNumerica(solu, h, inicio, fim)*Number(energia)*1.6E-13/1000;
       potencialNominal += p;
       potenciais.push(p);
       indice += numCelulasPorRegiao[regioes];
+      inicio = fim -1;
     }  
     console.log(potencialNominal);
   }
-  return { solu, newEsps, keffs, potenciais };
+  return { solu, newEsps, keffs, potenciais, itfluxo };
 };
 const valitadionContorno = async () => {
   try{
@@ -359,7 +378,7 @@ catch (e) {
 }
   const solveProblem = async () => {
     setValidated(false);
-    const {solu, newEsps, keffs, potenciais} = generateVectors();
+    const {solu, newEsps, keffs, potenciais, itfluxo} = generateVectors();
     console.log(potenciais);
     console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -377,7 +396,8 @@ catch (e) {
         vector_solutions: solu,
         esps: newEsps,
         vector_keffs: keffs,
-        vector_pot: potenciais
+        vector_pot: potenciais,
+        itfluxo: itfluxo
       } 
     });
   };
