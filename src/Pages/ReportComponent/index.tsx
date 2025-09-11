@@ -107,19 +107,23 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
       return `<p>Erro ao gerar o gráfico</p>`;
     }
   };
-
-  const exportPDF = () => {
-    if (!pdfRef.current) return;
-    const element = pdfRef.current;
-    const opt = {
-      margin: 0.5,
-      filename: `difusao_particulas_${Date.now()}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: false }, 
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
-    html2pdf().set(opt).from(element).save();
-  }; 
+const exportPDF = () => {
+  if (!pdfRef.current) return;
+  const element = pdfRef.current;
+  const opt = {
+    margin: 0,
+    filename: `difusao_particulas_${Date.now()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, allowTaint: false },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+    pagebreak: {
+      mode: ['css', 'legacy'],
+      before: '.page-break',         
+      avoid: ['.avoid-break', 'table', '.convergence-box', 'img'] 
+    }
+  };
+  html2pdf().set(opt).from(element).save();
+};
   
 const showCondicoesdeContorno = (
   value: string,
@@ -202,99 +206,125 @@ const showCondicoesdeContorno = (
 
   const createFluxTable = (): string => {
     if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
-  
+
     const dataStep = (array: number[], step: number) => {
       return array
         .map((value, index) => ({ index, value }))
         .filter((_, i) => i % step === 0 || i === array.length - 1);
     };
-  
+
     const data = dataStep(vector_solutions, Number(result.stepTable));
-  
+
     return `
       <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela do Fluxo de Nêutrons</h3>
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+      <table class="pdf-table" style="width:100%; border-collapse: collapse;">
         <thead>
           <tr>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Posição (cm)</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Fluxo de Nêutrons</th>
+            <th style="padding:8px; text-align:center;">Índice</th>
+            <th style="padding:8px; text-align:center;">Posição (cm)</th>
+            <th style="padding:8px; text-align:center;">Fluxo de Nêutrons</th>
           </tr>
         </thead>
         <tbody>
           ${data.map((info) => `
             <tr>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${esps[info.index]?.toFixed(5) || 0}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+              <td style="padding:8px; text-align:center;">${info.index + 1}</td>
+              <td style="padding:8px; text-align:center;">${esps[info.index]?.toFixed(5) || 0}</td>
+              <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
     `;
   };
+
   const createKeffTable = (): string => {
     if (!vector_keffs || vector_keffs.length === 0 || !result) return "";
-  
-    const dataStep = (array: number[], step: number) => {
-      return array
-        .map((value, index) => ({ index, value }))
-        .filter((_, i) => i % step === 0 || i === array.length - 1);
+
+    // quantas linhas por sub-tabela (ajuste se necessário)
+    const linesPerPage = 28;
+
+    // cria array de { index, value } (mesma lógica do dataStep que você usa)
+    const data = vector_keffs.map((value, index) => ({ index, value }));
+
+    // função utilitária para chunk
+    const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+      const out: T[][] = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
     };
-  
-    const data = dataStep(vector_keffs, 1);
-  
-    return `
-      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela do Fator de Multiplicação Efetivo</h3>
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+
+    const chunks = chunkArray(data, linesPerPage);
+
+    // monta uma sub-tabela para cada chunk, adicionando page-break entre elas
+    return chunks.map((chunk, pageIndex) => `
+      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">
+        Tabela do Fator de Multiplicação Efetivo
+      </h3>
+
+      <table class="pdf-table" style="width:100%; border-collapse: collapse; margin-bottom: 8mm;">
         <thead>
           <tr>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Índice</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Keff</th>
+            <th style="padding:8px; text-align:center;">Índice</th>
+            <th style="padding:8px; text-align:center;">Keff</th>
           </tr>
         </thead>
         <tbody>
-          ${data.map((info) => `
+          ${chunk.map(info => `
             <tr>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+              <td style="padding:8px; text-align:center;">${info.index + 1}</td>
+              <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
-    `;
+
+      ${pageIndex < chunks.length - 1 ? '<div class="page-break" style="page-break-after: always; height:0"></div>' : ''}
+    `).join('');
   };
+
   const createPotTable = (): string => {
     if (!vector_pot || vector_pot.length === 0 || !result) return "";
-  
-    const dataStep = (array: number[], step: number) => {
-      return array
-        .map((value, index) => ({ index, value }))
-        .filter((_, i) => i % step === 0 || i === array.length - 1);
+
+    // ajuste este valor conforme seu layout (font-size / padding)
+    const linesPerPage = 28;
+
+    const data = vector_pot.map((value, index) => ({ index, value }));
+
+    const chunkArray = <T,>(arr: T[], size: number): T[][] => {
+      const out: T[][] = [];
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+      return out;
     };
-  
-    const data = dataStep(vector_pot, 1);
-  
-    return `
-      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Tabela de Densidade de Potências</h3>
-      <table style="width: 100%; border-collapse: collapse; border: 1px solid #ccc;">
+
+    const chunks = chunkArray(data, linesPerPage);
+
+    return chunks.map((chunk, pageIndex) => `
+      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">
+        Tabela de Densidade de Potências
+      </h3>
+
+      <table class="pdf-table" style="width:100%; border-collapse: collapse; margin-bottom: 8mm;">
         <thead>
           <tr>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Região</th>
-            <th style="padding: 8px; background-color: #f2f2f2; text-align: center;">Densidade Potência</th>
+            <th style="padding:8px; text-align:center;">Região</th>
+            <th style="padding:8px; text-align:center;">Densidade Potência</th>
           </tr>
         </thead>
         <tbody>
-          ${data.map((info) => `
+          ${chunk.map(info => `
             <tr>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.index + 1}</td>
-              <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${info.value.toExponential(5)}</td>
+              <td style="padding:8px; text-align:center;">${info.index + 1}</td>
+              <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
-    `;
+
+      ${pageIndex < chunks.length - 1 ? '<div class="page-break" style="page-break-after: always; height:0"></div>' : ''}
+    `).join('');
   };
+
   const PotenciaTotal = () => {
     if (!vector_pot || vector_pot.length === 0 || !result) return 0;
     let potTotal = 0;
@@ -448,7 +478,7 @@ const showCondicoesdeContorno = (
               </div>
             </>
           )}
-
+          <div style={{ pageBreakBefore: 'always' }} />
           <div style={{ padding: 20 }}>
             <h2
               style={{
@@ -587,12 +617,12 @@ const showCondicoesdeContorno = (
           {isResultStateMultiplicative(result) && (
             <div className="convergence-box">
               <p className="convergence-text">
-                O fator de multiplicação efetivo atingiu com{" "}
+                O fator de multiplicação efetivo atingiu o critério de parada com{" "}
                 <span className="convergence-value">{vector_keffs.length}</span>{" "}
                 {vector_keffs.length === 1 ? "iteração" : "iterações"}
               </p>
               <p className="convergence-text">
-                O fluxo de partículas neutras atingiu com{" "}
+                O fluxo escalar de partículas neutras atingiu o critério de parada com{" "}
                 <span className="convergence-value">{itfluxo}</span>{" "}
                 {itfluxo === 1 ? "iteração" : "iterações"}
               </p>
@@ -611,6 +641,7 @@ const showCondicoesdeContorno = (
               __html: createFluxTable()
             }}
           />
+          <div style={{padding: 20}} />
         </div>
       </div>
     </div>
