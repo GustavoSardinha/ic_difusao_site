@@ -238,50 +238,36 @@ const showCondicoesdeContorno = (
     `;
   };
 
-  const createKeffTable = (): string => {
-    if (!vector_keffs || vector_keffs.length === 0 || !result) return "";
+const createKeffTable = (): string => {
+  if (!vector_keffs || vector_keffs.length === 0 || !result) return "";
 
-    // quantas linhas por sub-tabela (ajuste se necessário)
-    const linesPerPage = 28;
+  // cria array de { index, value }
+  const data = vector_keffs.map((value, index) => ({ index, value }));
 
-    // cria array de { index, value } (mesma lógica do dataStep que você usa)
-    const data = vector_keffs.map((value, index) => ({ index, value }));
+  return `
+    <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">
+      Tabela do Fator de Multiplicação Efetivo
+    </h3>
 
-    // função utilitária para chunk
-    const chunkArray = <T,>(arr: T[], size: number): T[][] => {
-      const out: T[][] = [];
-      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-      return out;
-    };
-
-    const chunks = chunkArray(data, linesPerPage);
-
-    // monta uma sub-tabela para cada chunk, adicionando page-break entre elas
-    return chunks.map((chunk, pageIndex) => `
-      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">
-        Tabela do Fator de Multiplicação Efetivo
-      </h3>
-
-      <table class="pdf-table" style="width:100%; border-collapse: collapse; margin-bottom: 8mm;">
-        <thead>
+    <table class="pdf-table" style="width:100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="padding:8px; text-align:center;">Índice</th>
+          <th style="padding:8px; text-align:center;">Keff</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(info => `
           <tr>
-            <th style="padding:8px; text-align:center;">Índice</th>
-            <th style="padding:8px; text-align:center;">Keff</th>
+            <td style="padding:8px; text-align:center;">${info.index + 1}</td>
+            <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${chunk.map(info => `
-            <tr>
-              <td style="padding:8px; text-align:center;">${info.index + 1}</td>
-              <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+};
 
-      ${pageIndex < chunks.length - 1 ? '<div class="page-break" style="page-break-after: always; height:0"></div>' : ''}
-    `).join('');
-  };
 
   const createPotTable = (): string => {
     if (!vector_pot || vector_pot.length === 0 || !result) return "";
