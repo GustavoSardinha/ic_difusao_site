@@ -44,69 +44,70 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   };
 
   const createGraphics = async (): Promise<string> => {
-    if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
-  
-    try {
-      const dataStep = (array: number[], step: number) => {
-        return array
-          .map((value, index) => ({ index, value }))
-          .filter((_, i) => i % step === 0 || i === array.length - 1);
-      };
-  
-      const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
-  
-      const data = stepData.map((info) => ({
-        x: esps[info.index].toFixed(5),
-        y: info.value.toFixed(5),
-      }));
-  
-      const response = await api.post(
-        "chart",
-        {
-          version: "2",
-          backgroundColor: "transparent",
-          width: 500,
-          height: 300,
-          devicePixelRatio: 1.0,
-          format: "png",
-          chart: {
-            type: "scatter",
-            data: {
-              datasets: [
-                {
-                  label: "Ponto da malha de discretização",
-                  borderColor: "rgb(255, 99, 132, 0.0)",
-                  backgroundColor: "rgba(255, 99, 132, 0.8)",
-                  pointRadius: 1.5,
-                  data: data,
-                },
-              ],
-            },
-            options: {
-              title: {
-                display: true,
-                text: "Fluxo de Nêutrons X Posição",
+  if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+
+  try {
+    const dataStep = (array: number[], step: number) =>
+      array
+        .map((value, index) => ({ index, value }))
+        .filter((_, i) => i % step === 0 || i === array.length - 1);
+
+    const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
+
+    // aqui já convertemos para notação científica
+    const data = stepData.map((info) => ({
+      x: Number(esps[info.index]).toExponential(2),
+      y: Number(info.value).toExponential(2),
+    }));
+
+    const response = await api.post(
+      "chart",
+      {
+        version: "4",
+        backgroundColor: "transparent",
+        width: 500,
+        height: 300,
+        devicePixelRatio: 1.0,
+        format: "png",
+        chart: {
+          type: "scatter",
+          data: {
+            datasets: [
+              {
+                label: "Ponto da malha de discretização",
+                borderColor: "rgba(255, 99, 132, 0.0)",
+                backgroundColor: "rgba(255, 99, 132, 0.8)",
+                pointRadius: 1.5,
+                data: data,
               },
+            ],
+          },
+          options: {
+            title: {
+              display: true,
+              text: "Fluxo de Nêutrons X Posição",
             },
           },
         },
-        { responseType: "arraybuffer" }
-      );
-  
-      const bytes = new Uint8Array(response.data);
-      const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
-      const base64ImageString = btoa(binary);
-      const srcValue = "data:image/png;base64," + base64ImageString;
-  
-      return `
-        <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
-        <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
-      `;
-    } catch (error) {
-      console.error("Erro ao gerar o gráfico:", error);
-      return `<p>Erro ao gerar o gráfico</p>`;
-    }
-  };
+      },
+      { responseType: "arraybuffer" }
+    );
+
+    const bytes = new Uint8Array(response.data);
+    const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
+    const base64ImageString = btoa(binary);
+    const srcValue = "data:image/png;base64," + base64ImageString;
+
+    return `
+      <h3 style="font-size: 25px; color: #0056b3; margin-bottom: 10px; text-align: center;">Gráfico do Fluxo de Nêutrons</h3>
+      <img src="${srcValue}" alt="Chart Image" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
+    `;
+  } catch (error: any) {
+    console.error("Erro ao gerar o gráfico:", error);
+    return `<p>Erro ao gerar o gráfico</p>`;
+  }
+};
+
 const exportPDF = () => {
   if (!pdfRef.current) return;
   const element = pdfRef.current;
