@@ -54,7 +54,6 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
 
     const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
 
-    // aqui já convertemos para notação científica
     const data = stepData.map((info) => ({
       x: Number(esps[info.index]).toExponential(2),
       y: Number(info.value).toExponential(2),

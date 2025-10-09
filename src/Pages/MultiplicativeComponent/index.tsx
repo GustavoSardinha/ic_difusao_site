@@ -209,7 +209,6 @@ const generateVectors = () => {
     noNi,
     solutions: solResult = [],   
   } = result;
-
   const vectorA: number[] = [];
   const vectorB: number[] = [];
   const xsx: number[] = [];
@@ -218,7 +217,7 @@ const generateVectors = () => {
   let keff = 1;
   let keffAnt = 0;
   let sol_ant = 0;
-
+  if(noGamma){
   const cond_left = contornoEsq.split(";").map(Number);
   const cond_right = contornoDir.split(";").map(Number);
   const espPorReg: number[] = [];
@@ -354,6 +353,67 @@ const generateVectors = () => {
     console.log(potencialNominal);
   }
   return { solu, newEsps, keffs, potenciais, itfluxo };
+  }
+  else{
+    for(let i = 0; i < nm + 1; i++){
+    solResult.push(1);
+  }
+    const vectorA: number[] = [];
+    const vectorB: number[] = [];
+    const vectorFonte: number[] = [];
+    const s: number[] = [];
+    const espPorReg: number[] = [];
+    let cond_left = contornoEsq.split(";").map(Number);
+    let cond_right = contornoDir.split(";").map(Number);
+    const keff = 1;
+
+    for (let regioes = 0; regioes < numRegioes; regioes++) {
+      const indice_mapeamento = mapeamento[regioes] - 1;
+      const coef_difusao = coeficientesDifusao[indice_mapeamento];
+      const coef_choque_macro = choquesMacroscopicosAbs[indice_mapeamento];
+      const Σf = choquesMacroscopicosFis[indice_mapeamento];
+      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+      let gamma = 1;
+      const ni = 1;
+      if(coef_choque_macro - Ni*Σf/keff > 0){
+        const xL = Math.sqrt(coef_difusao/(coef_choque_macro - ni*Σf/keff));
+        const z = h / (2 * xL);
+        gamma = Math.tanh(z)/z;
+      }
+      else{
+        const xL = Math.sqrt(coef_difusao/(ni*Σf/keff - coef_choque_macro));
+        console.log(xL);
+        const z = h / (2 * xL);
+        console.log(z);
+        gamma = Math.tan(z)/z;
+      }
+      console.log('Gama: ' + gamma);
+      for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
+        nm++;
+        espPorReg.push(h);
+        vectorB.push((coef_difusao/(gamma*h)) - coef_choque_macro * h * gamma/ 4);
+        xsx.push(coef_choque_macro * h * gamma/ 4);
+        s.push( ni* Σf/keff * h * gamma / 2);                        
+      }
+    }
+    
+    espPorReg.push(comprimento);
+
+    vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
+    vectorFonte.push(s[0] + Number(cond_left[0]));
+    
+    for (let i = 1; i < nm; i++) {
+      vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
+      vectorFonte.push(s[i] + s[i - 1]);
+    }
+    
+    vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
+    vectorFonte.push(s[nm - 1] +  Number(cond_right[0]));
+    console.log("vetor a: " + vectorA);
+    console.log("vetor b: " + vectorB);
+    console.log("vetor s: " + vectorFonte);
+  }
+  return {};
 };
 const valitadionContorno = async () => {
   try{
