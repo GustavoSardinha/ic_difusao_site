@@ -355,9 +355,6 @@ const generateVectors = () => {
   return { solu, newEsps, keffs, potenciais, itfluxo };
   }
   else{
-    for(let i = 0; i < nm + 1; i++){
-    solResult.push(1);
-  }
     const vectorA: number[] = [];
     const vectorB: number[] = [];
     const vectorFonte: number[] = [];
@@ -375,7 +372,7 @@ const generateVectors = () => {
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
       let gamma = 1;
       const ni = 1;
-      if(coef_choque_macro - Ni*Σf/keff > 0){
+      if(coef_choque_macro - ni*Σf/keff > 0){
         const xL = Math.sqrt(coef_difusao/(coef_choque_macro - ni*Σf/keff));
         const z = h / (2 * xL);
         gamma = Math.tanh(z)/z;
@@ -396,7 +393,11 @@ const generateVectors = () => {
         s.push( ni* Σf/keff * h * gamma / 2);                        
       }
     }
-    
+    for(let i = 0; i < nm + 1; i++){
+      solResult.push(1);
+    }
+    for(let i = 0; i < s.length; i++)
+      s[i] *= (solResult[i] + solResult[i + 1]); 
     espPorReg.push(comprimento);
 
     vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
