@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ic_difusao_site/static/css/main.50d95443.css",
-    "main.js": "/ic_difusao_site/static/js/main.e64be517.js",
+    "main.js": "/ic_difusao_site/static/js/main.f61dce95.js",
     "static/js/453.e58cd836.chunk.js": "/ic_difusao_site/static/js/453.e58cd836.chunk.js",
     "static/media/fundo_desktop.png": "/ic_difusao_site/static/media/fundo_desktop.da084a4e5e5713886db0.png",
     "static/media/fundo.png": "/ic_difusao_site/static/media/fundo.71262332d81b93fc2dfb.png",
@@ -12,11 +12,11 @@
     "static/media/error.png": "/ic_difusao_site/static/media/error.7f8fc3b751bda0faf017.png",
     "index.html": "/ic_difusao_site/index.html",
     "main.50d95443.css.map": "/ic_difusao_site/static/css/main.50d95443.css.map",
-    "main.e64be517.js.map": "/ic_difusao_site/static/js/main.e64be517.js.map",
+    "main.f61dce95.js.map": "/ic_difusao_site/static/js/main.f61dce95.js.map",
     "453.e58cd836.chunk.js.map": "/ic_difusao_site/static/js/453.e58cd836.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.50d95443.css",
-    "static/js/main.e64be517.js"
+    "static/js/main.f61dce95.js"
   ]
 }
