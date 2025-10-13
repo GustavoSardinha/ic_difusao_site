@@ -362,7 +362,7 @@ const generateVectors = () => {
     const espPorReg: number[] = [];
     let cond_left = contornoEsq.split(";").map(Number);
     let cond_right = contornoDir.split(";").map(Number);
-    const keff = 1;
+    let keff = 0.1;
 
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const indice_mapeamento = mapeamento[regioes] - 1;
@@ -372,6 +372,7 @@ const generateVectors = () => {
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
       let gamma = 1;
       const ni = 1;
+      keff += Σf/coef_choque_macro;
       if(coef_choque_macro - ni*Σf/keff > 0){
         const xL = Math.sqrt(coef_difusao/(coef_choque_macro - ni*Σf/keff));
         const z = h / (2 * xL);

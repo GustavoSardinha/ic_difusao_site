@@ -144,7 +144,6 @@ export function useValidation() {
     validateNoZeros(chocArr, "Seções de Choque Macroscópicas de Absorção");
 
     const chocArrFis = validateFloatForm(choquesMacroscopicosFis, "Seções de Choque Macroscópicas de Fissão", z, "zonas");
-    validateNoZeros(chocArrFis, "Seções de Choque Macroscópicas de Fissão");
 
     const espArr = validateFloatForm(espessura, "Espessura de cada Região", r, "regiões");
     validateNoZeros(espArr, "Espessura de cada Região");
