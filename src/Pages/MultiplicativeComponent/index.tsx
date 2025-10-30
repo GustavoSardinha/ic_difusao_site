@@ -192,238 +192,174 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       onError(err as Error);
     }
   };
-const generateVectors = () => {
-  if (!result) return { solu: [], newEsps: [] };
+  const generateVectors = () => {
+    
+    if (!result) return { solutions: [], newEsps: [] };
+    
+    const {
+      numRegioes,
+      mapeamento,
+      numCelulasPorRegiao,
+      coeficientesDifusao,
+      choquesMacroscopicosAbs,
+      choquesMacroscopicosFis,
+      espessura,
+      comprimento,
+      nogamma,
+      Ni
+    } = result;
+    let solResult: number[] = [];
+    let newEsps: number[] = [];
+    let cond_left = contornoEsq.split(";").map(Number);
+    let cond_right = contornoDir.split(";").map(Number);
+    let itfluxo = 0;
+    let keff: number = Math.sqrt(2);
+    let keffs: number[] = [keff];
+    let keffAnt: number = 0;
+    let fluxoMedio = 1/2;
+    let fluxoMedioAnt = 0;
+    let numPassos = 0;
+    let sol_ant: number = 0;
+    let niValor = noNi ? Number(Ni) : 1;
 
-  const {
-    numRegioes,
-    mapeamento,
-    numCelulasPorRegiao,
-    coeficientesDifusao,
-    choquesMacroscopicosAbs,
-    choquesMacroscopicosFis,
-    Ni,
-    comprimento,
-    espessura,
-    nogamma,
-    noNi
-  } = result;
-
-  let itfluxo = 0;
-  let keff = 0.1;
-  let keffAnt = keff;
-  let fluxoMedio = 1;
-  let fluxoMedioAnt = 0;
-  let keffs: number[] = [keff];
-  let solResult: number[] = []; 
-  let numPassos = 0;
-  let first = true;
-  const niValor = noNi ? Number(Ni) : 1;
-
-  
-  const parseCond = (c: string) => (c ? c.split(";").map(Number) : [0, 0]);
-
-  const MAX_IT = 1000;
-
-
-  const dentroTolerancia = (k: number, kAnt: number, f: number, fAnt: number) => {
-    const lk = Number(Lkeff);
-    const lf = Number(Lfluxo);
-    const dK = desvioRelativo(k, kAnt);
-    const dF = desvioRelativo(f, fAnt);
-    return dK <= lk && dF <= lf;
-  };
-
-
-  while (true) {
-    keffAnt = keff;
-    fluxoMedioAnt = fluxoMedio;
-
-    let nm = 0;
-    const espPorReg: number[] = [];
-    const vectorA: number[] = [];
-    const vectorB: number[] = [];
-    const vectorFonte: number[] = [];
-    const s: number[] = [];
-    const xsx: number[] = [];
-
-    const cond_left = parseCond(contornoEsq);
-    const cond_right = parseCond(contornoDir);
-
-    for (let regioes = 0; regioes < numRegioes; regioes++) {
-      const indice_mapeamento = mapeamento[regioes] - 1;
-      const coef_difusao = coeficientesDifusao[indice_mapeamento];
-      const coef_choque_macro = choquesMacroscopicosAbs[indice_mapeamento];
-      const SigmaF = choquesMacroscopicosFis[indice_mapeamento];
-      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-
-      let gamma = 1;
-      if (first) {
-        keff += SigmaF / coef_choque_macro;
-        first = false;
-      }
-
-      if(!noGamma){
-        if (coef_choque_macro - niValor * SigmaF / keff > 0) {
-          const xL = Math.sqrt(coef_difusao / (coef_choque_macro - niValor * SigmaF / keff));
-          const z = h / (2 * xL);
-          gamma = Math.tanh(z) / z;
-        } else {
-          const xL = Math.sqrt(coef_difusao / (Math.max(1e-12, niValor * SigmaF / keff - coef_choque_macro)));
-          const z = h / (2 * xL);
-          gamma = Math.tan(z) / z;
+    while(((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo))) || (numPassos >= 1000)){
+      const vectorA: number[] = [];
+      const vectorB: number[] = [];
+      const vectorFonte: number[] = [];
+      newEsps = [];
+      let xsx: number[] = [];
+      let s: number[] = [];
+      let nm = 0;
+      let espPorReg: number[] = [];
+      if ((desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo)))
+        itfluxo++;
+      for (let regioes = 0; regioes < numRegioes; regioes++) {
+        const indice_mapeamento = mapeamento[regioes] - 1;
+        const coef_difusao = coeficientesDifusao[indice_mapeamento];
+        const coef_choque_macro = choquesMacroscopicosAbs[indice_mapeamento];
+        const coef_choque_fis = choquesMacroscopicosFis[regioes];
+        const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+        let gamma = 1;
+        if(nogamma){
+          if(coef_choque_macro - (niValor*coef_choque_fis)/keff > 0){
+            const Lk = Math.sqrt(coef_difusao/(coef_choque_macro - (Number(Ni)*coef_choque_fis)/keff));
+            gamma = ((2*Lk)/h)*Math.tanh(h/(2*Lk));
+          }
+          else{
+            const Lk = Math.sqrt(coef_difusao/((niValor*coef_choque_fis - coef_choque_macro)/keff));
+            gamma = ((2*Lk)/h)*Math.tan(h/(2*Lk));
+          }
+        }
+      
+        for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
+          nm++;
+          espPorReg.push(h);
+          vectorB.push((coef_difusao/(gamma*h)) - coef_choque_macro * h * gamma/ 4);
+          xsx.push(coef_choque_macro * h * gamma/ 4);
+          s.push((niValor * coef_choque_fis / keff) * h * gamma / 2);                       
         }
       }
-      console.log("gamma: " + gamma);
-      for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
-        nm++;
-        espPorReg.push(h);
-        vectorB.push((coef_difusao / (gamma * h)) - (coef_choque_macro * h * gamma) / 4);
-        xsx.push((coef_choque_macro * h * gamma) / 4);
-        s.push((niValor * SigmaF / keff) * h * gamma / 2);
+      if(solResult.length == 0){
+        for(let i = 0; i < nm + 1; i++){
+          solResult.push(1);
+        }
       }
-    }
+      for(let i = 0; i < s.length; i++){
+        s[i] *= (solResult[i] + solResult[i + 1])/2;
+      }
+      espPorReg.push(comprimento);
 
-    if (solResult.length === 0) solResult = Array(nm + 1).fill(1);
-
-  
-    for (let i = 0; i < s.length; i++) {
-      const denom = (solResult[i] ?? 1) + (solResult[i + 1] ?? 1);
-      s[i] *= denom;
-    }
-
-    vectorA.push(vectorB[0] + 2 * xsx[0] + Number(cond_left[1] ?? 0));
-    vectorFonte.push(s[0] + Number(cond_left[0] ?? 0));
-
-    for (let i = 1; i < nm; i++) {
-      const aVal = (vectorB[i] ?? 0) + (vectorB[i - 1] ?? 0) + 2 * (xsx[i] ?? 0) + 2 * (xsx[i - 1] ?? 0);
-      vectorA.push(aVal);
-      vectorFonte.push((s[i] ?? 0) + (s[i - 1] ?? 0));
-    }
-
-    vectorA.push((vectorB[nm - 1] ?? 0) + 2 * (xsx[nm - 1] ?? 0) + Number(cond_right[1] ?? 0));
-    vectorFonte.push((s[nm - 1] ?? 0) + Number(cond_right[0] ?? 0));
-
-    
-    let solu: number[] | null = null;
-    try {
-      console.log("A:" + vectorA);
-      console.log("B: " + vectorB);
-      console.log("C: "+ vectorFonte);
-      solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
-    } catch (e) {
-      console.error("Erro no solver Thomas:", e);
-      solu = null;
-    }
-    if (!solu) {
-      console.warn("Solução nula do solver — interrompendo iteração.");
-      break;
-    }
-
-    fluxoMedio = solu.reduce((acc, v) => acc + v, 0) / solu.length;
-
-    const somaAnt = vectorFonte.reduce((acc, v) => acc + v, 0);
-    let somaAtual = 0;
-    for (let i = 0; i < vectorFonte.length; i++) {
-      const prev = solResult[i] ?? 1;
-      if (prev === 0) continue;
-      somaAtual += vectorFonte[i] * (solu[i] / prev);
-    }
-
-    if (somaAnt > 0) {
-      keff = keffAnt * (somaAtual / somaAnt);
+      vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
+      vectorFonte.push(s[0] + Number(cond_left[0]));
+      
+      for (let i = 1; i < nm; i++) {
+        vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
+        vectorFonte.push(s[i] + s[i - 1]);
+      }
+      
+      vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
+      vectorFonte.push(s[nm - 1] + Number(cond_right[0]));
+      keffAnt = keff;
+      console.log(vectorA);
+      console.log(vectorB);
+      console.log(vectorFonte);
+      const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
+      let somaAtual = 0;
+      let somaAnt = 0;
+      fluxoMedioAnt = fluxoMedio;
+      fluxoMedio = 0;
+      for(let i = 0; i < vectorFonte.length; i++){
+        sol_ant = solResult[i];
+        somaAnt += vectorFonte[i];
+        somaAtual += vectorFonte[i]*(solu[i]/sol_ant);
+        fluxoMedio += solu[i]/solu.length;
+        solResult[i] = solu[i];
+      }
+      keff = keffAnt*(somaAtual/somaAnt);
+      if((desvioRelativo(keff, keffAnt) > Number(Lkeff))){
+        keffs.push(keff);
+      }
+      numPassos++;
+      if(criterioParada)
+        if(numPassos >= passos)
+          break;
+      let pos = 0;
+      espPorReg.forEach((esp) => {
+        newEsps.push(pos);
+        pos += esp;
+      });
+  }
+  let potencialFicitio = 0;  
+  let potenciais = [];
+  let indice = 1;
+  let inicio = 0;
+  let fim = 0;
+  for (let regioes = 0; regioes < numRegioes; regioes++) {
+    const idx = mapeamento[regioes] - 1;
+    const Σf = choquesMacroscopicosFis[idx];
+    const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+    fim = indice + numCelulasPorRegiao[regioes];
+    console.log(inicio);
+    console.log(fim);
+    potencialFicitio += Σf*integralNumerica(solResult, h, inicio, fim);
+    indice += numCelulasPorRegiao[regioes];
+    inicio = fim -1;
+  } 
+  potencialFicitio*= Number(energia)*1.6E-13;
+  console.log(potencialFicitio);
+  const newSolu: number[] = [];
+  if(solResult != null){
+  const pot = Number(potencia)*1000 || 1; 
+    if (potencialFicitio === 0) {
+      console.warn("potencialFicitio === 0 -> mantendo solução sem reescalonamento.");
     } else {
-      console.warn("somaAnt === 0 ao recalcular keff — mantendo keff anterior.");
-      keff = keffAnt;
+      const factor = pot / potencialFicitio;
+      for (let i = 0; i < solResult.length; i++) {
+        newSolu.push(solResult[i] * factor);
+      }
+      solResult = newSolu; 
     }
-
-    if (desvioRelativo(keff, keffAnt) > Number(Lkeff)) {
-      keffs.push(keff);
-    }
-
-    solResult = solu.slice();
-
-    numPassos++;
-    if (desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo)) {
-      itfluxo++;
-    }
-
-    if (dentroTolerancia(keff, keffAnt, fluxoMedio, fluxoMedioAnt)) {
-      break;
-    }
-    if (criterioParada && numPassos >= Number(passos)) {
-      break;
-    }
-    if (numPassos >= MAX_IT) {
-      console.warn("Máximo de iterações atingido.");
-      break;
-    }
-  }
-
-  const newEsps: number[] = [];
-  let pos = 0;
-  const espPorRegFinal: number[] = [];
-  for (let r = 0; r < numRegioes; r++) {
-    const h = espessura[r] / numCelulasPorRegiao[r];
-    for (let j = 0; j < numCelulasPorRegiao[r]; j++) {
-      espPorRegFinal.push(h);
-    }
-  }
-  espPorRegFinal.forEach((esp) => {
-    newEsps.push(pos);
-    pos += esp;
-  });
-  newEsps.push(comprimento);
-
- 
-  let potencialFicitio = 0;
-  const potenciais: number[] = [];
-  if (solResult && solResult.length > 0) {
+    let potencialNominal= 0;  
     let indice = 1;
     let inicio = 0;
     let fim = 0;
     for (let regioes = 0; regioes < numRegioes; regioes++) {
       const idx = mapeamento[regioes] - 1;
-      const SigmaF = choquesMacroscopicosFis[idx];
+      const Σf = choquesMacroscopicosFis[idx];
       const h = espessura[regioes] / numCelulasPorRegiao[regioes];
       fim = indice + numCelulasPorRegiao[regioes];
-      potencialFicitio += SigmaF * integralNumerica(solResult, h, inicio, fim);
-      indice += numCelulasPorRegiao[regioes];
-      inicio = fim - 1;
-    }
-
-    potencialFicitio *= Number(energia) * 1.6e-13;
-
-
-    const potKW = (Number(potencia) * 1000) || 1;
-    if (potencialFicitio === 0) {
-      console.warn("potencialFicitio === 0 -> mantendo solução sem reescalonamento.");
-    } else {
-      const factor = potKW / potencialFicitio;
-      for (let i = 0; i < solResult.length; i++) {
-        solResult[i] = solResult[i] * factor;
-      }
-    }
-
-    let indice2 = 1;
-    let inicio2 = 0;
-    let fim2 = 0;
-    let potencialNominal = 0;
-    for (let regioes = 0; regioes < numRegioes; regioes++) {
-      const idx = mapeamento[regioes] - 1;
-      const SigmaF = choquesMacroscopicosFis[idx];
-      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-      fim2 = indice2 + numCelulasPorRegiao[regioes];
-      const p = SigmaF * integralNumerica(solResult, h, inicio2, fim2) * Number(energia) * 1.6e-13 / 1000;
+      console.log(inicio);
+      console.log(fim);
+      let p = Σf*integralNumerica(solResult, h, inicio, fim)*Number(energia)*1.6E-13/1000;
       potencialNominal += p;
       potenciais.push(p);
-      indice2 += numCelulasPorRegiao[regioes];
-      inicio2 = fim2 - 1;
-    }
+      indice += numCelulasPorRegiao[regioes];
+      inicio = fim -1;
+    } 
+    return {solResult, newEsps, keffs, potenciais, itfluxo};  
   }
-
-  return { solu: solResult, newEsps, keffs, potenciais, itfluxo };
-};
+  return {};
+  };
 
 const valitadionContorno = async () => {
   try{
@@ -448,7 +384,7 @@ catch (e) {
 }
   const solveProblem = async () => {
     setValidated(false);
-    const {solu, newEsps, keffs, potenciais, itfluxo} = generateVectors();
+    const {solResult, newEsps, keffs, potenciais, itfluxo} = generateVectors();
     console.log(potenciais);
     console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -463,7 +399,7 @@ catch (e) {
           contornoDir,
           contornoEsq,
         },
-        vector_solutions: solu,
+        vector_solutions: solResult,
         esps: newEsps,
         vector_keffs: keffs,
         vector_pot: potenciais,
