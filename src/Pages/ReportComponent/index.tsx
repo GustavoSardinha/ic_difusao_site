@@ -8,6 +8,7 @@ import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import main_img from '../../img/logomarca-uerj.png'
 import {ResultStateNonMultiplicative, isResultStateNonMultiplicative} from '../../Interfaces/ResultStateNonMultiplicative';
 import {ResultStateMultiplicative, isResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
+import { color } from 'framer-motion';
 
 
 
@@ -227,7 +228,7 @@ const showCondicoesdeContorno = (
         </thead>
         <tbody>
           ${data.map((info) => `
-            <tr>
+            <tr style="font-size: 25px; background-color: #fff;">
               <td style="padding:8px; text-align:center;">${info.index + 1}</td>
               <td style="padding:8px; text-align:center;">${esps[info.index]?.toFixed(5) || 0}</td>
               <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
@@ -258,7 +259,7 @@ const createKeffTable = (): string => {
       </thead>
       <tbody>
         ${data.map(info => `
-          <tr>
+          <tr style="font-size: 25px; background-color: #fff;">
             <td style="padding:8px; text-align:center;">${info.index + 1}</td>
             <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
           </tr>
@@ -299,7 +300,7 @@ const createKeffTable = (): string => {
         </thead>
         <tbody>
           ${chunk.map(info => `
-            <tr>
+            <tr style="font-size: 25px; background-color: #fff;">
               <td style="padding:8px; text-align:center;">${info.index + 1}</td>
               <td style="padding:8px; text-align:center;">${info.value.toExponential(5)}</td>
             </tr>
@@ -601,7 +602,7 @@ const createKeffTable = (): string => {
           )
           }
           {isResultStateMultiplicative(result) && (
-            <div className="convergence-box">
+            <div className="convergence-box" style={{backgroundColor: "white"}}>
               <p className="convergence-text">
                 O fator de multiplicação efetivo atingiu o critério de parada com{" "}
                 <span className="convergence-value">{vector_keffs.length}</span>{" "}

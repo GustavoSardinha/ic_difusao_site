@@ -237,20 +237,25 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
         const indice_mapeamento = mapeamento[regioes] - 1;
         const coef_difusao = coeficientesDifusao[indice_mapeamento];
         const coef_choque_macro = choquesMacroscopicosAbs[indice_mapeamento];
-        const coef_choque_fis = choquesMacroscopicosFis[regioes];
+        const coef_choque_fis = choquesMacroscopicosFis[indice_mapeamento];
         const h = espessura[regioes] / numCelulasPorRegiao[regioes];
         let gamma = 1;
-        if(nogamma){
+        console.log(coef_choque_macro);
+        console.log(coef_difusao);
+        console.log(h);
+        console.log(coef_choque_fis);
+        if(!nogamma){
           if(coef_choque_macro - (niValor*coef_choque_fis)/keff > 0){
-            const Lk = Math.sqrt(coef_difusao/(coef_choque_macro - (Number(Ni)*coef_choque_fis)/keff));
+            const Lk = Math.sqrt(coef_difusao/(coef_choque_macro - (niValor*coef_choque_fis)/keff));
             gamma = ((2*Lk)/h)*Math.tanh(h/(2*Lk));
+            console.log(gamma);
           }
           else{
-            const Lk = Math.sqrt(coef_difusao/((niValor*coef_choque_fis - coef_choque_macro)/keff));
+            const Lk = Math.sqrt(coef_difusao/((niValor*coef_choque_fis/keff - coef_choque_macro)));
             gamma = ((2*Lk)/h)*Math.tan(h/(2*Lk));
+            console.log(gamma);
           }
         }
-      
         for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
           nm++;
           espPorReg.push(h);
@@ -284,6 +289,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       console.log(vectorB);
       console.log(vectorFonte);
       const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
+      console.log(solu);
       let somaAtual = 0;
       let somaAnt = 0;
       fluxoMedioAnt = fluxoMedio;
@@ -314,6 +320,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   let indice = 1;
   let inicio = 0;
   let fim = 0;
+  console.log(solResult);
   for (let regioes = 0; regioes < numRegioes; regioes++) {
     const idx = mapeamento[regioes] - 1;
     const Σf = choquesMacroscopicosFis[idx];
