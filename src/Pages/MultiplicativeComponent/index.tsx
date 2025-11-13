@@ -315,57 +315,35 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
         pos += esp;
       });
   }
-  let potencialFicitio = 0;  
+  const E_fission_J = Number(energia) * 1.602176634e-13;
+  const pot = Number(potencia) || 1;
+  let potencialFicitio = 0;
   let potenciais = [];
   let indice = 1;
   let inicio = 0;
   let fim = 0;
-  console.log(solResult);
+
   for (let regioes = 0; regioes < numRegioes; regioes++) {
     const idx = mapeamento[regioes] - 1;
     const Σf = choquesMacroscopicosFis[idx];
     const h = espessura[regioes] / numCelulasPorRegiao[regioes];
     fim = indice + numCelulasPorRegiao[regioes];
-    console.log(inicio);
-    console.log(fim);
-    potencialFicitio += Σf*integralNumerica(solResult, h, inicio, fim);
+    const p = Σf * integralNumerica(solResult, h, inicio, fim) * E_fission_J / 1000000;
+    potenciais.push(p);
+    potencialFicitio += p;
     indice += numCelulasPorRegiao[regioes];
-    inicio = fim -1;
-  } 
-  potencialFicitio*= Number(energia)*1.6E-13;
-  console.log(potencialFicitio);
-  const newSolu: number[] = [];
-  if(solResult != null){
-  const pot = Number(potencia)*1000 || 1; 
-    if (potencialFicitio === 0) {
-      console.warn("potencialFicitio === 0 -> mantendo solução sem reescalonamento.");
-    } else {
-      const factor = pot / potencialFicitio;
-      for (let i = 0; i < solResult.length; i++) {
-        newSolu.push(solResult[i] * factor);
-      }
-      solResult = newSolu; 
-    }
-    let potencialNominal= 0;  
-    let indice = 1;
-    let inicio = 0;
-    let fim = 0;
-    for (let regioes = 0; regioes < numRegioes; regioes++) {
-      const idx = mapeamento[regioes] - 1;
-      const Σf = choquesMacroscopicosFis[idx];
-      const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-      fim = indice + numCelulasPorRegiao[regioes];
-      console.log(inicio);
-      console.log(fim);
-      let p = Σf*integralNumerica(solResult, h, inicio, fim)*Number(energia)*1.6E-13/1000;
-      potencialNominal += p;
-      potenciais.push(p);
-      indice += numCelulasPorRegiao[regioes];
-      inicio = fim -1;
-    } 
-    return {solResult, newEsps, keffs, potenciais, itfluxo};  
+    inicio = fim - 1;
   }
-  return {};
+
+  if (potencialFicitio > 0) {
+    const factor = pot / potencialFicitio;
+    for (let i = 0; i < solResult.length; i++) {
+      solResult[i] = solResult[i] * factor;
+    }
+    potenciais = potenciais.map(p => p * factor);
+  }
+
+    return {solResult, newEsps, keffs, potenciais, itfluxo};  
   };
 
 const valitadionContorno = async () => {

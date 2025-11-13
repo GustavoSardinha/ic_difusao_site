@@ -414,7 +414,9 @@ const createKeffTable = (): string => {
           >
             ENTRADAS
           </h2>
-
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
+            {generateSection('Método escolhido', result?.nogamma ? "Diferenças Finitas." : "Espectronodal.")}
+          </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 15 }}>
             {generateSection('Número de Regiões', result?.numRegioes.toString() || "")}
             {generateSection('Zonas Materiais', result?.zonasMateriais.toString() || "")}
