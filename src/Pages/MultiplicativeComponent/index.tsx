@@ -222,7 +222,9 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     let sol_ant: number = 0;
     let niValor = noNi ? Number(Ni) : 1;
 
-    while(((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || (desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo))) || (numPassos >= 1000)){
+    while (((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || 
+        (desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo))) || 
+        (numPassos >= 1000)){
       const vectorA: number[] = [];
       const vectorB: number[] = [];
       const vectorFonte: number[] = [];
@@ -275,7 +277,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       espPorReg.push(comprimento);
 
       vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
-      vectorFonte.push(s[0] + Number(cond_left[0]));
+      vectorFonte.push(s[0]);
       
       for (let i = 1; i < nm; i++) {
         vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
@@ -283,7 +285,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       }
       
       vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
-      vectorFonte.push(s[nm - 1] + Number(cond_right[0]));
+      vectorFonte.push(s[nm - 1]);
       keffAnt = keff;
       console.log(vectorA);
       console.log(vectorB);
