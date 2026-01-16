@@ -6,7 +6,7 @@ import ArrayFormInput from '../../Components/ArrayFormInput';
 import { useValidation } from '../../Hooks/useValidationMultiplicative';
 import ContinueButton from '../../Components/ContinueButton';
 import ContornoModal from '../../Components/ContornoModal/Multiplicative';
-import { thomasSimetrico, desvioRelativo, integralNumerica } from '../../Services/numericalMath';
+import { thomasSimetrico, desvioRelativo, integralNumerica, integralDifusaoSimpson } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
@@ -330,7 +330,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     const Σf = choquesMacroscopicosFis[idx];
     const h = espessura[regioes] / numCelulasPorRegiao[regioes];
     fim = indice + numCelulasPorRegiao[regioes];
-    const p = Σf * integralNumerica(solResult, h, inicio, fim) * E_fission_J / 1000000;
+    const p = Σf * integralDifusaoSimpson(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
     potenciais.push(p);
     potencialFicitio += p;
     indice += numCelulasPorRegiao[regioes];
