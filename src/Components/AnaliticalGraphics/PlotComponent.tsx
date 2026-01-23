@@ -1,7 +1,6 @@
-
 import React from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
-import Plotly from 'plotly.js-basic-dist'; 
+import Plotly from 'plotly.js-basic-dist';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -21,11 +20,20 @@ const PlotComponent: React.FC<PlotCompProps> = ({
   const x = Array.from({ length: L }, (_, i) =>
     a + ((b - a) * i) / (L - 1)
   );
+
   const y = x.map(f);
+
+  const minY = Math.min(...y);
+  const maxY = Math.max(...y);
+  const isConstant = minY === maxY;
+
+  const yPadding = isConstant
+    ? Math.abs(minY) * 0.1 || 1
+    : 0;
 
   return (
     <Plot
-      useResizeHandler={true}
+      useResizeHandler
       style={{ width: '100%', height: '100%' }}
       data={[
         {
@@ -39,11 +47,16 @@ const PlotComponent: React.FC<PlotCompProps> = ({
         autosize: true,
         title: 'Zoom e Pan com Plotly',
         xaxis: { title: 'x' },
-        yaxis: { title: 'f(x)' },
-        dragmode: 'zoom', 
+        yaxis: {
+          title: 'f(x)',
+          range: isConstant
+            ? [minY - yPadding, maxY + yPadding]
+            : undefined,
+        },
+        dragmode: 'zoom',
       }}
       config={{
-        scrollZoom: true, 
+        scrollZoom: true,
         displaylogo: false,
         modeBarButtonsToAdd: ['zoom2d', 'pan2d', 'autoScale2d'],
         modeBarButtonsToRemove: ['select2d', 'lasso2d'],

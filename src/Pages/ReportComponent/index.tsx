@@ -352,7 +352,7 @@ const createKeffTable = (): string => {
         <input type='button' value={"Voltar"} className='Continue-button' onClick={Back}/>
         <input type='button' value={"Voltar com dados anteriores"} className='Continue-button' onClick={BackwithData}/>
         <input type='button' value={"Baixar PDF"} className='Continue-button' onClick={exportPDF}/>
-        {(!result?.nogamma && isResultStateNonMultiplicative(result)) && (
+        {(!result?.nogamma) && (
           <input type='button' value={"Reconstrução analítica"} className='Continue-button' onClick={Reconstrucition}/>
         )}
       </div>
