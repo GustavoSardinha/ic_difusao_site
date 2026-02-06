@@ -256,90 +256,136 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
   /* ===========================================================
      absorptionRate: integra célula a célula usando A/C por célula
      ===========================================================*/
-  function absorptionRate(a: number, b: number): number {
-    if (!result) return NaN;
-    if (a < 0 || b < a || b > result.comprimento) return NaN;
+function absorptionRate(a: number, b:number) : number {
+   if (!result) 
+    return -1; 
+  let absRate = 0; 
+  if(isResultStateNonMultiplicative(result)){ 
+    const { 
+      mapeamento,
+      fonteNeutrons, 
+      coeficientesDifusao, 
+      choquesMacroscopicos, 
+      espessura, 
+    } = result; 
+    const regInfosA = findAPoint(a); 
+    const regInfosB = findAPoint(b); 
+    for(let i = regInfosA[0]; i <= regInfosB[0]; i++){
+       const zona = mapeamento[i]; 
+       const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]); 
+       let dxa = 0; 
+       let dxb = espessura[i]; 
+       if(i == regInfosA[0]) 
+        dxa = a - (regInfosA[1] - espessura[i]); 
+       if(i == regInfosB[0]) 
+        dxb = b - (regInfosB[1] - espessura[i]); 
+      absRate += L*choquesMacroscopicos[zona - 1]*(solution_consts[2*i]*(Math.pow(Math.E, dxb/L) - Math.pow(Math.E, dxa/L)) - solution_consts[2*i + 1]*(Math.pow(Math.E, - dxb/L) - Math.pow(Math.E, - dxa/L))) + fonteNeutrons[i]*(dxb - dxa) 
+    } 
+  } 
+  return absRate; 
+}
+function powerRate(a: number, b: number): number {
+  if (!result) return -1;
+  let power = 0;
 
-    const ra = findAPoint(a);
-    const rb = findAPoint(b);
-    if (ra.length === 0 || rb.length === 0) return NaN;
+  if (isResultStateMultiplicative(result)) {
+    const {
+      mapeamento,
+      coeficientesDifusao,
+      choquesMacroscopicosAbs,
+      choquesMacroscopicosFis,
+      numCelulasPorRegiao,
+      espessura,
+      keff,
+      energia,
+      noNi,
+      Ni,
+    } = result;
 
-    let total = 0;
+    // energia em J (assume 'energia' em MeV)
+    const E = 1.602176634e-13 * Number(energia);
 
-    const { numCelulasPorRegiao, espessura } = result;
+    const regInfosA = findAPoint(a);
+    const regInfosB = findAPoint(b);
+    if (regInfosA.length === 0 || regInfosB.length === 0) return -1;
 
-    // helper para obter global cell index given regionIdx and local cell idx
-    function getCellGlobalIndex(regionIdx: number, localCellIdx: number) {
-      let idx = 0;
-      for (let r = 0; r < regionIdx; r++) idx += numCelulasPorRegiao[r];
-      return idx + localCellIdx;
+    // soma de células para calcular índices globais
+    const prefixCells: number[] = [];
+    let acc = 0;
+    for (let i = 0; i < numCelulasPorRegiao.length; i++) {
+      prefixCells.push(acc);
+      acc += numCelulasPorRegiao[i];
     }
 
-    // iterar regiões e dentro delas células envolvidas
-    for (let regionIdx = ra[0]; regionIdx <= rb[0]; regionIdx++) {
-      const regionStart = ra[0] === regionIdx ? (ra[1] - espessura[regionIdx]) : undefined; // not used directly
-      const nCells = numCelulasPorRegiao[regionIdx];
-      const hCell = espessura[regionIdx] / nCells;
+    // percorre regiões entre A e B
+    for (let i = regInfosA[0]; i <= regInfosB[0]; i++) {
+      const zona = mapeamento[i];
+      const D = coeficientesDifusao[zona - 1];
+      const Sa = choquesMacroscopicosAbs[zona - 1];
+      const Sf = choquesMacroscopicosFis[zona - 1];
 
-      // limites locais de integração dentro da região
-      const localA = regionIdx === ra[0] ? a - (ra[1] - espessura[regionIdx]) : 0;
-      const localB = regionIdx === rb[0] ? b - (rb[1] - espessura[regionIdx]) : espessura[regionIdx];
+      // limites locais dentro da região
+      let dxa = 0;
+      let dxb = espessura[i];
+      if (i === regInfosA[0]) dxa = a - (regInfosA[1] - espessura[i]);
+      if (i === regInfosB[0]) dxb = b - (regInfosB[1] - espessura[i]);
+      if (dxb <= dxa) continue;
 
-      // células que participam (índices locais)
-      const firstCell = Math.floor(localA / hCell);
-      const lastCell = Math.floor((localB - 1e-12) / hCell); // -eps para caso exato na fronteira
+      const nCells = numCelulasPorRegiao[i];
+      const hCell = espessura[i] / nCells;
 
-      for (let localCell = Math.max(0, firstCell); localCell <= Math.min(nCells - 1, lastCell); localCell++) {
-        // limites de integração dentro da célula
-        const cellLeftGlobalX = (localCell) * hCell;
-        const cellRightGlobalX = (localCell + 1) * hCell;
+      const B2 = (((noNi ? Number(Ni) : 1) * Sf) / keff) - Sa;
 
-        const ia = localCell === firstCell ? localA - localCell * hCell : 0;
-        const ib = localCell === lastCell ? localB - localCell * hCell : hCell;
+      // células afetadas dentro da região
+      let startCell = Math.floor(dxa / hCell);
+      let endCell = Math.floor((dxb - 1e-12) / hCell);
+      if (startCell < 0) startCell = 0;
+      if (endCell >= nCells) endCell = nCells - 1;
 
-        // obtém parâmetros por região/célula
-        if (isResultStateMultiplicative(result)) {
-          const {
-            mapeamento,
-            coeficientesDifusao,
-            choquesMacroscopicosAbs,
-            choquesMacroscopicosFis,
-            Ni,
-            keff,
-            noNi,
-          } = result;
-          const niValor = noNi ? Number(Ni) : 1;
-          const zona = mapeamento[regionIdx];
-          const D = coeficientesDifusao[zona - 1];
-          const Sa = choquesMacroscopicosAbs[zona - 1];
-          const Sf = choquesMacroscopicosFis[zona - 1];
-          const B2 = (niValor * Sf) / keff - Sa;
+      for (let local = startCell; local <= endCell; local++) {
+        // limites dentro da célula (0..hCell)
+        const cellLocalStart = (local === startCell) ? dxa - local * hCell : 0;
+        const cellLocalEnd = (local === endCell) ? dxb - local * hCell : hCell;
+        if (cellLocalEnd <= cellLocalStart) continue;
 
-          const cellGlobalIdx = getCellGlobalIndex(regionIdx, localCell);
-          const A = solution_consts[2 * cellGlobalIdx];
-          const C = solution_consts[2 * cellGlobalIdx + 1];
+        const thisCellGlobal = prefixCells[i] + local;
+        const idxA = 2 * thisCellGlobal;
+        const idxC = idxA + 1;
+        if (idxC >= solution_consts.length) return -1; // proteção
 
-          if (B2 > 0) {
-            const B = Math.sqrt(B2 / D);
-            total += Sa * ((A / B) * (Math.sin(B * ib) - Math.sin(B * ia)) - (C / B) * (Math.cos(B * ib) - Math.cos(B * ia)));
-          } else if (B2 < 0) {
-            const alpha = Math.sqrt(-B2 / D);
-            total += Sa * ((A / alpha) * (Math.sinh(alpha * ib) - Math.sinh(alpha * ia)) + (C / alpha) * (Math.cosh(alpha * ib) - Math.cosh(alpha * ia)));
-          } else {
-            // caso linear
-            // integral de (A + C x) dx = A*(ib-ia) + C*(ib^2 - ia^2)/2
-            total += Sa * (A * (ib - ia) + C * ((ib * ib - ia * ia) / 2));
-          }
+        const A = solution_consts[idxA];
+        const C = solution_consts[idxC];
+
+        if (B2 > 0) {
+          const B = Math.sqrt(B2 / D);
+          const denom = Math.abs(B) > 1e-12 ? B : 1e-12;
+          power +=
+            E *
+            Sf *
+            ((A / denom) * (Math.sin(B * cellLocalEnd) - Math.sin(B * cellLocalStart)) -
+              (C / denom) * (Math.cos(B * cellLocalEnd) - Math.cos(B * cellLocalStart)));
+        } else if (B2 < 0) {
+          const alpha = Math.sqrt(-B2 / D);
+          const denom = Math.abs(alpha) > 1e-12 ? alpha : 1e-12;
+          power +=
+            E *
+            Sf *
+            ((A / denom) * (Math.sinh(alpha * cellLocalEnd) - Math.sinh(alpha * cellLocalStart)) +
+              (C / denom) * (Math.cosh(alpha * cellLocalEnd) - Math.cosh(alpha * cellLocalStart)));
+        } else {
+          power +=
+            E *
+            Sf *
+            (A * (cellLocalEnd - cellLocalStart) + (C / 2) * (Math.pow(cellLocalEnd, 2) - Math.pow(cellLocalStart, 2)));
         }
       }
     }
-
-    return total;
   }
 
-  /* ===========================================================
-     RENDER
-     ===========================================================*/
+  return power;
+}
+
+
   return (
     <div>
       <PlotComponent f={(x) => fluxFunction(x)} L={1000} range={[0, getComprimento()]} />
@@ -357,23 +403,42 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
           <p style={{ textAlign: 'center' }}>O ponto filtrado está fora do domínio</p>
         )}
         {!(fluxFunction(Number(filterPoint)) === -1 || isNaN(Number(filterPoint))) && (
-          <p style={{ textAlign: 'center' }}>O valor em {filterPoint} é {fluxFunction(Number(filterPoint))}</p>
+          <p style={{ textAlign: 'center' }}>O valor em {filterPoint} é {fluxFunction(Number(filterPoint)).toExponential(5)}</p>
         )}
       </div>
 
-      <ArrayFormInput
-        label="Digite um intervalo"
-        placeholder="Informe o intervalo para calcular a taxa de absorção (a;b)"
-        value={filterInterval}
-        msgAlert="Informe um intervalo do domínio para calcular a taxa de absorção"
-        onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
-      />
-
-      <div style={{ justifyContent: 'center', alignItems: 'center' }}>
-        {(filterInterval.split(";").length === 2 && Number(filterInterval.split(";")[0]) >= 0 && Number(filterInterval.split(";")[1]) >= 0) && (
-          <p style={{ textAlign: 'center' }}>O valor em {filterInterval} é {absorptionRate(Number(filterInterval.split(";")[0]), Number(filterInterval.split(";")[1]))}</p>
+      {isResultStateNonMultiplicative(result) &&( 
+        <div>
+          <ArrayFormInput
+            label="Digite um intervalo"
+            placeholder="Informe o intervalo para calcular a taxa de absorção a;b"
+            value={filterInterval}
+            msgAlert="Informe um intervalo do domínio para calcular a taxa de absorção"
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
+          />
+          <div style={{ justifyContent: 'center', alignItems: 'center' }}>
+            {(filterInterval.split(";").length === 2 && Number(filterInterval.split(";")[0]) >= 0 && Number(filterInterval.split(";")[1]) >= 0) && (
+              <p style={{ textAlign: 'center' }}>O valor em {filterInterval} é {absorptionRate(Number(filterInterval.split(";")[0]), Number(filterInterval.split(";")[1])).toExponential(5)}</p>
+            )}
+          </div>
+        </div>
         )}
-      </div>
+      {isResultStateMultiplicative(result) &&( 
+        <div>
+        <ArrayFormInput
+          label="Digite um intervalo para determinar a potência local"
+          placeholder="Informe o intervalo para calcular a potência local a;b"
+          value={filterInterval}
+          msgAlert="Informe um intervalo do domínio para calcular a potência local."
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
+        />
+        <div style={{ justifyContent: 'center', alignItems: 'center' }}>
+            {(filterInterval.split(";").length === 2 && Number(filterInterval.split(";")[0]) >= 0 && Number(filterInterval.split(";")[1]) >= 0) && (
+              <p style={{ textAlign: 'center' }}>O valor em {filterInterval} é {powerRate(Number(filterInterval.split(";")[0]), Number(filterInterval.split(";")[1])).toExponential(5)}</p>
+            )}
+          </div>
+        </div>
+        )}
     </div>
   );
 }
