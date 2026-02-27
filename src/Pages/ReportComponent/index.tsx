@@ -355,6 +355,9 @@ const createKeffTable = (): string => {
         {(!result?.nogamma) && (
           <input type='button' value={"Reconstrução analítica"} className='Continue-button' onClick={Reconstrucition}/>
         )}
+        {isResultStateMultiplicative(result) && (!result?.keff || result?.keff < 1) && (
+          <input type='button' value={"Estabilização de Potência"} className='Continue-button'/>
+        )}
       </div>
       <div
         ref={pdfRef}

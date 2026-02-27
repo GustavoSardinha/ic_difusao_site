@@ -375,24 +375,27 @@ catch (e) {
     console.log(potenciais);
     console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
-    navigate("/relatorio", { 
-      state: { 
-        result: {
-          ...result!,
-          hasGrafic,
-          advancedOptions,
-          filterPoint: Number(filterPoint),
-          nogamma: noGamma,
-          contornoDir,
-          contornoEsq,
-        },
-        vector_solutions: solResult,
-        esps: newEsps,
-        vector_keffs: keffs,
-        vector_pot: potenciais,
-        itfluxo: itfluxo
-      } 
-    });
+    if(keffs != undefined){
+      navigate("/relatorio", { 
+        state: { 
+          result: {
+            ...result!,
+            hasGrafic,
+            advancedOptions,
+            filterPoint: Number(filterPoint),
+            nogamma: noGamma,
+            contornoDir,
+            contornoEsq,
+            keff: keffs[keffs.length - 1],
+          },
+          vector_solutions: solResult,
+          esps: newEsps,
+          vector_keffs: keffs,
+          vector_pot: potenciais,
+          itfluxo: itfluxo
+        } 
+      });
+    }
   };
 
   return (
