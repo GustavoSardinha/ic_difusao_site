@@ -270,80 +270,91 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
   }
   function powerRate(a: number, b: number): number {
     if (!result) return -1;
+    if (!isResultStateMultiplicative(result)) return -1;
+
+    const {
+      mapeamento,
+      coeficientesDifusao,
+      choquesMacroscopicosAbs,
+      choquesMacroscopicosFis,
+      numCelulasPorRegiao,
+      espessura,
+      keff,
+      energia,
+      noNi,
+      Ni,
+    } = result;
+
+    if (b <= a) return -1;
+
+    const E = 1.602176634e-13 * Number(energia);
+    const niValor = noNi ? Number(Ni) : 1;
+    const eps = 1e-12;
+
     let power = 0;
+    let globalCellIndex = 0;
+    let xAccRegionStart = 0;
 
-    if (isResultStateMultiplicative(result)) {
-      const {
-        mapeamento,
-        coeficientesDifusao,
-        choquesMacroscopicosAbs,
-        choquesMacroscopicosFis,
-        numCelulasPorRegiao,
-        espessura,
-        keff,
-        energia,
-        noNi,
-        Ni,
-      } = result;
+    for (let r = 0; r < numCelulasPorRegiao.length; r++) {
+      const zona = mapeamento[r];
+      const D = coeficientesDifusao[zona - 1];
+      const Sa = choquesMacroscopicosAbs[zona - 1];
+      const Sf = choquesMacroscopicosFis[zona - 1];
 
-      const E = 1.602176634e-13 * Number(energia);
+      const nCells = numCelulasPorRegiao[r];
+      const regionLength = espessura[r];
+      const hCell = regionLength / nCells;
 
-      const regInfosA = findAPoint(a);
-      const regInfosB = findAPoint(b);
-      if (regInfosA.length === 0 || regInfosB.length === 0) return -1;
+      const B2 = ((niValor * Sf) / keff - Sa) / D;
 
-      const startRegion = regInfosA[0];
-      const endRegion = regInfosB[0];
+      for (let k = 0; k < nCells; k++) {
+        const cellStart = xAccRegionStart + k * hCell;
+        const cellEnd = cellStart + hCell;
 
-      const niValor = noNi ? Number(Ni) : 1;
-      const eps = 1e-12;
+        const localA = Math.max(a, cellStart);
+        const localB = Math.min(b, cellEnd);
 
-      for (let i = startRegion; i <= endRegion; i++) {
-        const zona = mapeamento[i];
-        const D = coeficientesDifusao[zona - 1];
-        const Sa = choquesMacroscopicosAbs[zona - 1];
-        const Sf = choquesMacroscopicosFis[zona - 1];
+        if (localB <= localA) {
+          globalCellIndex++;
+          continue;
+        }
 
-        let dxa = 0;
-        let dxb = espessura[i];
-        if (i === regInfosA[0]) dxa = a - (regInfosA[1] - espessura[i]);
-        if (i === regInfosB[0]) dxb = b - (regInfosB[1] - espessura[i]);
-        if (dxb <= dxa) continue;
+        const dxA = localA - cellStart;
+        const dxB = localB - cellStart;
 
-        const idxA = 2 * i;
-        const idxC = idxA + 1;
-        if (idxC >= solution_consts.length) return -1; 
-        const A = solution_consts[idxA];
-        const C = solution_consts[idxC];
-
-        const B2 = (niValor * Sf) / keff - Sa;
+        const A = solution_consts[2 * globalCellIndex];
+        const C = solution_consts[2 * globalCellIndex + 1];
 
         if (B2 > 0) {
-          const B = Math.sqrt(B2 / D);
-          const denom = Math.abs(B) > eps ? B : eps;
+          const beta = Math.sqrt(B2);
+          const denom = Math.abs(beta) > eps ? beta : eps;
           power +=
             E *
             Sf *
-            ((A / denom) * (Math.sin(B * dxb) - Math.sin(B * dxa)) -
-              (C / denom) * (Math.cos(B * dxb) - Math.cos(B * dxa)));
+            ((A / denom) * (Math.sin(beta * dxB) - Math.sin(beta * dxA)) -
+              (C / denom) * (Math.cos(beta * dxB) - Math.cos(beta * dxA)));
         } else if (B2 < 0) {
-          const alpha = Math.sqrt(-B2 / D);
+          const alpha = Math.sqrt(-B2);
           const denom = Math.abs(alpha) > eps ? alpha : eps;
           power +=
             E *
             Sf *
-            ((A / denom) * (Math.sinh(alpha * dxb) - Math.sinh(alpha * dxa)) +
-              (C / denom) * (Math.cosh(alpha * dxb) - Math.cosh(alpha * dxa)));
+            ((A / denom) * (Math.sinh(alpha * dxB) - Math.sinh(alpha * dxA)) +
+              (C / denom) * (Math.cosh(alpha * dxB) - Math.cosh(alpha * dxA)));
         } else {
           power +=
             E *
             Sf *
-            (A * (dxb - dxa) + (C / 2) * (Math.pow(dxb, 2) - Math.pow(dxa, 2)));
+            (A * (dxB - dxA) + (C / 2) * (dxB * dxB - dxA * dxA));
         }
+
+        globalCellIndex++;
       }
+
+      xAccRegionStart += regionLength;
     }
 
-    return power;
+    return power/1e+6;
   }
 
 
