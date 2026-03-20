@@ -403,7 +403,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
         })()}
       </div>
 
-      {isResultStateNonMultiplicative(result) &&( 
+      {isResultStateNonMultiplicative(result) && (
         <div>
           <ArrayFormInput
             label="Digite um intervalo"
@@ -413,59 +413,93 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
             onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
           />
           <div style={{ justifyContent: 'center', alignItems: 'center' }}>
-            {(filterInterval.split(";").length === 2 && Number(filterInterval.split(";")[0]) >= 0 && Number(filterInterval.split(";")[1]) >= 0) && (
-              <p style={{ textAlign: 'center' }}>O valor em {filterInterval} é {absorptionRate(Number(filterInterval.split(";")[0]), Number(filterInterval.split(";")[1])).toExponential(5)}</p>
-            )}
+            {(() => {
+              if (filterInterval === '') return null;
+
+              const parts = filterInterval.split(';');
+              if (parts.length !== 2) return null;
+
+              const a = Number(parts[0]);
+              const b = Number(parts[1]);
+              const length = getComprimento();
+
+              // Validação do Domínio
+              if (Number.isNaN(a) || Number.isNaN(b) || a < 0 || b > length || b <= a) {
+                return (
+                  <p style={{ textAlign: 'center' }}>
+                    Intervalo inválido ou fora do domínio (0 a {length}).
+                  </p>
+                );
+              }
+
+              const value = absorptionRate(a, b);
+              
+              if (Number.isNaN(value) || value === -1) {
+                return (
+                  <p style={{ textAlign: 'center' }}>
+                    Erro ao calcular o intervalo.
+                  </p>
+                );
+              }
+
+              return (
+                <p style={{ textAlign: 'center' }}>
+                  O valor em {filterInterval} é {value.toExponential(5)}
+                </p>
+              );
+            })()}
           </div>
         </div>
-        )}
-      {isResultStateMultiplicative(result) &&( 
+      )}
+
+      {isResultStateMultiplicative(result) && (
         <div>
-        <ArrayFormInput
-          label="Digite um intervalo para determinar a potência local"
-          placeholder="Informe o intervalo para calcular a potência local a;b"
-          value={filterInterval}
-          msgAlert="Informe um intervalo do domínio para calcular a potência local."
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
-        />
-        <div style={{ justifyContent: 'center', alignItems: 'center' }}>
-          {(() => {
-            const parts = filterInterval.split(";");
+          <ArrayFormInput
+            label="Digite um intervalo para determinar a potência local"
+            placeholder="Informe o intervalo para calcular a potência local a;b"
+            value={filterInterval}
+            msgAlert="Informe um intervalo do domínio para calcular a potência local."
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) => setFilterInterval(event.target.value)}
+          />
+          <div style={{ justifyContent: 'center', alignItems: 'center' }}>
+            {(() => {
+              if (filterInterval === '') return null;
 
-            if (parts.length !== 2) {
-              return null;
-            }
+              const parts = filterInterval.split(';');
+              if (parts.length !== 2) return null;
 
-            const x = Number(parts[0]);
-            const y = Number(parts[1]);
+              const x = Number(parts[0]);
+              const y = Number(parts[1]);
+              const length = getComprimento();
 
-            if (Number.isNaN(x) || Number.isNaN(y) || x < 0 || y < 0 || y <= x) {
+              // Validação do Domínio adicionando a checagem com 'length'
+              if (Number.isNaN(x) || Number.isNaN(y) || x < 0 || y > length || y <= x) {
+                return (
+                  <p style={{ textAlign: 'center' }}>
+                    Intervalo inválido ou fora do domínio (0 a {length}).
+                  </p>
+                );
+              }
+
+              const value = powerRate(x, y);
+
+              if (Number.isNaN(value) || value === -1) {
+                return (
+                  <p style={{ textAlign: 'center' }}>
+                    Erro ao calcular o intervalo.
+                  </p>
+                );
+              }
+
               return (
                 <p style={{ textAlign: 'center' }}>
-                  Intervalo inválido.
+                  O valor em {filterInterval} é {value.toExponential(5)} MW.
                 </p>
               );
-            }
-
-            const value = powerRate(x, y);
-
-            if (Number.isNaN(value) || value === -1) {
-              return (
-                <p style={{ textAlign: 'center' }}>
-                  Intervalo inválido.
-                </p>
-              );
-            }
-
-            return (
-              <p style={{ textAlign: 'center' }}>
-                O valor em {filterInterval} é {value.toExponential(5)} MW.
-              </p>
-            );
-          })()}
+            })()}
+          </div>
         </div>
-        </div>
-        )}
+      )}
     </div>
   );
 }
