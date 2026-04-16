@@ -8,14 +8,16 @@ interface CheckBoxInputProps{
 }
 function CheckBoxInput(props: CheckBoxInputProps){
     return(
-    <div className="Check-Container">
-        <input
-        className="Check"
-        type='checkbox'
-        checked={props.value}
-        onChange={(event) => {props.onChange(event.target.checked)}}
-        ></input>
-         <label className="Label">{props.text}</label>
+    <div className="switch-container">
+        <label className="switch">
+            <input 
+            type="checkbox" 
+            checked={props.value}
+            onChange={(e) => props.onChange(e.target.checked)}
+            />
+            <span className="slider"></span>
+        </label>
+        <span className="switch-label">{props.text}</span>
     </div>
     )
 }

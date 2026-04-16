@@ -59,7 +59,9 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
 
   const [criterioParada, setCriterioParada] = useState<boolean>(false);
   const [passos, setPassos] = useState<number>(1);
-
+  const [albedo, setAlbedo] = useState<boolean>(false);
+  const [a, setA] = useState<string>("");
+  const [b, setB] = useState<string>("");
   useEffect(() => {
     if (initialState?.result) {
       const savedState = (initialState?.result as ResultStateMultiplicative);
@@ -360,14 +362,14 @@ const valitadionContorno = async () => {
     }
     await solveProblem();
   }
-catch (e) {
-  if (e instanceof Error) {
-    setMsgErro(e.message);
-  } else {
-    setMsgErro("Erro inesperado");
+  catch (e) {
+    if (e instanceof Error) {
+      setMsgErro(e.message);
+    } else {
+      setMsgErro("Erro inesperado");
+    }
+    setShowModal(true);
   }
-  setShowModal(true);
-}
 }
   const solveProblem = async () => {
     setValidated(false);
@@ -531,6 +533,13 @@ catch (e) {
               setCriterioParada={setCriterioParada}
               passos={passos}
               setPassos={setPassos}
+              setCCActive={setCCActive}
+              albedo={albedo}
+              setAlbedo={setAlbedo}
+              a={a}
+              setA={setA}
+              b={b}
+              setB={setB}
             />
           )}
         </div>

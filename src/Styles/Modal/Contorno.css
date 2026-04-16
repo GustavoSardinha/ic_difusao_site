@@ -16,7 +16,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    
+    max-height: 100vh;  
+    overflow-y: auto;  
 }
 .Title{
     color: #f9f9f9;;
@@ -32,6 +33,19 @@
     flex-direction: column;
     margin: 5vh;
 }
+.Div-buttons{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100vh;
+    gap: 2rem;
+}
+.Div-row{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 2vh 0;
+}
 @media (max-width: 600px) {
     .Row-container {
       flex-direction: column;
@@ -39,6 +53,13 @@
     }
     .Col-container{
         margin: 0vh;
+    }
+    .Div-buttons{
+        flex-direction: column;
+        width: 50vh;
+    }
+    .Div-row{
+        flex-direction: column;
     }
   }
 .Subtitle{

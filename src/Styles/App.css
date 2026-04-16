@@ -29,9 +29,10 @@
   border-bottom: 1px solid #ddd;   
   position:fixed;
   width: 100%;
+  z-index: 1000;
 }
 .App-header nav {
-  display: flex; 
+  display: flex;
 }
 .App-link {
   color: #61dafb;

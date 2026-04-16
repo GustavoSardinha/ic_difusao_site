@@ -24,8 +24,15 @@ interface ContornoModalProps {
   setShowModal: (value: boolean) => void;
   criterioParada: boolean;
   setCriterioParada: (value: boolean) => void;
+  albedo: boolean;
+  setAlbedo: (value: boolean) => void;
   passos: number;
   setPassos: (value: number) => void;
+  setCCActive: (value: boolean) => void;
+  a:string;
+  setA: (value: string) => void;
+  b:string;
+  setB: (value: string) => void;
 }
 
 function ContornoModal(props: ContornoModalProps) {
@@ -61,29 +68,52 @@ function ContornoModal(props: ContornoModalProps) {
           </div>
         </div>
         <div>
-          <CheckBoxInput
-            text = {"Critério de parada fixo"}
-            value = {props.criterioParada}
-            onChange = {props.setCriterioParada}
-          />
+        {(props.albedo) && (
+            <div  className="Div-row">
+                <div>
+                  <p className="Subtitle">Informe o comprimento do baffle</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Exemplo: 1 cm`}
+                      onChange={(value) => props.setA(value)}
+                      value={String(props.a)}
+                  />
+                </div>
+                <div>
+                  <p className="Subtitle">Informe o comprimento da água</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Exemplo: 1 cm`}
+                      onChange={(value) => props.setB(value)}
+                      value={String(props.b)}
+                  />
+                </div>
+            </div>
+          )}
           {(!props.criterioParada) && (
-            <div>
-                <p className="Subtitle">Critério de parada para keff</p>
-                <FormInputNoMask
-                    disabled={false}
-                    label=""
-                    placeholder={`Informe o críterio de parada para keff:`}
-                    onChange={(value) => props.setLKeff(value)}
-                    value={String(props.Lkeff)}
-                />
-                <p className="Subtitle">Critério de parada para fluxo</p>
-                <FormInputNoMask
-                    disabled={false}
-                    label=""
-                    placeholder={`Informe o críterio de parada para o fluxo:`}
-                    onChange={(value) => props.setLfluxo(value)}
-                    value={String(props.Lfluxo)}
-                />
+            <div  className="Div-row">
+                <div>
+                  <p className="Subtitle">Critério de parada para keff</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Informe o críterio de parada para keff`}
+                      onChange={(value) => props.setLKeff(value)}
+                      value={String(props.Lkeff)}
+                  />
+                </div>
+                <div>
+                  <p className="Subtitle">Critério de parada para fluxo</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Informe o críterio de parada para o fluxo`}
+                      onChange={(value) => props.setLfluxo(value)}
+                      value={String(props.Lfluxo)}
+                  />
+                </div>
             </div>
           )}
           {(props.criterioParada) && (
@@ -92,7 +122,7 @@ function ContornoModal(props: ContornoModalProps) {
               <FormInput
                 disabled={false}
                 label=""
-                placeholder={`Informe o número fixo de iterações:`}
+                placeholder={`Informe o número fixo de iterações`}
                 onChange={(value) => props.setPassos(Number(value))}
                 value={String(props.passos)}
               ></FormInput>
@@ -100,12 +130,34 @@ function ContornoModal(props: ContornoModalProps) {
           )
           }
         </div>
-        <div className="Button-container">
-          <input
-            className="Continue-button"
-            type="button"
-            onClick={props.successFunc}
-            value={"Executar"}
+        <div className="Div-buttons">
+          <div className="Button-container">
+            <input
+              className="Continue-button"
+              type="button"
+              onClick={props.successFunc}
+              value={"Executar"}
+            />
+          </div>
+          <div className="Button-container">
+            <input
+              className="Continue-button"
+              type="button"
+              onClick={() => props.setCCActive(false)}
+              value={"Fechar"}
+            />
+          </div>
+        </div>
+        <div className="Div-row">
+          <CheckBoxInput
+            text = {"Condição de contorno do tipo albedo"}
+            value = {props.albedo}
+            onChange = {props.setAlbedo}
+          />
+          <CheckBoxInput
+            text = {"Critério de parada fixo"}
+            value = {props.criterioParada}
+            onChange = {props.setCriterioParada}
           />
         </div>
       </div>
