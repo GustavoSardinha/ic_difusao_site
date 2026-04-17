@@ -354,11 +354,19 @@ const valitadionContorno = async () => {
   try{
     const lkeff = Number(Lkeff);
     const lfluxo = Number(Lfluxo);
+    const a_l = Number(a);
+    const b_l = Number(b);
     if (!Number.isFinite(lkeff) || lkeff === 0) {
       throw new Error("Valor inválido para critério de parada de keff");
     }
     if (!Number.isFinite(lfluxo) || lfluxo === 0) {
       throw new Error("Valor inválido para critério de parada do fluxo");
+    }
+    if (!Number.isFinite(a_l) || a_l === 0) {
+      throw new Error("Valor inválido para comprimento do baffle");
+    }
+    if (!Number.isFinite(b_l) || b_l === 0) {
+      throw new Error("Valor inválido para comprimento da água");
     }
     await solveProblem();
   }
