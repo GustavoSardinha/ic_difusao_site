@@ -14,7 +14,7 @@ import ArrayField from '../../Interfaces/ArrayField';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import {ResultStateMultiplicative} from '../../Interfaces/ResultStateMultiplicative';
 import FormInputWithAlert from '../../Components/FormInputWithAlert';
-import { number } from 'framer-motion';
+import { calculateAlbedo } from '../../Hooks/useAlbedoSolver';
 
 
 function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
@@ -59,9 +59,19 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
 
   const [criterioParada, setCriterioParada] = useState<boolean>(false);
   const [passos, setPassos] = useState<number>(1);
-  const [albedo, setAlbedo] = useState<boolean>(false);
-  const [a, setA] = useState<string>("");
-  const [b, setB] = useState<string>("");
+  const [albedoL, setAlbedoL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.albedoL || false);
+  const [albedoR, setAlbedoR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.albedoR || false);
+  const [aL, setAL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.aL?.toString() || "");
+  const [bL, setBL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bL?.toString() || "");  
+  const [aR, setAR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.aR?.toString() || "");
+  const [bR, setBR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bR?.toString() || ""); 
+  const [inf_bL, setInf_bL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bL || false);
+  const [inf_bR, setInf_bR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bR || false);
+  const [coefDifusaoL, setCoefDifuL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoL?.toString() || "");
+  const [coefDifusaoR, setCoefDifuR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoR?.toString() || "");
+  const [coefChoqueL, setCoefChoqueL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueL?.toString() || "");
+  const [coefChoqueR, setCoefChoqueR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueR?.toString() || "");
+
   useEffect(() => {
     if (initialState?.result) {
       const savedState = (initialState?.result as ResultStateMultiplicative);
@@ -83,7 +93,11 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       setFilterPoint(savedState.filterPoint.toString());
     }
   }, [initialState]);
-
+  useEffect(() => {
+    if (!noNi) {
+      setNi("");
+    }
+  }, [noNi]);
   const arrayFields: ArrayField[] = [
     {
       key
@@ -212,8 +226,13 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     } = result;
     let solResult: number[] = [];
     let newEsps: number[] = [];
-    let cond_left = contornoEsq.split(";").map(Number);
-    let cond_right = contornoDir.split(";").map(Number);
+    const { newContornoEsq, newContornoDir } = solveAlbedo();
+    let cond_left = newContornoEsq.split(";").map(Number);
+    let cond_right = newContornoDir.split(";").map(Number);
+    console.log(cond_left);
+    console.log(cond_right);
+    console.log(newContornoEsq);
+    console.log(newContornoDir);
     let itfluxo = 0;
     let keff: number = Math.sqrt(2);
     let keffs: number[] = [keff];
@@ -354,19 +373,66 @@ const valitadionContorno = async () => {
   try{
     const lkeff = Number(Lkeff);
     const lfluxo = Number(Lfluxo);
-    const a_l = Number(a);
-    const b_l = Number(b);
+    const albeldoL = Boolean(albedoL);
+    const albeldoR = Boolean(albedoR);
+    const a_l = Number(aL);
+    const b_l = Number(bL);
+    const a_r = Number(aR);
+    const b_r = Number(bR);
+    const coef_difu_l = coefDifusaoL.split(";").map(Number);
+    const coef_difu_r = coefDifusaoR.split(";").map(Number);
+    const coef_choque_l = coefChoqueL.split(";").map(Number);
+    const coef_choque_r = coefChoqueR.split(";").map(Number);
+
     if (!Number.isFinite(lkeff) || lkeff === 0) {
       throw new Error("Valor inválido para critério de parada de keff");
     }
     if (!Number.isFinite(lfluxo) || lfluxo === 0) {
       throw new Error("Valor inválido para critério de parada do fluxo");
     }
-    if (!Number.isFinite(a_l) || a_l === 0) {
-      throw new Error("Valor inválido para comprimento do baffle");
+    if(albeldoL){
+      if (!Number.isFinite(a_l) || a_l === 0) {
+        throw new Error("Valor inválido para comprimento do baffle na esquerda");
+      }
+      if(!inf_bL){
+        if (!Number.isFinite(b_l) || b_l === 0) {
+          throw new Error("Valor inválido para comprimento do refletor na esquerda");
+        }
+      }
+      if(coef_difu_l.length != 2){
+        throw new Error("Informe exatamente dois valores numéricos para os coeficientes de difusão na esquerda");
+      }
+      if(coef_choque_l.length != 2){
+        throw new Error("Informe exatamente dois valores numéricos separados por ; para as seções de choque macroscópicas na esquerda");
+      }
+      if(coef_difu_l.some(isNaN) || coef_difu_l.some(value => value <= 0)){
+        throw new Error("Informe apenas valores numéricos maiores que zero para os coeficientes de difusão na esquerda");
+      }
+      if(coef_choque_l.some(isNaN) || coef_choque_l.some(value => value < 0)){
+        throw new Error("Informe apenas valores numéricos maiores que zero para as seções de choque macroscópicas na esquerda");
+      }
     }
-    if (!Number.isFinite(b_l) || b_l === 0) {
-      throw new Error("Valor inválido para comprimento da água");
+    if(albeldoR){
+      if (!Number.isFinite(a_r) || a_r === 0) {
+        throw new Error("Valor inválido para comprimento do baffle na direita");
+      }
+      if(!inf_bR){
+        if (!Number.isFinite(b_r) || b_r === 0) {
+          throw new Error("Valor inválido para comprimento do refletor na direita");
+        }
+      }
+      if(coef_difu_r.length != 2){
+        throw new Error("Informe exatamente dois valores numéricos para os coeficientes de difusão na direita");
+      }
+      if(coef_choque_r.length != 2){
+        throw new Error("Informe exatamente dois valores numéricos separados por ; para as seções de choque macroscópicas na direita");
+      }
+      if(coef_difu_r.some(isNaN) || coef_difu_r.some(value => value <= 0)){
+        throw new Error("Informe apenas valores numéricos maiores que zero para os coeficientes de difusão na direita");
+      }
+      if(coef_choque_r.some(isNaN) || coef_choque_r.some(value => value < 0)){
+        throw new Error("Informe apenas valores numéricos maiores que zero para as seções de choque macroscópicas na direita");
+      }
     }
     await solveProblem();
   }
@@ -382,9 +448,8 @@ const valitadionContorno = async () => {
   const solveProblem = async () => {
     setValidated(false);
     const {solResult, newEsps, keffs, potenciais, itfluxo} = generateVectors();
-    console.log(potenciais);
-    console.log(newEsps);
     await new Promise(resolve => setTimeout(resolve, 0));
+    const{newContornoEsq, newContornoDir} = solveAlbedo();
     if(keffs != undefined){
       navigate("/relatorio", { 
         state: { 
@@ -394,9 +459,21 @@ const valitadionContorno = async () => {
             advancedOptions,
             filterPoint: Number(filterPoint),
             nogamma: noGamma,
-            contornoDir,
-            contornoEsq,
+            contornoDir: newContornoDir,
+            contornoEsq: newContornoEsq,
             keff: keffs[keffs.length - 1],
+            aL,
+            bL,
+            aR,
+            bR,
+            inf_bL,
+            inf_bR,
+            coefDifusaoL,
+            coefDifusaoR,
+            coefChoqueL,
+            coefChoqueR,
+            albedoL,
+            albedoR
           },
           vector_solutions: solResult,
           esps: newEsps,
@@ -407,7 +484,50 @@ const valitadionContorno = async () => {
       });
     }
   };
+  const solveAlbedo = () => {
+    let cond_left = contornoEsq.split(";").map(Number);
+    let cond_right = contornoDir.split(";").map(Number);
 
+    let newContornoEsq = contornoEsq;
+    let newContornoDir = contornoDir;
+
+    if (albedoL) {
+      const albedoValue = calculateAlbedo(
+        Number(aL),
+        Number(bL),
+        cond_left[1],
+        Number(coefDifusaoL.split(";")[0]),
+        Number(coefDifusaoL.split(";")[1]),
+        Number(coefChoqueL.split(";")[0]),
+        Number(coefChoqueL.split(";")[1]),
+        Boolean(inf_bL)
+      );
+
+      newContornoEsq = `${cond_left[0]};${albedoValue}`;
+      setContornoEsq(newContornoEsq);
+    }
+
+    if (albedoR) {
+      const albedoValue = calculateAlbedo(
+        Number(aR),
+        Number(bR),
+        cond_right[1],
+        Number(coefDifusaoR.split(";")[0]),
+        Number(coefDifusaoR.split(";")[1]),
+        Number(coefChoqueR.split(";")[0]),
+        Number(coefChoqueR.split(";")[1]),
+        Boolean(inf_bR)
+      );
+
+      newContornoDir = `${cond_right[0]};${albedoValue}`;
+      setContornoDir(newContornoDir);
+    }
+
+    return {
+      newContornoEsq,
+      newContornoDir
+    };
+  };
   return (
     <div className="App">
       <header className="App-header">
@@ -542,12 +662,30 @@ const valitadionContorno = async () => {
               passos={passos}
               setPassos={setPassos}
               setCCActive={setCCActive}
-              albedo={albedo}
-              setAlbedo={setAlbedo}
-              a={a}
-              setA={setA}
-              b={b}
-              setB={setB}
+              albedoL={albedoL}
+              setAlbedoL={setAlbedoL}
+              albedoR={albedoR}
+              setAlbedoR={setAlbedoR}
+              aL={aL}
+              setAL={setAL}
+              bL={bL}
+              setBL={setBL}
+              aR={aR}
+              setAR={setAR}
+              bR={bR}
+              setBR={setBR}
+              inf_bL={inf_bL}
+              setInf_bL={setInf_bL}
+              inf_bR={inf_bR}
+              setInf_bR={setInf_bR}
+              coefChoqueL={coefChoqueL}
+              setCoefChoqueL={setCoefChoqueL}
+              coefChoqueR={coefChoqueR}
+              setCoefChoqueR={setCoefChoqueR}
+              coefDifusaoL={coefDifusaoL}
+              setCoefDifuL={setCoefDifuL}
+              coefDifusaoR={coefDifusaoR}
+              setCoefDifuR={setCoefDifuR}
             />
           )}
         </div>

@@ -8,6 +8,7 @@ import AlertIcon from "../../../img/icons/error.png";
 import CheckBoxInput from "../../CheckBoxInput";
 import FormInput from "../../FormInput";
 
+
 interface ContornoModalProps {
   contornoEsq: string;
   setContornoEsq: (value: string) => void;
@@ -24,15 +25,33 @@ interface ContornoModalProps {
   setShowModal: (value: boolean) => void;
   criterioParada: boolean;
   setCriterioParada: (value: boolean) => void;
-  albedo: boolean;
-  setAlbedo: (value: boolean) => void;
+  albedoL: boolean;
+  setAlbedoL: (value: boolean) => void;
+  albedoR: boolean;
+  setAlbedoR: (value: boolean) => void;
+  inf_bL: boolean;
+  setInf_bL: (value: boolean) => void;
+  inf_bR: boolean;
+  setInf_bR: (value: boolean) => void;
   passos: number;
   setPassos: (value: number) => void;
   setCCActive: (value: boolean) => void;
-  a:string;
-  setA: (value: string) => void;
-  b:string;
-  setB: (value: string) => void;
+  aL:string;
+  setAL: (value: string) => void;
+  bL:string;
+  setBL: (value: string) => void;
+  aR:string;
+  setAR: (value: string) => void;
+  bR:string;
+  setBR: (value: string) => void;
+  coefDifusaoL: string;
+  setCoefDifuL: (value: string) => void;
+  coefDifusaoR: string;
+  setCoefDifuR: (value: string) => void;
+  coefChoqueL: string;
+  setCoefChoqueL: (value: string) => void;
+  coefChoqueR: string;
+  setCoefChoqueR: (value: string) => void;
 }
 
 function ContornoModal(props: ContornoModalProps) {
@@ -48,7 +67,9 @@ function ContornoModal(props: ContornoModalProps) {
               className="Picker"
               value={props.contornoEsq}
               onChange={(event) => {props.setContornoEsq(event.target.value)}}>
-              <option value="0;0">Reflexiva</option>
+              {(!props.albedoL) && (
+                <option value="0;0">Reflexiva</option>
+              )}
               <option value="0;99999999999999999999">Fluxo escalar nulo</option>
               <option value="0.5;0.5">Vácuo</option>
             </select>
@@ -61,37 +82,123 @@ function ContornoModal(props: ContornoModalProps) {
               value={props.contornoDir}
               onChange={(event) => {props.setContornoDir(event.target.value)}}
             >
-              <option value="0;0">Reflexiva</option>
+              {(!props.albedoR) && (
+                <option value="0;0">Reflexiva</option>
+              )}
               <option value="0;99999999999999999999">Fluxo escalar nulo</option>
               <option value="0.5;0.5">Vácuo</option>
             </select>
           </div>
         </div>
         <div>
-        {(props.albedo) && (
-            <div  className="Div-row">
+        <div className="Div-row">
+          <CheckBoxInput
+            text = {"Condição de contorno do tipo albedo"}
+            value = {props.albedoL}
+            onChange = {props.setAlbedoL}
+          />
+          <CheckBoxInput
+            text = {"Condição de contorno do tipo albedo"}
+            value = {props.albedoR}
+            onChange = {props.setAlbedoR}
+          />
+        </div>
+        <div className="Div-row">
+          <div  className="Div-col">
+            {(props.albedoL) && (
                 <div>
                   <p className="Subtitle">Informe o comprimento do baffle</p>
                   <FormInputNoMask
                       disabled={false}
                       label=""
-                      placeholder={`Exemplo: 1 cm`}
-                      onChange={(value) => props.setA(value)}
-                      value={String(props.a)}
+                      placeholder={`Digite o comprimento do baffle`}
+                      onChange={(value) => props.setAL(value)}
+                      value={String(props.aL)}
+                  />
+                {(!props.inf_bL) && (
+                  <div>
+                    <p className="Subtitle">Informe o comprimento do refletor </p>
+                    <FormInputNoMask
+                        disabled={props.inf_bL}
+                        label=""
+                      placeholder={`Digite o comprimento do refletor`}
+                      onChange={(value) => props.setBL(value)}
+                      value={String(props.bL)}
                   />
                 </div>
-                <div>
-                  <p className="Subtitle">Informe o comprimento da água</p>
+                )}
+                <CheckBoxInput
+                  text = {"Refletor infinito"}
+                  value = {props.inf_bL}
+                  onChange = {props.setInf_bL}
+                />
+                <p className="Subtitle">Informe os coeficientes de difusão</p>
                   <FormInputNoMask
                       disabled={false}
                       label=""
-                      placeholder={`Exemplo: 1 cm`}
-                      onChange={(value) => props.setB(value)}
-                      value={String(props.b)}
+                      placeholder={`Digite os coeficientes de difusão`}
+                      onChange={(value) => props.setCoefDifuL(value)}
+                      value={String(props.coefDifusaoL)}
+                  />
+                <p className="Subtitle">Informe as seções de choque macroscópicas</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Digite as seções de choque macroscópicas`}
+                      onChange={(value) => props.setCoefChoqueL(value)}
+                      value={String(props.coefChoqueL)}
                   />
                 </div>
+              )}
             </div>
-          )}
+            <div  className="Div-col">
+              {(props.albedoR) && (
+                  <div>
+                    <p className="Subtitle">Informe o comprimento do baffle</p>
+                    <FormInputNoMask
+                        disabled={false}
+                        label=""
+                        placeholder={`Digite o comprimento do baffle`}
+                        onChange={(value) => props.setAR(value)}
+                        value={String(props.aR)}
+                    />
+                  {(!props.inf_bR) && (
+                    <div>
+                      <p className="Subtitle">Informe o comprimento do refletor </p>
+                      <FormInputNoMask
+                          disabled={props.inf_bR}
+                          label=""
+                          placeholder={`Digite o comprimento do refletor`}
+                        onChange={(value) => props.setBR(value)}
+                        value={String(props.bR)}
+                    />
+                  </div>
+                  )}
+                  <CheckBoxInput
+                    text = {"Refletor infinito"}
+                    value = {props.inf_bR}
+                    onChange = {props.setInf_bR}
+                  />
+                  <p className="Subtitle">Informe os coeficientes de difusão</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Digite os coeficientes de difusão`}
+                      onChange={(value) => props.setCoefDifuR(value)}
+                      value={String(props.coefDifusaoR)}
+                  />
+                <p className="Subtitle">Informe as seções de choque macroscópicas</p>
+                  <FormInputNoMask
+                      disabled={false}
+                      label=""
+                      placeholder={`Digite as seções de choque macroscópicas`}
+                      onChange={(value) => props.setCoefChoqueR(value)}
+                      value={String(props.coefChoqueR)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
           {(!props.criterioParada) && (
             <div  className="Div-row">
                 <div>
@@ -149,11 +256,6 @@ function ContornoModal(props: ContornoModalProps) {
           </div>
         </div>
         <div className="Div-row">
-          <CheckBoxInput
-            text = {"Condição de contorno do tipo albedo"}
-            value = {props.albedo}
-            onChange = {props.setAlbedo}
-          />
           <CheckBoxInput
             text = {"Critério de parada fixo"}
             value = {props.criterioParada}
