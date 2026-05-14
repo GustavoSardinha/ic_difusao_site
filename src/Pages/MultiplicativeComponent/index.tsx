@@ -67,10 +67,16 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const [bR, setBR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bR?.toString() || ""); 
   const [inf_bL, setInf_bL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bL || false);
   const [inf_bR, setInf_bR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bR || false);
-  const [coefDifusaoL, setCoefDifuL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoL?.toString() || "");
-  const [coefDifusaoR, setCoefDifuR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoR?.toString() || "");
-  const [coefChoqueL, setCoefChoqueL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueL?.toString() || "");
-  const [coefChoqueR, setCoefChoqueR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueR?.toString() || "");
+  const [coefDifusaoRefL, setCoefDifuRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoRefL?.toString() || "");
+  const [coefDifusaoRefR, setCoefDifuRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoRefR?.toString() || "");
+  const [coefChoqueRefL, setCoefChoqueRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueRefL?.toString() || "");
+  const [coefChoqueRefR, setCoefChoqueRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueRefR?.toString() || "");
+  const [coefDifusaoBaffL, setCoefDifuBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoBaffL?.toString() || "");
+  const [coefDifusaoBaffR, setCoefDifuBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoBaffR?.toString() || "");
+  const [coefChoqueBaffL, setCoefChoqueBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueBaffL?.toString() || "");
+  const [coefChoqueBaffR, setCoefChoqueBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueBaffR?.toString() || "");
+  const [baffleL, setBaffleL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.baffleL || false);
+  const [baffleR, setBaffleR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.baffleR || false);
 
   useEffect(() => {
     if (initialState?.result) {
@@ -379,10 +385,14 @@ const valitadionContorno = async () => {
     const b_l = Number(bL);
     const a_r = Number(aR);
     const b_r = Number(bR);
-    const coef_difu_l = coefDifusaoL.split(";").map(Number);
-    const coef_difu_r = coefDifusaoR.split(";").map(Number);
-    const coef_choque_l = coefChoqueL.split(";").map(Number);
-    const coef_choque_r = coefChoqueR.split(";").map(Number);
+    const coef_difu_ref_l = Number(coefDifusaoRefL);
+    const coef_difu_baff_l = Number(coefDifusaoBaffL);
+    const coef_difu_ref_r = Number(coefDifusaoRefR);
+    const coef_difu_baff_r = Number(coefDifusaoBaffR);
+    const coef_choque_ref_l = Number(coefChoqueRefL);
+    const coef_choque_ref_r = Number(coefChoqueRefR);
+    const coef_choque_baff_l = Number(coefChoqueBaffL);
+    const coef_choque_baff_r = Number(coefChoqueBaffR);
 
     if (!Number.isFinite(lkeff) || lkeff === 0) {
       throw new Error("Valor inválido para critério de parada de keff");
@@ -391,47 +401,55 @@ const valitadionContorno = async () => {
       throw new Error("Valor inválido para critério de parada do fluxo");
     }
     if(albeldoL){
-      if (!Number.isFinite(a_l) || a_l === 0) {
-        throw new Error("Valor inválido para comprimento do baffle na esquerda");
+      if(baffleL){
+        if (!Number.isFinite(a_l) || a_l === 0) {
+          throw new Error("Valor inválido para comprimento do baffle na esquerda");
+        }
       }
       if(!inf_bL){
         if (!Number.isFinite(b_l) || b_l === 0) {
           throw new Error("Valor inválido para comprimento do refletor na esquerda");
         }
       }
-      if(coef_difu_l.length != 2){
-        throw new Error("Informe exatamente dois valores numéricos para os coeficientes de difusão na esquerda");
+      if(albeldoR){
+        if(baffleR){
+          if (!Number.isFinite(a_r) || a_r === 0) {
+            throw new Error("Valor inválido para comprimento do baffle na direita");
+          }
+        }
+        if(!inf_bR){
+          if (!Number.isFinite(b_r) || b_r === 0) {
+            throw new Error("Valor inválido para comprimento do refletor na direita");
+          }
+        }
+      } 
+      if(isNaN(coef_difu_ref_l) || coef_difu_ref_l <= 0){
+        throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do refletor na esquerda");
       }
-      if(coef_choque_l.length != 2){
-        throw new Error("Informe exatamente dois valores numéricos separados por ; para as seções de choque macroscópicas na esquerda");
+      if(isNaN(coef_choque_ref_l) || coef_choque_ref_l <= 0){
+        throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do refletor na esquerda");
       }
-      if(coef_difu_l.some(isNaN) || coef_difu_l.some(value => value <= 0)){
-        throw new Error("Informe apenas valores numéricos maiores que zero para os coeficientes de difusão na esquerda");
+      if(isNaN(coef_difu_ref_r) || coef_difu_ref_r <= 0){
+        throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do refletor na direita");
       }
-      if(coef_choque_l.some(isNaN) || coef_choque_l.some(value => value < 0)){
-        throw new Error("Informe apenas valores numéricos maiores que zero para as seções de choque macroscópicas na esquerda");
+      if(isNaN(coef_choque_ref_r) || coef_choque_ref_r <= 0){
+        throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do refletor na direita");
       }
-    }
-    if(albeldoR){
-      if (!Number.isFinite(a_r) || a_r === 0) {
-        throw new Error("Valor inválido para comprimento do baffle na direita");
-      }
-      if(!inf_bR){
-        if (!Number.isFinite(b_r) || b_r === 0) {
-          throw new Error("Valor inválido para comprimento do refletor na direita");
+      if(baffleL){
+        if(isNaN(coef_difu_baff_l) || coef_difu_baff_l <= 0){
+          throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do baffle na esquerda");
+        }
+        if(isNaN(coef_choque_baff_l) || coef_choque_baff_l <= 0){
+          throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do baffle na esquerda");
         }
       }
-      if(coef_difu_r.length != 2){
-        throw new Error("Informe exatamente dois valores numéricos para os coeficientes de difusão na direita");
-      }
-      if(coef_choque_r.length != 2){
-        throw new Error("Informe exatamente dois valores numéricos separados por ; para as seções de choque macroscópicas na direita");
-      }
-      if(coef_difu_r.some(isNaN) || coef_difu_r.some(value => value <= 0)){
-        throw new Error("Informe apenas valores numéricos maiores que zero para os coeficientes de difusão na direita");
-      }
-      if(coef_choque_r.some(isNaN) || coef_choque_r.some(value => value < 0)){
-        throw new Error("Informe apenas valores numéricos maiores que zero para as seções de choque macroscópicas na direita");
+      if(baffleR){
+        if(isNaN(coef_difu_baff_r) || coef_difu_baff_r <= 0){
+          throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do baffle na direita");
+        }
+        if(isNaN(coef_choque_baff_r) || coef_choque_baff_r <= 0){
+          throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do baffle na direita");
+        }
       }
     }
     await solveProblem();
@@ -468,10 +486,16 @@ const valitadionContorno = async () => {
             bR,
             inf_bL,
             inf_bR,
-            coefDifusaoL,
-            coefDifusaoR,
-            coefChoqueL,
-            coefChoqueR,
+            baffleL,
+            baffleR,
+            coefDifusaoRefL,
+            coefDifusaoRefR,
+            coefChoqueRefL,
+            coefChoqueRefR,
+            coefDifusaoBaffL,
+            coefDifusaoBaffR,
+            coefChoqueBaffL,
+            coefChoqueBaffR,
             albedoL,
             albedoR
           },
@@ -496,11 +520,12 @@ const valitadionContorno = async () => {
         Number(aL),
         Number(bL),
         cond_left[1],
-        Number(coefDifusaoL.split(";")[0]),
-        Number(coefDifusaoL.split(";")[1]),
-        Number(coefChoqueL.split(";")[0]),
-        Number(coefChoqueL.split(";")[1]),
-        Boolean(inf_bL)
+        Number(coefDifusaoRefL),
+        Number(coefDifusaoBaffL),
+        Number(coefChoqueRefL),
+        Number(coefChoqueBaffL),
+        Boolean(inf_bL),
+        baffleL
       );
 
       newContornoEsq = `${cond_left[0]};${albedoValue}`;
@@ -512,11 +537,12 @@ const valitadionContorno = async () => {
         Number(aR),
         Number(bR),
         cond_right[1],
-        Number(coefDifusaoR.split(";")[0]),
-        Number(coefDifusaoR.split(";")[1]),
-        Number(coefChoqueR.split(";")[0]),
-        Number(coefChoqueR.split(";")[1]),
-        Boolean(inf_bR)
+        Number(coefDifusaoRefR),
+        Number(coefDifusaoBaffR),
+        Number(coefChoqueRefR),
+        Number(coefChoqueBaffR),
+        Boolean(inf_bR),
+        baffleR
       );
 
       newContornoDir = `${cond_right[0]};${albedoValue}`;
@@ -678,14 +704,26 @@ const valitadionContorno = async () => {
               setInf_bL={setInf_bL}
               inf_bR={inf_bR}
               setInf_bR={setInf_bR}
-              coefChoqueL={coefChoqueL}
-              setCoefChoqueL={setCoefChoqueL}
-              coefChoqueR={coefChoqueR}
-              setCoefChoqueR={setCoefChoqueR}
-              coefDifusaoL={coefDifusaoL}
-              setCoefDifuL={setCoefDifuL}
-              coefDifusaoR={coefDifusaoR}
-              setCoefDifuR={setCoefDifuR}
+              coefChoqueRefL={coefChoqueRefL}
+              setCoefChoqueRefL={setCoefChoqueRefL}
+              coefChoqueRefR={coefChoqueRefR}
+              setCoefChoqueRefR={setCoefChoqueRefR}
+              coefDifusaoRefL={coefDifusaoRefL}
+              setCoefDifuRefL={setCoefDifuRefL}
+              coefDifusaoRefR={coefDifusaoRefR}
+              setCoefDifuRefR={setCoefDifuRefR}
+              coefChoqueBaffL={coefChoqueBaffL}
+              setCoefChoqueBaffL={setCoefChoqueBaffL}
+              coefChoqueBaffR={coefChoqueBaffR}
+              setCoefChoqueBaffR={setCoefChoqueBaffR}
+              coefDifusaoBaffL={coefDifusaoBaffL}
+              setCoefDifuBaffL={setCoefDifuBaffL}
+              coefDifusaoBaffR={coefDifusaoBaffR}
+              setCoefDifuBaffR={setCoefDifuBaffR}
+              baffleL={baffleL}
+              setBafflebL={setBaffleL}
+              baffleR={baffleR}
+              setBaffleR={setBaffleR}
             />
           )}
         </div>

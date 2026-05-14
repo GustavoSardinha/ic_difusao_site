@@ -19,10 +19,16 @@ export interface ResultStateMultiplicative extends ResultState{
   aR: number;
   bL: number;
   bR: number;
-  coefDifusaoL: number;
-  coefDifusaoR: number;
-  coefChoqueL: number;
-  coefChoqueR: number;
+  coefDifusaoRefL: number;
+  coefDifusaoRefR: number;
+  coefChoqueRefL: number;
+  coefChoqueRefR: number;
+  coefDifusaoBaffL: number;
+  coefDifusaoBaffR: number;
+  coefChoqueBaffL: number;
+  coefChoqueBaffR: number;
+  baffleL: boolean;
+  baffleR: boolean;
 }
 
 export function isResultStateMultiplicative(obj: any): obj is ResultStateMultiplicative {

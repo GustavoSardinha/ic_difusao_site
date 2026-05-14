@@ -550,7 +550,7 @@ const createKeffTable = (): string => {
                         (result as ResultStateNonMultiplicative).incidenciaDir
                       )
                     : showCondicoesdeContorno(
-                        result?.contornoEsq || '',
+                        result?.contornoDir || '',
                         '0'
                       )}
                 </div>
