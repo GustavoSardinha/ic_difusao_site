@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import "../../../Styles/Modal/Modal.css";
 import "../../../Styles/Modal/Contorno.css";
 import "../../../Styles/FormInput/Input.css";
@@ -15,7 +15,10 @@ interface ContornoModalProps {
   contornoDir: string;
   setContornoDir: (value: string) => void;
   L: number;
-  successFunc: () => void;
+  successFunc: (
+    contornoEsq: string,
+    contornoDir: string
+  ) => void;
   Lkeff: string;
   setLKeff: (value: string) => void
   Lfluxo: string;
@@ -67,6 +70,9 @@ interface ContornoModalProps {
 }
 
 function ContornoModal(props: ContornoModalProps) {
+  const contornoEsqRef = useRef<HTMLSelectElement>(null);
+  const contornoDirRef = useRef<HTMLSelectElement>(null);
+
   return (
     <div className="Modal-overlay Modal-overlayC">
       <h2 className="Title">Condições de Contorno</h2>
@@ -76,6 +82,7 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">Esquerda</p>
             <p className="Subtitle">x = 0</p>
             <select
+              ref={contornoEsqRef}
               className="Picker"
               value={props.contornoEsq}
               onChange={(event) => {props.setContornoEsq(event.target.value)}}>
@@ -90,6 +97,7 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">Direita</p>
             <p className="Subtitle">x = {props.L}</p>
             <select
+              ref={contornoDirRef}
               className="Picker"
               value={props.contornoDir}
               onChange={(event) => {props.setContornoDir(event.target.value)}}
@@ -120,7 +128,7 @@ function ContornoModal(props: ContornoModalProps) {
             {(props.albedoL) && (
                 <div>
                   <CheckBoxInput
-                  text = {"Incluir baffle"}
+                  text = {"Baffle implícito"}
                   value = {props.baffleL}
                   onChange = {props.setBafflebL}
                   />
@@ -196,7 +204,7 @@ function ContornoModal(props: ContornoModalProps) {
               {(props.albedoR) && (
                   <div>
                     <CheckBoxInput
-                    text = {"Incluir baffle"}
+                    text = {"Baffle implícito"}
                     value = {props.baffleR}
                     onChange = {props.setBaffleR}
                     />
@@ -312,7 +320,25 @@ function ContornoModal(props: ContornoModalProps) {
             <input
               className="Continue-button"
               type="button"
-              onClick={props.successFunc}
+              onClick={() => {
+                const contornoEsqAtual = contornoEsqRef.current?.value ?? "0;0";
+                const contornoDirAtual = contornoDirRef.current?.value ?? "0;0";
+
+                console.log("Contorno Esquerdo: " + contornoEsqAtual);
+                console.log("Contorno Direito: " + contornoDirAtual);
+
+                props.setContornoEsq(contornoEsqAtual);
+                props.setContornoDir(contornoDirAtual);
+
+                console.log("Contorno Esquerdo (state): " + props.contornoEsq);
+                console.log("Contorno Direito (state): " + props.contornoDir);
+
+              
+                props.successFunc(
+                  contornoEsqAtual,
+                  contornoDirAtual
+                );
+              }}
               value={"Executar"}
             />
           </div>

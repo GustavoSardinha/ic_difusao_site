@@ -214,7 +214,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       onError(err as Error);
     }
   };
-  const generateVectors = () => {
+  const generateVectors = (contornoEsqAtual: string, contornoDirAtual: string) => {
     
     if (!result) return { solutions: [], newEsps: [] };
     
@@ -232,7 +232,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     } = result;
     let solResult: number[] = [];
     let newEsps: number[] = [];
-    const { newContornoEsq, newContornoDir } = solveAlbedo();
+    const { newContornoEsq, newContornoDir } = solveAlbedo(contornoEsqAtual, contornoDirAtual);
     let cond_left = newContornoEsq.split(";").map(Number);
     let cond_right = newContornoDir.split(";").map(Number);
     console.log(cond_left);
@@ -375,7 +375,10 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     return {solResult, newEsps, keffs, potenciais, itfluxo};  
   };
 
-const valitadionContorno = async () => {
+const valitadionContorno = async (
+  contornoEsqAtual: string,
+  contornoDirAtual: string
+) => {
   try{
     const lkeff = Number(Lkeff);
     const lfluxo = Number(Lfluxo);
@@ -452,7 +455,10 @@ const valitadionContorno = async () => {
         }
       }
     }
-    await solveProblem();
+    await solveProblem(
+      contornoEsqAtual,
+      contornoDirAtual
+    );
   }
   catch (e) {
     if (e instanceof Error) {
@@ -463,11 +469,11 @@ const valitadionContorno = async () => {
     setShowModal(true);
   }
 }
-  const solveProblem = async () => {
+  const solveProblem = async (contornoEsqAtual: string, contornoDirAtual: string) => {
     setValidated(false);
-    const {solResult, newEsps, keffs, potenciais, itfluxo} = generateVectors();
+    const {solResult, newEsps, keffs, potenciais, itfluxo} = generateVectors(contornoEsqAtual, contornoDirAtual);
     await new Promise(resolve => setTimeout(resolve, 0));
-    const{newContornoEsq, newContornoDir} = solveAlbedo();
+    const{newContornoEsq, newContornoDir} = solveAlbedo(contornoEsqAtual, contornoDirAtual);
     if(keffs != undefined){
       navigate("/relatorio", { 
         state: { 
@@ -508,12 +514,13 @@ const valitadionContorno = async () => {
       });
     }
   };
-  const solveAlbedo = () => {
-    let cond_left = contornoEsq.split(";").map(Number);
-    let cond_right = contornoDir.split(";").map(Number);
-
-    let newContornoEsq = contornoEsq;
-    let newContornoDir = contornoDir;
+  const solveAlbedo = (contornoEsqAtual: string, contornoDirAtual: string) => {
+    let cond_left = contornoEsqAtual.split(";").map(Number);
+    let cond_right = contornoDirAtual.split(";").map(Number);
+    console.log("beta_esq: " + cond_left[1]);
+    console.log("beta_dir: " + cond_right[1]);
+    let newContornoEsq = contornoEsqAtual;
+    let newContornoDir = contornoDirAtual;
 
     if (albedoL) {
       const albedoValue = calculateAlbedo(
