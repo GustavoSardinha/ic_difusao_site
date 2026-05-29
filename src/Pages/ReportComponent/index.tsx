@@ -43,7 +43,30 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
       e / result.numCelulasPorRegiao[i]
     );
   };
+  const findBoundaryConditionType = (value: string): string => { 
+    switch(value) {
+      case "0;0":
+        return "Reflexiva";
+      case "0;99999999999999999999":
+        return "Fluxo escalar nulo";
+      case "0.5;0.5":
+        return "Vacúo";
+      default:
+        return "Desconecido";
+    }
+  }; 
 
+  const renderMultiplicativeLabel = (albedo: boolean, baffle: boolean, bound: string): ReactNode => {
+    if (!isResultStateMultiplicative(result)) return null;
+
+    if (albedo && baffle) {
+      return <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "6px" }}><strong>Tipo:</strong> Albedo Baffle-Refletor</div>;
+    }
+    if (albedo && !baffle) {
+        return <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "6px" }}><strong>Tipo:</strong> Albedo Refletor</div>;
+    }
+    return <div style={{ fontSize: "14px", color: "#6c757d", marginBottom: "6px" }}><strong>Tipo:</strong> {findBoundaryConditionType(bound)}</div>;
+  };
   const createGraphics = async (): Promise<string> => {
   if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
 
@@ -511,6 +534,13 @@ const createKeffTable = (): string => {
                   Esquerda: <br></br> x = 0
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
+                  {isResultStateMultiplicative(result) && 
+                    renderMultiplicativeLabel(
+                      (result as ResultStateMultiplicative).albedoL, 
+                      (result as ResultStateMultiplicative).baffleL, 
+                      (result as ResultStateMultiplicative).contornoEsq
+                    )
+                  }
                   { isResultStateNonMultiplicative(result)
                     ? showCondicoesdeContorno(
                         result.contornoEsq,
@@ -543,6 +573,13 @@ const createKeffTable = (): string => {
                   Direita: <br></br>x = {result?.comprimento || 0}
                 </h3>
                 <div style={{ fontSize: 18, color: '#333', margin: 0 }}>
+                  {isResultStateMultiplicative(result) && 
+                    renderMultiplicativeLabel(
+                      (result as ResultStateMultiplicative).albedoR, 
+                      (result as ResultStateMultiplicative).baffleR, 
+                      (result as ResultStateMultiplicative).contornoDir
+                    )
+                  }
                   { isResultStateNonMultiplicative(result)
                     ? showCondicoesdeContorno(
                         result.contornoDir,

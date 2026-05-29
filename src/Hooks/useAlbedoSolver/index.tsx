@@ -3,7 +3,7 @@ export const calculateAlbedo = (a : number, b : number, beta : number, D1 : numb
     let alpha = oneRegionAlbedo(b, D1, Sg1, beta, isInf);
     
     if(baffle){
-        alpha = oneRegionAlbedo(a, D2, Sg2, alpha, isInf);
+        alpha = oneRegionAlbedo(a, D2, Sg2, alpha, false);
     }
     return alpha;
 }

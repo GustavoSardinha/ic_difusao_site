@@ -324,14 +324,8 @@ function ContornoModal(props: ContornoModalProps) {
                 const contornoEsqAtual = contornoEsqRef.current?.value ?? "0;0";
                 const contornoDirAtual = contornoDirRef.current?.value ?? "0;0";
 
-                console.log("Contorno Esquerdo: " + contornoEsqAtual);
-                console.log("Contorno Direito: " + contornoDirAtual);
-
                 props.setContornoEsq(contornoEsqAtual);
                 props.setContornoDir(contornoDirAtual);
-
-                console.log("Contorno Esquerdo (state): " + props.contornoEsq);
-                console.log("Contorno Direito (state): " + props.contornoDir);
 
               
                 props.successFunc(
