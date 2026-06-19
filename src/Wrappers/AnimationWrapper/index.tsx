@@ -7,6 +7,7 @@ import MultiplicativeWrapper from '../MultiplicativeWrapper';
 import NonMultiplicativeWrapper from '../NonMultiplicativeWrapper';
 import ReportWrapper from '../ReportWrapper';
 import ReconstructionWrapper from '../ReconstructionWrapper';
+import DrivenPowerWrapper from '../DrivenPowerWrapper';
 
 export default function AnimatedRoutes() {
   const location = useLocation();
@@ -27,6 +28,7 @@ export default function AnimatedRoutes() {
           <Route path="/multiplicativo" element={<MultiplicativeWrapper />} />
           <Route path="/relatorio" element={<ReportWrapper />} />
           <Route path="/reconstrucao" element={<ReconstructionWrapper />} />
+          <Route path="/estabilizar-potencia" element={<DrivenPowerWrapper />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

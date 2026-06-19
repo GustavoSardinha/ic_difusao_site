@@ -98,8 +98,8 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
             datasets: [
               {
                 label: "Ponto da malha de discretização",
-                borderColor: "rgba(255, 99, 132, 0.0)",
-                backgroundColor: "rgba(255, 99, 132, 0.8)",
+                borderColor: "rgb(44, 12, 226)",
+                backgroundColor: "rgb(44, 12, 226)",
                 pointRadius: 1.5,
                 data: data,
               },
@@ -368,7 +368,11 @@ const createKeffTable = (): string => {
       state: { result, vector_solutions, esps }
     });
   }
-  
+  const DrivenPower = () => {
+    navigate("/estabilizar-potencia", { 
+      state: { result, vector_solutions, esps }
+    });
+  }
   return(
     <div>
       <div style={{margin: '5vh'}}>
@@ -379,7 +383,7 @@ const createKeffTable = (): string => {
           <input type='button' value={"Reconstrução analítica"} className='Continue-button' onClick={Reconstrucition}/>
         )}
         {isResultStateMultiplicative(result) && (!result?.keff || result?.keff < 1) && (
-          <input type='button' value={"Estabilização de Potência"} className='Continue-button'/>
+          <input type='button' value={"Estabilização de Potência"} className='Continue-button' onClick={DrivenPower}/>
         )}
       </div>
       <div

@@ -47,6 +47,10 @@ const PlotComponent: React.FC<PlotCompProps> = ({
           type: 'scatter',
           mode: 'lines',
           name: 'Fluxo escalar de nêutrons X Posição', 
+          line: {
+            color: '#003366', 
+            width: 2,
+          }
         },
       ]}
       layout={{
@@ -56,7 +60,7 @@ const PlotComponent: React.FC<PlotCompProps> = ({
         legend: {
           x: 0.05,
           y: 1,
-          bgcolor: 'rgba(255,255,255,0.7)',
+          bgcolor: 'rgba(255, 255, 255, 0.92)',
           bordercolor: 'black',
           borderwidth: 1,
         },
