@@ -2,16 +2,20 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import ResultState from '../../Interfaces/ResultState';
+import PlotComponent from '../../Components/AnaliticalGraphics/PlotComponent';
+import CheckBoxInput from '../../Components/CheckBoxInput';
 
 function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   const [result, setResult] = useState<ResultState | null>(initialState?.result || null);
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Estado que controlará o nosso interruptor
+  const [source, setSource] = useState<boolean>(false);
 
   const [boundaries, setBoundaries] = useState<number[]>([]);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
 
-  // 1. Inicializa as linhas divisórias APENAS NA MONTAGEM (se houver regiões)
   useEffect(() => {
     if (result?.numRegioes) {
       const initialBoundaries: number[] = [];
@@ -24,7 +28,6 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     }
   }, [result?.numRegioes]);
 
-  // 2. Lida com o arraste do mouse
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (draggingIndex === null || !containerRef.current) return;
@@ -35,13 +38,9 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
       const newBoundaries = [...boundaries];
       const minRegionSize = 0; 
 
-      // Torna a lógica dinâmica para suportar N barras
-      // O limite esquerdo é a barra anterior (ou 0%)
       const prevBoundary = draggingIndex === 0 ? 0 : boundaries[draggingIndex - 1];
-      // O limite direito é a próxima barra (ou 100%)
       const nextBoundary = draggingIndex === boundaries.length - 1 ? 100 : boundaries[draggingIndex + 1];
 
-      // Trava a barra para não ultrapassar os vizinhos
       newBoundaryPct = Math.max(
         prevBoundary + minRegionSize, 
         Math.min(newBoundaryPct, nextBoundary - minRegionSize)
@@ -66,14 +65,12 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     };
   }, [draggingIndex, boundaries]);
 
-  // 3. Calcula as regiões dinamicamente com base nas boundaries ATUAIS
   const regions = [];
   if (result?.numRegioes) {
     for (let i = 0; i < result.numRegioes; i++) {
       const start = i === 0 ? 0 : boundaries[i - 1];
       const end = i === result.numRegioes - 1 ? 100 : boundaries[i];
       
-      // Fallback seguro caso as boundaries ainda não estejam montadas
       const percentual = (end !== undefined && start !== undefined) 
         ? (end - start) 
         : (100 / result.numRegioes);
@@ -84,6 +81,53 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      
+      {/* Design do Interruptor da Fonte de Nêutrons */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+        <span style={{ marginRight: '15px', fontWeight: 'bold', color: '#333', fontSize: '14px' }}>
+          Fonte Externa de Nêutrons
+        </span>
+        
+        <div
+          onClick={() => setSource(!source)}
+          style={{
+            width: '46px',
+            height: '24px',
+            backgroundColor: source ? '#019722' : '#ccc',
+            borderRadius: '12px',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s ease',
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+          }}
+        >
+          <div
+            style={{
+              width: '20px',
+              height: '20px',
+              backgroundColor: 'white',
+              borderRadius: '50%',
+              position: 'absolute',
+              top: '2px',
+              left: source ? '24px' : '2px',
+              transition: 'left 0.3s ease',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+            }}
+          />
+        </div>
+
+        <span style={{ 
+          marginLeft: '15px', 
+          color: source ? '#019722' : '#777', 
+          fontWeight: 'bold',
+          fontSize: '13px'
+        }}>
+          {source ? 'LIGADA' : 'DESLIGADA'}
+        </span>
+      </div>
+      <span style={{ marginRight: '15px', fontWeight: 'bold', color: '#333', fontSize: '14px', marginBottom: '10px', display: 'block' }}>
+        Distribuição de Potência:
+      </span>
       <div 
         ref={containerRef}
         style={{ 
@@ -93,9 +137,11 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
           width: '100%', 
           border: '1px solid #ccc',
           userSelect: 'none',
-          overflow: 'hidden' // Evita que arredondamentos quebrem o layout
+          overflow: 'hidden',
+          marginBottom: '20px'
         }}
       >
+
         {regions.map((region, index) => (
           <div 
             key={`region-${index}`}
@@ -125,7 +171,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
               top: 0,
               bottom: 0,
               width: '5px',
-              marginLeft: '-2.5px', // Centraliza a barra (metade de 5px)
+              marginLeft: '-2.5px', 
               backgroundColor: draggingIndex === index ? '#019722' : '#d1cece',
               border: '1px solid #333',
               cursor: 'col-resize',
@@ -135,6 +181,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
           />
         ))}
       </div>
+      <PlotComponent f={(x) => {return x + 1}} L={1000} range={[0, 100]} />
     </div>
   );
 }

@@ -134,10 +134,9 @@ function ContornoModal(props: ContornoModalProps) {
                   />
                 {(props.baffleL) && (
                   <div>
-                    <p className="Subtitle">Informe o comprimento do baffle</p>
                     <FormInputNoMask
                         disabled={false}
-                        label=""
+                        label="Informe o comprimento do baffle"
                         placeholder={`Digite o comprimento do baffle`}
                         onChange={(value) => props.setAL(value)}
                         value={String(props.aL)}
@@ -146,10 +145,9 @@ function ContornoModal(props: ContornoModalProps) {
                 )}
                 {(!props.inf_bL) && (
                   <div>
-                    <p className="Subtitle">Informe o comprimento do refletor </p>
                     <FormInputNoMask
                         disabled={props.inf_bL}
-                        label=""
+                        label="Informe o comprimento do refletor"
                       placeholder={`Digite o comprimento do refletor`}
                       onChange={(value) => props.setBL(value)}
                       value={String(props.bL)}
@@ -161,36 +159,32 @@ function ContornoModal(props: ContornoModalProps) {
                   value = {props.inf_bL}
                   onChange = {props.setInf_bL}
                 />
-                <p className="Subtitle">Informe o coeficiente de difusão do refletor</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
+                      label="Informe o coeficiente de difusão do refletor"
                       placeholder={`Digite os coeficientes de difusão`}
                       onChange={(value) => props.setCoefDifuRefL(value)}
                       value={String(props.coefDifusaoRefL)}
                   />
-                <p className="Subtitle">Informe a seção de choque macroscópica do refletor</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
+                      label="Informe a seção de choque macroscópica do refletor"
                       placeholder={`Digite as seções de choque macroscópicas`}
                       onChange={(value) => props.setCoefChoqueRefL(value)}
                       value={String(props.coefChoqueRefL)}
                   />
                 {(props.baffleL) && (
                   <div>
-                    <p className="Subtitle">Informe o coeficiente de difusão do baffle</p>
                     <FormInputNoMask
                         disabled={false}
-                        label=""
+                        label="Informe o coeficiente de difusão do baffle"
                         placeholder={`Digite os coeficientes de difusão`}
                         onChange={(value) => props.setCoefDifuBaffL(value)}
                         value={String(props.coefDifusaoBaffL)}
                     />
-                  <p className="Subtitle">Informe a seção de choque macroscópica do baffle</p>
                     <FormInputNoMask
                         disabled={false}
-                        label=""
+                        label="Informe a seção de choque macroscópica do baffle"
                         placeholder={`Digite as seções de choque macroscópicas`}
                         onChange={(value) => props.setCoefChoqueBaffL(value)}
                         value={String(props.coefChoqueBaffL)}
@@ -210,10 +204,9 @@ function ContornoModal(props: ContornoModalProps) {
                     />
                     {(props.baffleR) && (
                       <div>
-                        <p className="Subtitle">Informe o comprimento do baffle</p>
                         <FormInputNoMask
                             disabled={false}
-                            label=""
+                            label="Informe o comprimento do baffle"
                             placeholder={`Digite o comprimento do baffle`}
                             onChange={(value) => props.setAR(value)}
                             value={String(props.aR)}
@@ -222,10 +215,9 @@ function ContornoModal(props: ContornoModalProps) {
                     )}
                   {(!props.inf_bR) && (
                     <div>
-                      <p className="Subtitle">Informe o comprimento do refletor </p>
                       <FormInputNoMask
                           disabled={props.inf_bR}
-                          label=""
+                          label="Informe o comprimento do refletor"
                           placeholder={`Digite o comprimento do refletor`}
                         onChange={(value) => props.setBR(value)}
                         value={String(props.bR)}
@@ -237,36 +229,32 @@ function ContornoModal(props: ContornoModalProps) {
                     value = {props.inf_bR}
                     onChange = {props.setInf_bR}
                   />
-                  <p className="Subtitle">Informe o coeficiente de difusão do refletor</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
+                      label="Informe o coeficiente de difusão do refletor"
                       placeholder={`Digite os coeficientes de difusão`}
                       onChange={(value) => props.setCoefDifuRefR(value)}
                       value={String(props.coefDifusaoRefR)}
                   />
-                  <p className="Subtitle">Informe a seção de choque macroscópica do refletor</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
+                      label="Informe a seção de choque macroscópica do refletor"
                       placeholder={`Digite as seções de choque macroscópicas`}
                       onChange={(value) => props.setCoefChoqueRefR(value)}
                       value={String(props.coefChoqueRefR)}
                   />
                   {(props.baffleR) && (
                     <div>
-                      <p className="Subtitle">Informe o coeficiente de difusão do baffle</p>
                       <FormInputNoMask
                           disabled={false}
-                          label=""
+                          label="Informe o coeficiente de difusão do baffle"
                           placeholder={`Digite os coeficientes de difusão`}
                           onChange={(value) => props.setCoefDifuBaffR(value)}
                           value={String(props.coefDifusaoBaffR)}
                       />
-                      <p className="Subtitle">Informe a seção de choque macroscópica do baffle</p>
                       <FormInputNoMask
                           disabled={false}
-                          label=""
+                          label="Informe a seção de choque macroscópica do baffle"
                           placeholder={`Digite as seções de choque macroscópicas`}
                           onChange={(value) => props.setCoefChoqueBaffR(value)}
                           value={String(props.coefChoqueBaffR)}
@@ -280,21 +268,19 @@ function ContornoModal(props: ContornoModalProps) {
           {(!props.criterioParada) && (
             <div  className="Div-row">
                 <div>
-                  <p className="Subtitle">Critério de parada para keff</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
-                      placeholder={`Informe o críterio de parada para keff`}
+                      label="Informe o critério de parada para keff"
+                      placeholder={`Digite o critério de parada para keff`}
                       onChange={(value) => props.setLKeff(value)}
                       value={String(props.Lkeff)}
                   />
                 </div>
                 <div>
-                  <p className="Subtitle">Critério de parada para fluxo</p>
                   <FormInputNoMask
                       disabled={false}
-                      label=""
-                      placeholder={`Informe o críterio de parada para o fluxo`}
+                      label="Informe o critério de parada para fluxo"
+                      placeholder={`Digite o critério de parada para o fluxo`}
                       onChange={(value) => props.setLfluxo(value)}
                       value={String(props.Lfluxo)}
                   />
@@ -306,8 +292,8 @@ function ContornoModal(props: ContornoModalProps) {
               <p className="Subtitle">Número fixo de iterações</p>
               <FormInput
                 disabled={false}
-                label=""
-                placeholder={`Informe o número fixo de iterações`}
+                label="Informe o número fixo de iterações"
+                placeholder={`Digite o número fixo de iterações`}
                 onChange={(value) => props.setPassos(Number(value))}
                 value={String(props.passos)}
               ></FormInput>
