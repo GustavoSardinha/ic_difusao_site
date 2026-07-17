@@ -8,20 +8,33 @@ interface PlotCompProps {
   f: (x: number) => number;
   L: number;
   range: [number, number];
+  x_data?: number[];
+  markers?: boolean;
 }
 
 const PlotComponent: React.FC<PlotCompProps> = ({
   f,
   L,
   range,
+  x_data,
+  markers = false,
 }) => {
   const [a, b] = range;
 
-  const x = Array.from({ length: L }, (_, i) =>
-    a + ((b - a) * i) / (L - 1)
-  );
+  let x;
+  if(x_data !== undefined) {
+    x = x_data;
+  } 
+  else {
+    x = Array.from({ length: L }, (_, i) =>
+      a + ((b - a) * i) / (L - 1)
+    );
+  }
 
   const y = x.map((v) => {
+    if(f(v) == null || isNaN(f(v))) {
+      return NaN;
+    }
     if (f(v) > 1e18) {
       return 1e18 * Number((f(v) / 1e18).toFixed(5));
     }
@@ -45,7 +58,7 @@ const PlotComponent: React.FC<PlotCompProps> = ({
           x,
           y,
           type: 'scatter',
-          mode: 'lines',
+          mode: markers ? 'markers' : 'lines',
           name: 'Fluxo escalar de nêutrons X Posição', 
           line: {
             color: '#003366', 

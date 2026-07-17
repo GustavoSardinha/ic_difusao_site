@@ -324,7 +324,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   };
 
   const Reconstrucition = () => navigate("/reconstrucao", { state: { result, vector_solutions, esps } });
-  const DrivenPower = () => navigate("/estabilizar-potencia", { state: { result, vector_solutions, esps } });
+  const DrivenPower = () => navigate("/estabilizar-potencia", { state: { result, vector_solutions, esps, vector_pot } });
 
   return (
     <div style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', padding: '20px' }}>

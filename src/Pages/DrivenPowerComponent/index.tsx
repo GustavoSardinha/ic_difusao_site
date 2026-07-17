@@ -1,93 +1,87 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
 import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import ResultState from '../../Interfaces/ResultState';
 import PlotComponent from '../../Components/AnaliticalGraphics/PlotComponent';
-import CheckBoxInput from '../../Components/CheckBoxInput';
+import PlotHistogramComponent from '../../Components/AnaliticalGraphics/PlotHistogramComponent';
 
 function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
-  const [result, setResult] = useState<ResultState | null>(initialState?.result || null);
-  const navigate = useNavigate();
+  const [result] = useState<ResultState | null>(initialState?.result || null);
+  const [vector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
+  const [vector_pot] = useState<number[]>(initialState?.vector_pot || []);
   const containerRef = useRef<HTMLDivElement>(null);
-  
-  // Estado que controlará o nosso interruptor
-  const [source, setSource] = useState<boolean>(false);
+  const [targetPower, setTargetPower] = useState<number[]>([...vector_pot]);
 
-  const [boundaries, setBoundaries] = useState<number[]>([]);
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [source, setSource] = useState(false);
+  const [draggingIndex] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (result?.numRegioes) {
-      const initialBoundaries: number[] = [];
-      const regionSize = 100 / result.numRegioes;
-      
-      for (let i = 0; i < result.numRegioes - 1; i++) {
-        initialBoundaries.push(regionSize * (i + 1));
+  const totalPower = vector_pot.reduce((acc, value) => acc + value, 0);
+
+  const regions = vector_pot.map((power) => ({
+    power,
+    percentual: totalPower > 0 ? (power / totalPower) * 100 : 0,
+  }));
+
+  function getDX(): number[] {
+    const dx: number[] = [];
+    let x = 0;
+    let xL = 0;
+
+    for (let i = 0; i < result?.numRegioes!; i++) {
+      xL += result?.espessura[i] || 0;
+      const cellSize =
+        (result?.espessura[i] || 1) /
+        (result?.numCelulasPorRegiao[i] || 1);
+
+      while (x !== xL) {
+        dx.push(x);
+        x += cellSize;
       }
-      setBoundaries(initialBoundaries);
-    }
-  }, [result?.numRegioes]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (draggingIndex === null || !containerRef.current) return;
-
-      const rect = containerRef.current.getBoundingClientRect();
-      let newBoundaryPct = ((e.clientX - rect.left) / rect.width) * 100;
-
-      const newBoundaries = [...boundaries];
-      const minRegionSize = 0; 
-
-      const prevBoundary = draggingIndex === 0 ? 0 : boundaries[draggingIndex - 1];
-      const nextBoundary = draggingIndex === boundaries.length - 1 ? 100 : boundaries[draggingIndex + 1];
-
-      newBoundaryPct = Math.max(
-        prevBoundary + minRegionSize, 
-        Math.min(newBoundaryPct, nextBoundary - minRegionSize)
-      );
-
-      newBoundaries[draggingIndex] = newBoundaryPct;
-      setBoundaries(newBoundaries);
-    };
-
-    const handleMouseUp = () => {
-      setDraggingIndex(null); 
-    };
-
-    if (draggingIndex !== null) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
     }
 
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [draggingIndex, boundaries]);
+    dx.push(xL);
 
-  const regions = [];
-  if (result?.numRegioes) {
-    for (let i = 0; i < result.numRegioes; i++) {
-      const start = i === 0 ? 0 : boundaries[i - 1];
-      const end = i === result.numRegioes - 1 ? 100 : boundaries[i];
-      
-      const percentual = (end !== undefined && start !== undefined) 
-        ? (end - start) 
-        : (100 / result.numRegioes);
-      
-      regions.push({ percentual });
-    }
+    return dx;
   }
 
+  function getSolutions(x: number): number {
+    const dx = getDX();
+    const i = dx.findIndex((value) => value === x);
+    return i >= 0 ? vector_solutions[i] : NaN;
+  }
+
+  function getRegions(): number[] {
+    const regions: number[] = [];
+    let x = 0;
+
+    for (let i = 0; i < result?.numRegioes!; i++) {
+      const cellSize = result?.espessura[i] || 2;
+      regions.push((2 * x + cellSize) / 2);
+      x += cellSize;
+    }
+
+    return regions;
+  }
+  function updateTargetPower(index: number, value: string) {
+    const newValues = [...targetPower];
+    newValues[index] = Number(value);
+    setTargetPower(newValues);
+  }
+
+  const totalTargetPower = targetPower.reduce((acc, value) => acc + value, 0);
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      
-      {/* Design do Interruptor da Fonte de Nêutrons */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-        <span style={{ marginRight: '15px', fontWeight: 'bold', color: '#333', fontSize: '14px' }}>
+        <span
+          style={{
+            marginRight: '15px',
+            fontWeight: 'bold',
+            color: '#333',
+            fontSize: '14px',
+          }}
+        >
           Fonte Externa de Nêutrons
         </span>
-        
+
         <div
           onClick={() => setSource(!source)}
           style={{
@@ -98,7 +92,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
             position: 'relative',
             cursor: 'pointer',
             transition: 'background-color 0.3s ease',
-            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+            boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)',
           }}
         >
           <div
@@ -111,77 +105,198 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
               top: '2px',
               left: source ? '24px' : '2px',
               transition: 'left 0.3s ease',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
             }}
           />
         </div>
 
-        <span style={{ 
-          marginLeft: '15px', 
-          color: source ? '#019722' : '#777', 
-          fontWeight: 'bold',
-          fontSize: '13px'
-        }}>
+        <span
+          style={{
+            marginLeft: '15px',
+            color: source ? '#019722' : '#777',
+            fontWeight: 'bold',
+            fontSize: '13px',
+          }}
+        >
           {source ? 'LIGADA' : 'DESLIGADA'}
         </span>
       </div>
-      <span style={{ marginRight: '15px', fontWeight: 'bold', color: '#333', fontSize: '14px', marginBottom: '10px', display: 'block' }}>
-        Distribuição de Potência:
-      </span>
-      <div 
-        ref={containerRef}
-        style={{ 
-          position: 'relative', 
-          display: 'flex', 
-          height: '30px', 
-          width: '100%', 
-          border: '1px solid #ccc',
-          userSelect: 'none',
-          overflow: 'hidden',
-          marginBottom: '20px'
+
+      <span
+        style={{
+          marginRight: '15px',
+          fontWeight: 'bold',
+          color: '#333',
+          fontSize: '14px',
+          marginBottom: '10px',
+          display: 'block',
         }}
       >
+        Distribuição de Potência:
+      </span>
 
+      <div
+        ref={containerRef}
+        style={{
+          display: 'flex',
+          height: '30px',
+          width: '100%',
+          border: '1px solid #ccc',
+          overflow: 'hidden',
+          marginBottom: '20px',
+        }}
+      >
         {regions.map((region, index) => (
-          <div 
-            key={`region-${index}`}
-            style={{ 
-              width: `${region.percentual}%`, 
-              backgroundColor:'#6c757d', 
+          <div
+            key={index}
+            style={{
+              width: `${region.percentual}%`,
+              minWidth: '20px',
+              backgroundColor: region.power === 0 ? '#dc3545' : '#6c757d',
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'center',
+              alignItems: 'center',
               color: 'white',
               fontSize: '12px',
               fontWeight: 'bold',
-              transition: draggingIndex === null ? 'width 0.1s ease-out' : 'none', 
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+              boxSizing: 'border-box',
+              borderRight: index < regions.length - 1 ? '1px solid #fff' : 'none',
+              transition: draggingIndex === null ? 'width 0.1s ease-out' : 'none',
             }}
           >
-            {Math.round(region.percentual)}%
+            {region.percentual.toFixed(1)}%
           </div>
         ))}
-
-        {boundaries.map((boundary, index) => (
-          <div
-            key={`handle-${index}`}
-            onMouseDown={() => setDraggingIndex(index)}
-            style={{
-              position: 'absolute',
-              left: `${boundary}%`,
-              top: 0,
-              bottom: 0,
-              width: '5px',
-              marginLeft: '-2.5px', 
-              backgroundColor: draggingIndex === index ? '#019722' : '#d1cece',
-              border: '1px solid #333',
-              cursor: 'col-resize',
-              zIndex: 10,
-              borderRadius: '2px',
-            }}
-          />
-        ))}
       </div>
-      <PlotComponent f={(x) => {return x + 1}} L={1000} range={[0, 100]} />
+      <div
+        style={{
+          marginBottom: '25px',
+          padding: '15px',
+          border: '1px solid #dcdcdc',
+          borderRadius: '8px',
+          background: '#fafafa',
+        }}
+      >
+        <h3
+          style={{
+            marginTop: 0,
+            marginBottom: '15px',
+            fontSize: '16px',
+            color: '#333',
+          }}
+        >
+          Distribuição de Potência Desejada
+        </h3>
+
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+          }}
+        >
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left', paddingBottom: '8px' }}>Região</th>
+              <th style={{ textAlign: 'center', paddingBottom: '8px' }}>Atual</th>
+              <th style={{ textAlign: 'center', paddingBottom: '8px' }}>Desejada</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {targetPower.map((value, index) => (
+              <tr key={index}>
+                <td
+                  style={{
+                    padding: '8px 0',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Região {index + 1}
+                </td>
+
+                <td
+                  style={{
+                    textAlign: 'center',
+                  }}
+                >
+                  {vector_pot[index].toFixed(4)}
+                </td>
+
+                <td
+                  style={{
+                    textAlign: 'center',
+                  }}
+                >
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={value}
+                    onChange={(e) => updateTargetPower(index, e.target.value)}
+                    style={{
+                      width: '100px',
+                      padding: '6px',
+                      textAlign: 'center',
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <div
+          style={{
+            marginTop: '15px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <strong>
+            Potência Total: {totalTargetPower.toFixed(4)} MW
+          </strong>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: '10px',
+            }}
+          >
+
+            <button
+              style={{
+                padding: '8px 20px',
+                background: '#019722',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                console.log(targetPower);
+              }}
+            >
+              Recalcular
+            </button>
+          </div>
+        </div>
+      </div>
+      <PlotComponent
+        f={getSolutions}
+        L={1000}
+        range={[0, result?.comprimento ?? 0]}
+        x_data={getDX()}
+        markers={true}
+      />
+
+      <PlotHistogramComponent
+        x_data={getRegions()}
+        y_data={vector_pot}
+        width={result?.espessura ?? []}
+      />
+
     </div>
   );
 }
