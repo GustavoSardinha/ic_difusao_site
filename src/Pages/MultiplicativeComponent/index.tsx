@@ -215,7 +215,7 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     }
   };
   const generateVectors = (contornoEsqAtual: string, contornoDirAtual: string) => {
-    
+    const start = performance.now();
     if (!result) return { solutions: [], newEsps: [] };
     
     const {
@@ -371,7 +371,11 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     }
     potenciais = potenciais.map(p => p * factor);
   }
+  const end = performance.now();
+  const tempoExecucao = end - start;
 
+  console.log(`Tempo de execução: ${tempoExecucao.toFixed(4)} ms`);
+  
     return {solResult, newEsps, keffs, potenciais, itfluxo};  
   };
 

@@ -3,16 +3,25 @@ import HomeWrapperProps from '../../Interfaces/HomeWrapperProps';
 import ResultState from '../../Interfaces/ResultState';
 import PlotComponent from '../../Components/AnaliticalGraphics/PlotComponent';
 import PlotHistogramComponent from '../../Components/AnaliticalGraphics/PlotHistogramComponent';
+import ContinueButton from '../../Components/ContinueButton';
 
 function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   const [result] = useState<ResultState | null>(initialState?.result || null);
-  const [vector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
+  const [vector_solutions] = useState<number[]>(
+    initialState?.vector_solutions || []
+  );
   const [vector_pot] = useState<number[]>(initialState?.vector_pot || []);
+  const isMultiplicative = vector_pot.map((value) => value !== 0);
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const [targetPower, setTargetPower] = useState<number[]>([...vector_pot]);
+
+  const [targetPower, setTargetPower] = useState<string[]>(
+    vector_pot.map((value) => value.toString())
+  );
 
   const [source, setSource] = useState(false);
   const [draggingIndex] = useState<number | null>(null);
+  const [err, setErr] = useState<Error | null>(null);
 
   const totalPower = vector_pot.reduce((acc, value) => acc + value, 0);
 
@@ -26,8 +35,9 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     let x = 0;
     let xL = 0;
 
-    for (let i = 0; i < result?.numRegioes!; i++) {
+    for (let i = 0; i < (result?.numRegioes ?? 0); i++) {
       xL += result?.espessura[i] || 0;
+
       const cellSize =
         (result?.espessura[i] || 1) /
         (result?.numCelulasPorRegiao[i] || 1);
@@ -46,6 +56,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   function getSolutions(x: number): number {
     const dx = getDX();
     const i = dx.findIndex((value) => value === x);
+
     return i >= 0 ? vector_solutions[i] : NaN;
   }
 
@@ -53,24 +64,91 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     const regions: number[] = [];
     let x = 0;
 
-    for (let i = 0; i < result?.numRegioes!; i++) {
+    for (let i = 0; i < (result?.numRegioes ?? 0); i++) {
       const cellSize = result?.espessura[i] || 2;
+
       regions.push((2 * x + cellSize) / 2);
       x += cellSize;
     }
 
     return regions;
   }
+
   function updateTargetPower(index: number, value: string) {
     const newValues = [...targetPower];
-    newValues[index] = Number(value);
+    newValues[index] = value;
     setTargetPower(newValues);
+
+    setErr(null);
   }
 
-  const totalTargetPower = targetPower.reduce((acc, value) => acc + value, 0);
+  function onSubmit(onError: (err: Error) => void) {
+    try {
+      let sum = 0;
+      const validatedValues = targetPower.map((value, index) => {
+        const numberValue = Number(value);
+
+        if (
+          value.trim() === '' ||
+          !Number.isFinite(numberValue) ||
+          numberValue < 0
+        ) {
+          throw new Error(
+            `O valor da Região ${index + 1} deve ser um número não negativo.`
+          );
+        }
+        if (isMultiplicative[index] && numberValue === 0) {
+          throw new Error(
+            `A Região ${index + 1} não pode ter potência zero, pois é multiplicativa.`
+          );
+        }
+        if( !isMultiplicative[index] && numberValue > 0) {
+          throw new Error(
+            `A Região ${index + 1} não pode ter potência maior que zero, pois é não multiplicativa.`
+          );
+        }
+
+        sum += numberValue;
+
+        return numberValue;
+      });
+      if(sum != 100){
+        throw new Error(
+          `A soma dos percentuais deve ser igual a 100.`
+        );
+      }
+
+      setErr(null);
+      onError(null as unknown as Error);
+
+      console.log('Valores validados:', validatedValues);
+    } catch (error) {
+      const currentError = error as Error;
+
+      setErr(currentError);
+      onError(currentError);
+    }
+  }
+
+  const totalTargetPower = targetPower.reduce(
+    (acc, value) => acc + (Number(value) || 0),
+    0
+  );
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+    <div
+      style={{
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
         <span
           style={{
             marginRight: '15px',
@@ -152,7 +230,8 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
             style={{
               width: `${region.percentual}%`,
               minWidth: '20px',
-              backgroundColor: region.power === 0 ? '#dc3545' : '#6c757d',
+              backgroundColor:
+                region.power === 0 ? '#dc3545' : '#6c757d',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -162,14 +241,21 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
               overflow: 'hidden',
               whiteSpace: 'nowrap',
               boxSizing: 'border-box',
-              borderRight: index < regions.length - 1 ? '1px solid #fff' : 'none',
-              transition: draggingIndex === null ? 'width 0.1s ease-out' : 'none',
+              borderRight:
+                index < regions.length - 1
+                  ? '1px solid #fff'
+                  : 'none',
+              transition:
+                draggingIndex === null
+                  ? 'width 0.1s ease-out'
+                  : 'none',
             }}
           >
             {region.percentual.toFixed(1)}%
           </div>
         ))}
       </div>
+
       <div
         style={{
           marginBottom: '25px',
@@ -198,9 +284,32 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
         >
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', paddingBottom: '8px' }}>Região</th>
-              <th style={{ textAlign: 'center', paddingBottom: '8px' }}>Atual</th>
-              <th style={{ textAlign: 'center', paddingBottom: '8px' }}>Desejada</th>
+              <th
+                style={{
+                  textAlign: 'left',
+                  paddingBottom: '8px',
+                }}
+              >
+                Região
+              </th>
+
+              <th
+                style={{
+                  textAlign: 'center',
+                  paddingBottom: '8px',
+                }}
+              >
+                Atual
+              </th>
+
+              <th
+                style={{
+                  textAlign: 'center',
+                  paddingBottom: '8px',
+                }}
+              >
+                Desejada
+              </th>
             </tr>
           </thead>
 
@@ -230,14 +339,19 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
                   }}
                 >
                   <input
-                    type="number"
-                    step="0.0001"
+                    type="text"
                     value={value}
-                    onChange={(e) => updateTargetPower(index, e.target.value)}
+                    onChange={(e) =>
+                      updateTargetPower(index, e.target.value)
+                    }
                     style={{
                       width: '100px',
                       padding: '6px',
                       textAlign: 'center',
+                      border:
+                        err && value.trim() === ''
+                          ? '1px solid #dc3545'
+                          : '1px solid #ccc',
                     }}
                   />
                 </td>
@@ -255,7 +369,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
           }}
         >
           <strong>
-            Potência Total: {totalTargetPower.toFixed(4)} MW
+            Percentual Total: {totalTargetPower.toFixed(4)} MW
           </strong>
 
           <div
@@ -264,25 +378,14 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
               gap: '10px',
             }}
           >
-
-            <button
-              style={{
-                padding: '8px 20px',
-                background: '#019722',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                console.log(targetPower);
-              }}
-            >
-              Recalcular
-            </button>
+            <ContinueButton
+              onClick={onSubmit}
+              err={err}
+            />
           </div>
         </div>
       </div>
+
       <PlotComponent
         f={getSolutions}
         L={1000}
@@ -296,7 +399,6 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
         y_data={vector_pot}
         width={result?.espessura ?? []}
       />
-
     </div>
   );
 }
