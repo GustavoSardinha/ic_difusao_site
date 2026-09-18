@@ -357,7 +357,13 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
     const Σf = choquesMacroscopicosFis[idx];
     const h = espessura[regioes] / numCelulasPorRegiao[regioes];
     fim = indice + numCelulasPorRegiao[regioes];
-    const p = Σf * integralDifusaoSimpson(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
+    let p = 0;
+    if(noGamma){    
+      p = Σf * integralDifusaoSimpson(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
+    }
+    else{
+      p = Σf * integralNumerica(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
+    }
     potenciais.push(p);
     potencialFicitio += p;
     indice += numCelulasPorRegiao[regioes];

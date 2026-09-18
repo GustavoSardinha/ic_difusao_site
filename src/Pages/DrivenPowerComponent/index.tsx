@@ -33,22 +33,24 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   function getDX(): number[] {
     const dx: number[] = [];
     let x = 0;
-    let xL = 0;
 
     for (let i = 0; i < (result?.numRegioes ?? 0); i++) {
-      xL += result?.espessura[i] || 0;
+      const espessura = result?.espessura[i] ?? 0;
+      const numCelulas = result?.numCelulasPorRegiao[i] ?? 0;
 
-      const cellSize =
-        (result?.espessura[i] || 1) /
-        (result?.numCelulasPorRegiao[i] || 1);
+      if (numCelulas <= 0) {
+        continue;
+      }
 
-      while (x !== xL) {
+      const cellSize = espessura / numCelulas;
+
+      for (let j = 0; j < numCelulas; j++) {
         dx.push(x);
         x += cellSize;
       }
     }
 
-    dx.push(xL);
+    dx.push(x);
 
     return dx;
   }
