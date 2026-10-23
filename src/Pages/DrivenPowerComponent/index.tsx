@@ -15,9 +15,32 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [targetPower, setTargetPower] = useState<string[]>(
-    vector_pot.map((value) => value.toString())
-  );
+  const [targetPower, setTargetPower] = useState<string[]>(() => {
+    const total = vector_pot.reduce((acc, value) => acc + value, 0);
+
+    if (total <= 0) {
+      return vector_pot.map(() => '0.0000');
+    }
+
+    const percentages = vector_pot.map(
+      (value) => Number(((value / total) * 100).toFixed(4))
+    );
+
+    const largestIndex = vector_pot.reduce(
+      (largest, value, index, values) =>
+        value > values[largest] ? index : largest,
+      0
+    );
+
+    const roundedTotal = percentages.reduce(
+      (acc, value) => acc + value,
+      0
+    );
+
+    percentages[largestIndex] += 100 - roundedTotal;
+
+    return percentages.map((value) => value.toFixed(4));
+  });
 
   const [source, setSource] = useState(false);
   const [draggingIndex] = useState<number | null>(null);
@@ -340,22 +363,26 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
                     textAlign: 'center',
                   }}
                 >
-                  <input
-                    type="text"
-                    value={value}
-                    onChange={(e) =>
-                      updateTargetPower(index, e.target.value)
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+
+                    if (/^\d*([.,]\d{0,4})?$/.test(newValue)) {
+                      updateTargetPower(index, newValue);
                     }
-                    style={{
-                      width: '100px',
-                      padding: '6px',
-                      textAlign: 'center',
-                      border:
-                        err && value.trim() === ''
-                          ? '1px solid #dc3545'
-                          : '1px solid #ccc',
-                    }}
-                  />
+                  }}
+                  style={{
+                    width: '100px',
+                    padding: '6px',
+                    textAlign: 'center',
+                    border:
+                      err && value.trim() === ''
+                        ? '1px solid #dc3545'
+                        : '1px solid #ccc',
+                  }}
+                />
                 </td>
               </tr>
             ))}
@@ -371,7 +398,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
           }}
         >
           <strong>
-            Percentual Total: {totalTargetPower.toFixed(4)} MW
+            Percentual Total: {totalTargetPower.toFixed(2)} %
           </strong>
 
           <div
