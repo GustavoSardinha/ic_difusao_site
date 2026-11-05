@@ -68,7 +68,18 @@ interface ContornoModalProps {
   baffleR: boolean;
   setBaffleR: (value: boolean) => void;
 }
-
+function copyData(props: ContornoModalProps) {
+  props.setContornoDir(props.contornoEsq);
+  props.setInf_bR(props.inf_bL);
+  props.setAlbedoR(props.albedoL);
+  props.setBaffleR(props.baffleL);
+  props.setAR(props.aL);
+  props.setBR(props.bL);
+  props.setCoefDifuRefR(props.coefDifusaoRefL);
+  props.setCoefDifuBaffR(props.coefDifusaoBaffL);
+  props.setCoefChoqueRefR(props.coefChoqueRefL);
+  props.setCoefChoqueBaffR(props.coefChoqueBaffL);
+}
 function ContornoModal(props: ContornoModalProps) {
   const contornoEsqRef = useRef<HTMLSelectElement>(null);
   const contornoDirRef = useRef<HTMLSelectElement>(null);
@@ -287,6 +298,7 @@ function ContornoModal(props: ContornoModalProps) {
                 </div>
             </div>
           )}
+          <button className="Continue-button" onClick={() => copyData(props)}>Copiar dados da esquerda para a direita</button>
           {(props.criterioParada) && (
             <div>
               <p className="Subtitle">Número fixo de iterações</p>

@@ -10,7 +10,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   const [vector_solutions] = useState<number[]>(
     initialState?.vector_solutions || []
   );
-  const [vector_pot] = useState<number[]>(initialState?.vector_pot || []);
+  const [vector_pot, setVectorPot] = useState<number[]>(initialState?.vector_pot || []);
   const isMultiplicative = vector_pot.map((value) => value !== 0);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -147,14 +147,18 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
       onError(null as unknown as Error);
 
       console.log('Valores validados:', validatedValues);
+      setVectorPot(validatedValues.map((value) => (totalPower * value) / 100));
     } catch (error) {
       const currentError = error as Error;
 
       setErr(currentError);
       onError(currentError);
     }
+    solveProblem();
   }
-
+  function solveProblem() {
+    console.log(vector_pot);
+  }
   const totalTargetPower = targetPower.reduce(
     (acc, value) => acc + (Number(value) || 0),
     0
