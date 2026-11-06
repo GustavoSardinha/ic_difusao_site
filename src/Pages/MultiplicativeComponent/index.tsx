@@ -5,8 +5,8 @@ import FormInput from '../../Components/FormInput';
 import ArrayFormInput from '../../Components/ArrayFormInput';
 import { useValidation } from '../../Hooks/useValidationMultiplicative';
 import ContinueButton from '../../Components/ContinueButton';
-import ContornoModal from '../../Components/ContornoModal/Multiplicative';
-import { thomasSimetrico, desvioRelativo, integralNumerica, integralDifusaoSimpson } from '../../Services/numericalMath';
+import BoundaryModal from '../../Components/BoundaryModal/Multiplicative';
+import { solveSymmetricTridiagonal, relativeDeviation, numericalIntegral, integralDiffusionSimpson } from '../../Services/numericalMath';
 import CheckBoxInput from '../../Components/CheckBoxInput';
 import main_img from '../../img/logo_uerj.png';
 import logo from '../../img/atom.png';
@@ -20,193 +20,193 @@ import { calculateAlbedo } from '../../Hooks/useAlbedoSolver';
 function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
   const navigate = useNavigate();
   const [result, setResult] = useState<ResultStateMultiplicative | null>((initialState?.result as ResultStateMultiplicative) || null);
-  
-  const [numRegioes, setNumRegioes] = useState<string>(initialState?.result?.numRegioes?.toString() || "");
-  const [zonasMateriais, setZonasMateriais] = useState<string>(initialState?.result?.zonasMateriais?.toString() || "");
-  const [mapeamento, setMapeamento] = useState<string>(initialState?.result?.mapeamento?.join(';') || "");
-  const [numCelulasPorRegiao, setNumCelulasPorRegiao] = useState<string>(initialState?.result?.numCelulasPorRegiao?.join(';') || "");
-  const [coeficientesDifusao, setCoeficientesDifusao] = useState<string>(initialState?.result?.coeficientesDifusao?.join(';') || "");
-  const [choquesMacroscopicosAbs, setChoquesMacroscopicosAbs] = useState<string>((initialState?.result as ResultStateMultiplicative)?.choquesMacroscopicosAbs?.join(';') || "");
-  const [choquesMacroscopicosFis, setChoquesMacroscopicosFis] = useState<string>((initialState?.result as ResultStateMultiplicative)?.choquesMacroscopicosFis?.join(';') || "");
-  const [espessura, setEspessura] = useState<string>(initialState?.result?.espessura?.join(';') || "");
+
+  const [regionCount, setRegionCount] = useState<string>(initialState?.result?.regionCount?.toString() || "");
+  const [materialZoneCount, setMaterialZoneCount] = useState<string>(initialState?.result?.materialZoneCount?.toString() || "");
+  const [mapping, setMapping] = useState<string>(initialState?.result?.mapping?.join(';') || "");
+  const [cellsPerRegion, setCellsPerRegion] = useState<string>(initialState?.result?.cellsPerRegion?.join(';') || "");
+  const [diffusionCoefficients, setDiffusionCoefficients] = useState<string>(initialState?.result?.diffusionCoefficients?.join(';') || "");
+  const [crossSectionsMacroscopicAbs, setCrossSectionsMacroscopicAbs] = useState<string>((initialState?.result as ResultStateMultiplicative)?.crossSectionsMacroscopicAbs?.join(';') || "");
+  const [crossSectionsMacroscopicFis, setCrossSectionsMacroscopicFis] = useState<string>((initialState?.result as ResultStateMultiplicative)?.crossSectionsMacroscopicFis?.join(';') || "");
+  const [thickness, setThickness] = useState<string>(initialState?.result?.thickness?.join(';') || "");
   const [stepGraphic, setStepGraphic] = useState<string>(initialState?.result?.stepGraphic?.toString() || "1");
   const [stepTable, setStepTable] = useState<string>(initialState?.result?.stepTable?.toString() || "1");
-  const [contornoDir, setContornoDir] = useState<string>(initialState?.result?.contornoDir || "0;0");
-  const [contornoEsq, setContornoEsq] = useState<string>(initialState?.result?.contornoEsq || "0;0");
-  const [hasGrafic, setHasGrafic] = useState<boolean>(initialState?.result?.hasGrafic ?? true);
+  const [boundaryRight, setBoundaryRight] = useState<string>(initialState?.result?.boundaryRight || "0;0");
+  const [boundaryLeft, setBoundaryLeft] = useState<string>(initialState?.result?.boundaryLeft || "0;0");
+  const [hasGraphic, setHasGraphic] = useState<boolean>(initialState?.result?.hasGraphic ?? true);
   const [advancedOptions, setAdvancedOptions] = useState<boolean>(initialState?.result?.advancedOptions || false);
-  const [noGamma, setNoGamma] = useState<boolean>(initialState?.result?.nogamma || false);
+  const [noGamma, setNoGamma] = useState<boolean>(initialState?.result?.noGamma || false);
   const [noNi, setNoNi] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.noNi|| false);
-  const [Ni, setNi] = useState<string>((initialState?.result as ResultStateMultiplicative)?.Ni?.toString() || "");
-  const [potencia, setPotencia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.potencia?.toString() || "");
-  const [energia, setEnergia] = useState<string>((initialState?.result as ResultStateMultiplicative)?.energia?.toString() || "");
-  const [Lkeff, setLkeff] = useState<string>(
-    (initialState?.result as ResultStateMultiplicative)?.Lkeff ?? 1e-6
+  const [neutronsPerFission, setNeutronsPerFission] = useState<string>((initialState?.result as ResultStateMultiplicative)?.neutronsPerFission?.toString() || "");
+  const [power, setPower] = useState<string>((initialState?.result as ResultStateMultiplicative)?.power?.toString() || "");
+  const [energy, setEnergy] = useState<string>((initialState?.result as ResultStateMultiplicative)?.energy?.toString() || "");
+  const [keffTolerance, setLkeff] = useState<string>(
+    (initialState?.result as ResultStateMultiplicative)?.keffTolerance ?? 1e-6
   );
 
-  const [Lfluxo, setfluxo] = useState<string>(
-    (initialState?.result as ResultStateMultiplicative)?.Lfluxo ?? 1e-6
+  const [fluxTolerance, setFluxTolerance] = useState<string>(
+    (initialState?.result as ResultStateMultiplicative)?.fluxTolerance ?? 1e-6
   );
 
   const [filterPoint, setFilterPoint] = useState<string>(initialState?.result?.filterPoint?.toString() || "0");
   const [err, setErr] = useState<Error | null>(null);
-  
+
   const { validated, setValidated, runAll } = useValidation();
   const [cc_active, setCCActive] = useState<boolean>(false);
 
   const [msgErro, setMsgErro] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
 
-  const [criterioParada, setCriterioParada] = useState<boolean>(false);
-  const [passos, setPassos] = useState<number>(1);
+  const [stoppingCriterion, setCriterioParada] = useState<boolean>(false);
+  const [steps, setSteps] = useState<number>(1);
   const [albedoL, setAlbedoL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.albedoL || false);
   const [albedoR, setAlbedoR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.albedoR || false);
   const [aL, setAL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.aL?.toString() || "");
-  const [bL, setBL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bL?.toString() || "");  
+  const [bL, setBL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bL?.toString() || "");
   const [aR, setAR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.aR?.toString() || "");
-  const [bR, setBR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bR?.toString() || ""); 
+  const [bR, setBR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.bR?.toString() || "");
   const [inf_bL, setInf_bL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bL || false);
   const [inf_bR, setInf_bR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.inf_bR || false);
-  const [coefDifusaoRefL, setCoefDifuRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoRefL?.toString() || "");
-  const [coefDifusaoRefR, setCoefDifuRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoRefR?.toString() || "");
-  const [coefChoqueRefL, setCoefChoqueRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueRefL?.toString() || "");
-  const [coefChoqueRefR, setCoefChoqueRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueRefR?.toString() || "");
-  const [coefDifusaoBaffL, setCoefDifuBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoBaffL?.toString() || "");
-  const [coefDifusaoBaffR, setCoefDifuBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDifusaoBaffR?.toString() || "");
-  const [coefChoqueBaffL, setCoefChoqueBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueBaffL?.toString() || "");
-  const [coefChoqueBaffR, setCoefChoqueBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefChoqueBaffR?.toString() || "");
+  const [coefDiffusionRefL, setCoefDiffusionRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDiffusionRefL?.toString() || "");
+  const [coefDiffusionRefR, setCoefDiffusionRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDiffusionRefR?.toString() || "");
+  const [coefCrossSectionRefL, setCoefCrossSectionRefL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefCrossSectionRefL?.toString() || "");
+  const [coefCrossSectionRefR, setCoefCrossSectionRefR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefCrossSectionRefR?.toString() || "");
+  const [coefDiffusionBaffL, setCoefDiffusionBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDiffusionBaffL?.toString() || "");
+  const [coefDiffusionBaffR, setCoefDiffusionBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefDiffusionBaffR?.toString() || "");
+  const [coefCrossSectionBaffL, setCoefCrossSectionBaffL] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefCrossSectionBaffL?.toString() || "");
+  const [coefCrossSectionBaffR, setCoefCrossSectionBaffR] = useState<string>((initialState?.result as ResultStateMultiplicative)?.coefCrossSectionBaffR?.toString() || "");
   const [baffleL, setBaffleL] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.baffleL || false);
   const [baffleR, setBaffleR] = useState<boolean>((initialState?.result as ResultStateMultiplicative)?.baffleR || false);
 
   useEffect(() => {
     if (initialState?.result) {
       const savedState = (initialState?.result as ResultStateMultiplicative);
-      setNumRegioes(savedState.numRegioes.toString());
-      setZonasMateriais(savedState.zonasMateriais.toString());
-      setMapeamento(savedState.mapeamento.join(';'));
-      setNumCelulasPorRegiao(savedState.numCelulasPorRegiao.join(';'));
-      setCoeficientesDifusao(savedState.coeficientesDifusao.join(';'));
-      setChoquesMacroscopicosAbs(savedState.choquesMacroscopicosAbs.join(';'));
-      setChoquesMacroscopicosFis(savedState.choquesMacroscopicosFis.join(';'));
-      setEspessura(savedState.espessura.join(';'));
+      setRegionCount(savedState.regionCount.toString());
+      setMaterialZoneCount(savedState.materialZoneCount.toString());
+      setMapping(savedState.mapping.join(';'));
+      setCellsPerRegion(savedState.cellsPerRegion.join(';'));
+      setDiffusionCoefficients(savedState.diffusionCoefficients.join(';'));
+      setCrossSectionsMacroscopicAbs(savedState.crossSectionsMacroscopicAbs.join(';'));
+      setCrossSectionsMacroscopicFis(savedState.crossSectionsMacroscopicFis.join(';'));
+      setThickness(savedState.thickness.join(';'));
       setStepGraphic(savedState.stepGraphic.toString());
       setStepTable(savedState.stepTable.toString());
-      setContornoDir(savedState.contornoDir);
-      setContornoEsq(savedState.contornoEsq);
-      setHasGrafic(savedState.hasGrafic);
+      setBoundaryRight(savedState.boundaryRight);
+      setBoundaryLeft(savedState.boundaryLeft);
+      setHasGraphic(savedState.hasGraphic);
       setAdvancedOptions(savedState.advancedOptions);
-      setNoGamma(savedState.nogamma);
+      setNoGamma(savedState.noGamma);
       setFilterPoint(savedState.filterPoint.toString());
     }
   }, [initialState]);
   useEffect(() => {
     if (!noNi) {
-      setNi("");
+      setNeutronsPerFission("");
     }
   }, [noNi]);
   const arrayFields: ArrayField[] = [
     {
       key
-      : 'mapeamento',
+      : 'mapping',
       label: 'Mapeamento:',
       placeholder: 'Digite os índices do mapeamento.',
       msgAlert:
         'Para informar o mapeamento corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
       exAlert: 'Exemplo: 1;2;3;1',
-      value: mapeamento,
-      setter: setMapeamento,
+      value: mapping,
+      setter: setMapping,
     },
     {
-      key: 'numCelulasPorRegiao',
+      key: 'cellsPerRegion',
       label: 'Número de células por Região:',
       placeholder: 'Informe o número de células por região.',
       msgAlert:
         'Para informar o número de células por região corretamente, é necessário separar cada valor com um ponto e vírgula (;).',
       exAlert: 'Exemplo: 1000;800;1000;500',
-      value: numCelulasPorRegiao,
-      setter: setNumCelulasPorRegiao,
+      value: cellsPerRegion,
+      setter: setCellsPerRegion,
     },
     {
-      key: 'coeficientesDifusao',
+      key: 'diffusionCoefficients',
       label: 'Coeficientes de difusão:',
       placeholder: 'Informe os valores dos coeficientes de difusão.',
       msgAlert:
         'Para informar os coeficientes de difusão corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
       exAlert: 'Exemplo: 1.5;3.83;2.3;1',
-      value: coeficientesDifusao,
-      setter: setCoeficientesDifusao,
+      value: diffusionCoefficients,
+      setter: setDiffusionCoefficients,
     },
     {
-      key: 'choquesMacroscopicosAbs',
+      key: 'macroscopicAbsorptionCrossSections',
       label: 'Seções de Choque Macroscópicas de Absorção:',
       placeholder: 'Informe os valores das seções de choque macroscópicas.',
       msgAlert:
         'Para informar os valores das seções choques macroscópicos de absorção corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
       exAlert: 'Exemplo: 0.7;3;4.2;1',
-      value: choquesMacroscopicosAbs,
-      setter: setChoquesMacroscopicosAbs,
+      value: crossSectionsMacroscopicAbs,
+      setter: setCrossSectionsMacroscopicAbs,
     },
     {
-      key: 'choquesMacroscopicosFis',
+      key: 'macroscopicFissionCrossSections',
       label: 'Seções de Choque Macroscópicas de Fissão:',
       placeholder: 'Informe os valores das seções de choque macroscópicas.',
       msgAlert:
         'Para informar os valores das seções choques macroscópicos fissão corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais.',
       exAlert: 'Exemplo: 0.7;3;4.2;1',
-      value: choquesMacroscopicosFis,
-      setter: setChoquesMacroscopicosFis,
-    },    
+      value: crossSectionsMacroscopicFis,
+      setter: setCrossSectionsMacroscopicFis,
+    },
     {
-      key: 'espessura',
+      key: 'thickness',
       label: 'Espessura de cada Região (cm):',
       placeholder: 'Informe os valores das espessuras em cm.',
       msgAlert:
         'Para informar as espessuras corretamente, é necessário separar cada valor com um ponto e vírgula (;). Além disso, considere o (.) para passar valores decimais e que a unidade de espessura é centímetros.',
       exAlert: 'Exemplo: 2;1.4;1.7;2.3',
-      value: espessura,
-      setter: setEspessura,
+      value: thickness,
+      setter: setThickness,
     },
   ];
-  
-  function getComprimento(): number {
+
+  function getLength(): number {
     if(result != null){
-      return result.comprimento;
+      return result.length;
     }
     return 0;
   }
-  
+
   const onSubmit = (onError: (err: Error) => void) => {
     try {
       const newResult = runAll({
-        numRegioes,
-        zonasMateriais,
-        mapeamento,
-        numCelulasPorRegiao,
-        coeficientesDifusao,
-        choquesMacroscopicosAbs,
-        choquesMacroscopicosFis,
-        Ni,
+        regionCount,
+        materialZoneCount,
+        mapping,
+        cellsPerRegion,
+        diffusionCoefficients,
+        crossSectionsMacroscopicAbs,
+        crossSectionsMacroscopicFis,
+        neutronsPerFission,
         noNi,
-        espessura,
-        potencia,
-        energia,
+        thickness,
+        power,
+        energy,
         stepGraphic,
         stepTable,
         advancedOptions,
         filterPoint
       }) as ResultStateMultiplicative;
-      if(energia == "")
-        setEnergia("200");
-      if(potencia == "")
-        setPotencia("200");
+      if(energy == "")
+        setEnergy("200");
+      if(power == "")
+        setPower("200");
       setResult({
         ...newResult,
-        hasGrafic,
+        hasGraphic,
         advancedOptions,
         filterPoint: Number(filterPoint),
-        nogamma: noGamma,
-        contornoDir,
-        contornoEsq,
+        noGamma: noGamma,
+        boundaryRight,
+        boundaryLeft,
       });
       setCCActive(true);
     } catch (err) {
@@ -214,83 +214,83 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       onError(err as Error);
     }
   };
-  const generateVectors = (contornoEsqAtual: string, contornoDirAtual: string) => {
-    const start = performance.now();
-    if (!result) return { solutions: [], newEsps: [] };
-    
+  const generateVectors = (boundaryLeftCurrent: string, boundaryRightCurrent: string) => {
+    const startTime = performance.now();
+    if (!result) return { solutions: [], positions: [] };
+
     const {
-      numRegioes,
-      mapeamento,
-      numCelulasPorRegiao,
-      coeficientesDifusao,
-      choquesMacroscopicosAbs,
-      choquesMacroscopicosFis,
-      espessura,
-      comprimento,
-      nogamma,
-      Ni
+      regionCount,
+      mapping,
+      cellsPerRegion,
+      diffusionCoefficients,
+      crossSectionsMacroscopicAbs,
+      crossSectionsMacroscopicFis,
+      thickness,
+      length,
+      noGamma,
+      neutronsPerFission: neutronYield
     } = result;
     let solResult: number[] = [];
-    let newEsps: number[] = [];
-    const { newContornoEsq, newContornoDir } = solveAlbedo(contornoEsqAtual, contornoDirAtual);
-    let cond_left = newContornoEsq.split(";").map(Number);
-    let cond_right = newContornoDir.split(";").map(Number);
-    console.log(cond_left);
-    console.log(cond_right);
-    console.log(newContornoEsq);
-    console.log(newContornoDir);
-    let itfluxo = 0;
+    let positions: number[] = [];
+    const { newBoundaryLeft, newBoundaryRight } = solveAlbedo(boundaryLeftCurrent, boundaryRightCurrent);
+    let leftCondition = newBoundaryLeft.split(";").map(Number);
+    let rightCondition = newBoundaryRight.split(";").map(Number);
+    console.log(leftCondition);
+    console.log(rightCondition);
+    console.log(newBoundaryLeft);
+    console.log(newBoundaryRight);
+    let fluxIterations = 0;
     let keff: number = Math.sqrt(2);
-    let keffs: number[] = [keff];
-    let keffAnt: number = 0;
-    let fluxoMedio = 1/2;
-    let fluxoMedioAnt = 0;
-    let numPassos = 0;
-    let sol_ant: number = 0;
-    let niValor = noNi ? Number(Ni) : 1;
+    let keffValues: number[] = [keff];
+    let keffPrevious: number = 0;
+    let fluxAverage = 1/2;
+    let fluxAveragePrevious = 0;
+    let stepCount = 0;
+    let sol_Previous: number = 0;
+    let effectiveNeutronYield = noNi ? Number(neutronYield) : 1;
 
-    while (((desvioRelativo(keff, keffAnt) > Number(Lkeff)) || 
-        (desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo))) || 
-        (numPassos >= 1000)){
+    while (((relativeDeviation(keff, keffPrevious) > Number(keffTolerance)) ||
+        (relativeDeviation(fluxAverage, fluxAveragePrevious) > Number(fluxTolerance))) ||
+        (stepCount >= 1000)){
       const vectorA: number[] = [];
       const vectorB: number[] = [];
-      const vectorFonte: number[] = [];
-      newEsps = [];
+      const vectorSource: number[] = [];
+      positions = [];
       let xsx: number[] = [];
       let s: number[] = [];
       let nm = 0;
-      let espPorReg: number[] = [];
-      if ((desvioRelativo(fluxoMedio, fluxoMedioAnt) > Number(Lfluxo)))
-        itfluxo++;
-      for (let regioes = 0; regioes < numRegioes; regioes++) {
-        const indice_mapeamento = mapeamento[regioes] - 1;
-        const coef_difusao = coeficientesDifusao[indice_mapeamento];
-        const coef_choque_macro = choquesMacroscopicosAbs[indice_mapeamento];
-        const coef_choque_fis = choquesMacroscopicosFis[indice_mapeamento];
-        const h = espessura[regioes] / numCelulasPorRegiao[regioes];
+      let positionsPerRegion: number[] = [];
+      if ((relativeDeviation(fluxAverage, fluxAveragePrevious) > Number(fluxTolerance)))
+        fluxIterations++;
+      for (let regions = 0; regions < regionCount; regions++) {
+        const index_Mapping = mapping[regions] - 1;
+        const coef_Diffusion = diffusionCoefficients[index_Mapping];
+        const coef_CrossSection_macro = crossSectionsMacroscopicAbs[index_Mapping];
+        const coef_CrossSection_fis = crossSectionsMacroscopicFis[index_Mapping];
+        const h = thickness[regions] / cellsPerRegion[regions];
         let gamma = 1;
-        console.log(coef_choque_macro);
-        console.log(coef_difusao);
+        console.log(coef_CrossSection_macro);
+        console.log(coef_Diffusion);
         console.log(h);
-        console.log(coef_choque_fis);
-        if(!nogamma){
-          if(coef_choque_macro - (niValor*coef_choque_fis)/keff > 0){
-            const Lk = Math.sqrt(coef_difusao/(coef_choque_macro - (niValor*coef_choque_fis)/keff));
+        console.log(coef_CrossSection_fis);
+        if(!noGamma){
+          if(coef_CrossSection_macro - (effectiveNeutronYield*coef_CrossSection_fis)/keff > 0){
+            const Lk = Math.sqrt(coef_Diffusion/(coef_CrossSection_macro - (effectiveNeutronYield*coef_CrossSection_fis)/keff));
             gamma = ((2*Lk)/h)*Math.tanh(h/(2*Lk));
             console.log(gamma);
           }
           else{
-            const Lk = Math.sqrt(coef_difusao/((niValor*coef_choque_fis/keff - coef_choque_macro)));
+            const Lk = Math.sqrt(coef_Diffusion/((effectiveNeutronYield*coef_CrossSection_fis/keff - coef_CrossSection_macro)));
             gamma = ((2*Lk)/h)*Math.tan(h/(2*Lk));
             console.log(gamma);
           }
         }
-        for (let j = 0; j < numCelulasPorRegiao[regioes]; j++) {
+        for (let j = 0; j < cellsPerRegion[regions]; j++) {
           nm++;
-          espPorReg.push(h);
-          vectorB.push((coef_difusao/(gamma*h)) - coef_choque_macro * h * gamma/ 4);
-          xsx.push(coef_choque_macro * h * gamma/ 4);
-          s.push((niValor * coef_choque_fis / keff) * h * gamma / 2);                       
+          positionsPerRegion.push(h);
+          vectorB.push((coef_Diffusion/(gamma*h)) - coef_CrossSection_macro * h * gamma/ 4);
+          xsx.push(coef_CrossSection_macro * h * gamma/ 4);
+          s.push((effectiveNeutronYield * coef_CrossSection_fis / keff) * h * gamma / 2);
         }
       }
       if(solResult.length == 0){
@@ -301,116 +301,116 @@ function MultiplicativeComponent({ initialState }: HomeWrapperProps) {
       for(let i = 0; i < s.length; i++){
         s[i] *= (solResult[i] + solResult[i + 1])/2;
       }
-      espPorReg.push(comprimento);
+      positionsPerRegion.push(length);
 
-      vectorA.push(vectorB[0] + 2*xsx[0] + Number(cond_left[1]));
-      vectorFonte.push(s[0]);
-      
+      vectorA.push(vectorB[0] + 2*xsx[0] + Number(leftCondition[1]));
+      vectorSource.push(s[0]);
+
       for (let i = 1; i < nm; i++) {
         vectorA.push(vectorB[i] + vectorB[i - 1] + 2*xsx[i] + 2*xsx[i - 1]);
-        vectorFonte.push(s[i] + s[i - 1]);
+        vectorSource.push(s[i] + s[i - 1]);
       }
-      
-      vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(cond_right[1]));
-      vectorFonte.push(s[nm - 1]);
-      keffAnt = keff;
+
+      vectorA.push(vectorB[nm - 1] + 2*xsx[nm - 1] + Number(rightCondition[1]));
+      vectorSource.push(s[nm - 1]);
+      keffPrevious = keff;
       console.log(vectorA);
       console.log(vectorB);
-      console.log(vectorFonte);
-      const solu = thomasSimetrico(vectorA, vectorB, vectorFonte);
-      console.log(solu);
-      let somaAtual = 0;
-      let somaAnt = 0;
-      fluxoMedioAnt = fluxoMedio;
-      fluxoMedio = 0;
-      for(let i = 0; i < vectorFonte.length; i++){
-        sol_ant = solResult[i];
-        somaAnt += vectorFonte[i];
-        somaAtual += vectorFonte[i]*(solu[i]/sol_ant);
-        fluxoMedio += solu[i]/solu.length;
-        solResult[i] = solu[i];
+      console.log(vectorSource);
+      const solution = solveSymmetricTridiagonal(vectorA, vectorB, vectorSource);
+      console.log(solution);
+      let somaCurrent = 0;
+      let somaPrevious = 0;
+      fluxAveragePrevious = fluxAverage;
+      fluxAverage = 0;
+      for(let i = 0; i < vectorSource.length; i++){
+        sol_Previous = solResult[i];
+        somaPrevious += vectorSource[i];
+        somaCurrent += vectorSource[i]*(solution[i]/sol_Previous);
+        fluxAverage += solution[i]/solution.length;
+        solResult[i] = solution[i];
       }
-      keff = keffAnt*(somaAtual/somaAnt);
-      if((desvioRelativo(keff, keffAnt) > Number(Lkeff))){
-        keffs.push(keff);
+      keff = keffPrevious*(somaCurrent/somaPrevious);
+      if((relativeDeviation(keff, keffPrevious) > Number(keffTolerance))){
+        keffValues.push(keff);
       }
-      numPassos++;
-      if(criterioParada)
-        if(numPassos >= passos)
+      stepCount++;
+      if(stoppingCriterion)
+        if(stepCount >= steps)
           break;
       let pos = 0;
-      espPorReg.forEach((esp) => {
-        newEsps.push(pos);
-        pos += esp;
+      positionsPerRegion.forEach((position) => {
+        positions.push(pos);
+        pos += position;
       });
   }
-  const E_fission_J = Number(energia) * 1.602176634e-13;
-  const pot = Number(potencia) || 1;
-  let potencialFicitio = 0;
-  let potenciais = [];
-  let indice = 1;
-  let inicio = 0;
-  let fim = 0;
+  const E_fission_J = Number(energy) * 1.602176634e-13;
+  const pot = Number(power) || 1;
+  let estimatedPower = 0;
+  let powers = [];
+  let index = 1;
+  let start = 0;
+  let end = 0;
 
-  for (let regioes = 0; regioes < numRegioes; regioes++) {
-    const idx = mapeamento[regioes] - 1;
-    const Σf = choquesMacroscopicosFis[idx];
-    const h = espessura[regioes] / numCelulasPorRegiao[regioes];
-    fim = indice + numCelulasPorRegiao[regioes];
+  for (let regions = 0; regions < regionCount; regions++) {
+    const idx = mapping[regions] - 1;
+    const Σf = crossSectionsMacroscopicFis[idx];
+    const h = thickness[regions] / cellsPerRegion[regions];
+    end = index + cellsPerRegion[regions];
     let p = 0;
-    if(noGamma){    
-      p = Σf * integralDifusaoSimpson(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
+    if(noGamma){
+      p = Σf * integralDiffusionSimpson(solResult, h, start, end - 1) * E_fission_J / 1000000;
     }
     else{
-      p = Σf * integralNumerica(solResult, h, inicio, fim - 1) * E_fission_J / 1000000;
+      p = Σf * numericalIntegral(solResult, h, start, end - 1) * E_fission_J / 1000000;
     }
-    potenciais.push(p);
-    potencialFicitio += p;
-    indice += numCelulasPorRegiao[regioes];
-    inicio = fim - 1;
+    powers.push(p);
+    estimatedPower += p;
+    index += cellsPerRegion[regions];
+    start = end - 1;
   }
 
-  if (potencialFicitio > 0) {
-    const factor = pot / potencialFicitio;
+  if (estimatedPower > 0) {
+    const factor = pot / estimatedPower;
     for (let i = 0; i < solResult.length; i++) {
       solResult[i] = solResult[i] * factor;
     }
-    potenciais = potenciais.map(p => p * factor);
+    powers = powers.map(p => p * factor);
   }
-  const end = performance.now();
-  const tempoExecucao = end - start;
+  const endTime = performance.now();
+  const executionTime = endTime - startTime;
 
-  console.log(`Tempo de execução: ${tempoExecucao.toFixed(4)} ms`);
-  
-    return {solResult, newEsps, keffs, potenciais, itfluxo};  
+  console.log(`Tempo de execução: ${executionTime.toFixed(4)} ms`);
+
+    return {solResult, positions, keffValues, powers, fluxIterations};
   };
 
-const valitadionContorno = async (
-  contornoEsqAtual: string,
-  contornoDirAtual: string
+const validateBoundary = async (
+  boundaryLeftCurrent: string,
+  boundaryRightCurrent: string
 ) => {
   try{
-    const lkeff = Number(Lkeff);
-    const lfluxo = Number(Lfluxo);
+    const lkeff = Number(keffTolerance);
+    const numericFluxTolerance = Number(fluxTolerance);
     const albeldoL = Boolean(albedoL);
     const albeldoR = Boolean(albedoR);
     const a_l = Number(aL);
     const b_l = Number(bL);
     const a_r = Number(aR);
     const b_r = Number(bR);
-    const coef_difu_ref_l = Number(coefDifusaoRefL);
-    const coef_difu_baff_l = Number(coefDifusaoBaffL);
-    const coef_difu_ref_r = Number(coefDifusaoRefR);
-    const coef_difu_baff_r = Number(coefDifusaoBaffR);
-    const coef_choque_ref_l = Number(coefChoqueRefL);
-    const coef_choque_ref_r = Number(coefChoqueRefR);
-    const coef_choque_baff_l = Number(coefChoqueBaffL);
-    const coef_choque_baff_r = Number(coefChoqueBaffR);
+    const reflectorDiffusionCoefficientLeft = Number(coefDiffusionRefL);
+    const baffleDiffusionCoefficientLeft = Number(coefDiffusionBaffL);
+    const reflectorDiffusionCoefficientRight = Number(coefDiffusionRefR);
+    const baffleDiffusionCoefficientRight = Number(coefDiffusionBaffR);
+    const reflectorCrossSectionLeft = Number(coefCrossSectionRefL);
+    const reflectorCrossSectionRight = Number(coefCrossSectionRefR);
+    const baffleCrossSectionLeft = Number(coefCrossSectionBaffL);
+    const baffleCrossSectionRight = Number(coefCrossSectionBaffR);
 
     if (!Number.isFinite(lkeff) || lkeff === 0) {
       throw new Error("Valor inválido para critério de parada de keff");
     }
-    if (!Number.isFinite(lfluxo) || lfluxo === 0) {
+    if (!Number.isFinite(numericFluxTolerance) || numericFluxTolerance === 0) {
       throw new Error("Valor inválido para critério de parada do fluxo");
     }
     if(albeldoL){
@@ -435,39 +435,39 @@ const valitadionContorno = async (
             throw new Error("Valor inválido para comprimento do refletor na direita");
           }
         }
-      } 
-      if(isNaN(coef_difu_ref_l) || coef_difu_ref_l <= 0){
+      }
+      if(isNaN(reflectorDiffusionCoefficientLeft) || reflectorDiffusionCoefficientLeft <= 0){
         throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do refletor na esquerda");
       }
-      if(isNaN(coef_choque_ref_l) || coef_choque_ref_l <= 0){
+      if(isNaN(reflectorCrossSectionLeft) || reflectorCrossSectionLeft <= 0){
         throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do refletor na esquerda");
       }
-      if(isNaN(coef_difu_ref_r) || coef_difu_ref_r <= 0){
+      if(isNaN(reflectorDiffusionCoefficientRight) || reflectorDiffusionCoefficientRight <= 0){
         throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do refletor na direita");
       }
-      if(isNaN(coef_choque_ref_r) || coef_choque_ref_r <= 0){
+      if(isNaN(reflectorCrossSectionRight) || reflectorCrossSectionRight <= 0){
         throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do refletor na direita");
       }
       if(baffleL){
-        if(isNaN(coef_difu_baff_l) || coef_difu_baff_l <= 0){
+        if(isNaN(baffleDiffusionCoefficientLeft) || baffleDiffusionCoefficientLeft <= 0){
           throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do baffle na esquerda");
         }
-        if(isNaN(coef_choque_baff_l) || coef_choque_baff_l <= 0){
+        if(isNaN(baffleCrossSectionLeft) || baffleCrossSectionLeft <= 0){
           throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do baffle na esquerda");
         }
       }
       if(baffleR){
-        if(isNaN(coef_difu_baff_r) || coef_difu_baff_r <= 0){
+        if(isNaN(baffleDiffusionCoefficientRight) || baffleDiffusionCoefficientRight <= 0){
           throw new Error("Informe apenas valores numéricos maiores que zero para o coeficiente de difusão do baffle na direita");
         }
-        if(isNaN(coef_choque_baff_r) || coef_choque_baff_r <= 0){
+        if(isNaN(baffleCrossSectionRight) || baffleCrossSectionRight <= 0){
           throw new Error("Informe apenas valores numéricos maiores que zero para a seção de choque macroscópica do baffle na direita");
         }
       }
     }
     await solveProblem(
-      contornoEsqAtual,
-      contornoDirAtual
+      boundaryLeftCurrent,
+      boundaryRightCurrent
     );
   }
   catch (e) {
@@ -479,23 +479,23 @@ const valitadionContorno = async (
     setShowModal(true);
   }
 }
-  const solveProblem = async (contornoEsqAtual: string, contornoDirAtual: string) => {
+  const solveProblem = async (boundaryLeftCurrent: string, boundaryRightCurrent: string) => {
     setValidated(false);
-    const {solResult, newEsps, keffs, potenciais, itfluxo} = generateVectors(contornoEsqAtual, contornoDirAtual);
+    const {solResult, positions, keffValues, powers, fluxIterations} = generateVectors(boundaryLeftCurrent, boundaryRightCurrent);
     await new Promise(resolve => setTimeout(resolve, 0));
-    const{newContornoEsq, newContornoDir} = solveAlbedo(contornoEsqAtual, contornoDirAtual);
-    if(keffs != undefined){
-      navigate("/relatorio", { 
-        state: { 
+    const{newBoundaryLeft, newBoundaryRight} = solveAlbedo(boundaryLeftCurrent, boundaryRightCurrent);
+    if(keffValues != undefined){
+      navigate("/relatorio", {
+        state: {
           result: {
             ...result!,
-            hasGrafic,
+            hasGraphic,
             advancedOptions,
             filterPoint: Number(filterPoint),
-            nogamma: noGamma,
-            contornoDir: newContornoDir,
-            contornoEsq: newContornoEsq,
-            keff: keffs[keffs.length - 1],
+            noGamma: noGamma,
+            boundaryRight: newBoundaryRight,
+            boundaryLeft: newBoundaryLeft,
+            keff: keffValues[keffValues.length - 1],
             aL,
             bL,
             aR,
@@ -504,71 +504,71 @@ const valitadionContorno = async (
             inf_bR,
             baffleL,
             baffleR,
-            coefDifusaoRefL,
-            coefDifusaoRefR,
-            coefChoqueRefL,
-            coefChoqueRefR,
-            coefDifusaoBaffL,
-            coefDifusaoBaffR,
-            coefChoqueBaffL,
-            coefChoqueBaffR,
+            coefDiffusionRefL,
+            coefDiffusionRefR,
+            coefCrossSectionRefL,
+            coefCrossSectionRefR,
+            coefDiffusionBaffL,
+            coefDiffusionBaffR,
+            coefCrossSectionBaffL,
+            coefCrossSectionBaffR,
             albedoL,
             albedoR
           },
-          vector_solutions: solResult,
-          esps: newEsps,
-          vector_keffs: keffs,
-          vector_pot: potenciais,
-          itfluxo: itfluxo
-        } 
+          solutions: solResult,
+          positions: positions,
+          keffValues: keffValues,
+          powers: powers,
+          fluxIterations: fluxIterations
+        }
       });
     }
   };
-  const solveAlbedo = (contornoEsqAtual: string, contornoDirAtual: string) => {
-    let cond_left = contornoEsqAtual.split(";").map(Number);
-    let cond_right = contornoDirAtual.split(";").map(Number);
-    console.log("beta_esq: " + cond_left[1]);
-    console.log("beta_dir: " + cond_right[1]);
-    let newContornoEsq = contornoEsqAtual;
-    let newContornoDir = contornoDirAtual;
+  const solveAlbedo = (boundaryLeftCurrent: string, boundaryRightCurrent: string) => {
+    let leftCondition = boundaryLeftCurrent.split(";").map(Number);
+    let rightCondition = boundaryRightCurrent.split(";").map(Number);
+    console.log("beta_esq: " + leftCondition[1]);
+    console.log("beta_dir: " + rightCondition[1]);
+    let newBoundaryLeft = boundaryLeftCurrent;
+    let newBoundaryRight = boundaryRightCurrent;
 
     if (albedoL) {
       const albedoValue = calculateAlbedo(
         Number(aL),
         Number(bL),
-        cond_left[1],
-        Number(coefDifusaoRefL),
-        Number(coefDifusaoBaffL),
-        Number(coefChoqueRefL),
-        Number(coefChoqueBaffL),
+        leftCondition[1],
+        Number(coefDiffusionRefL),
+        Number(coefDiffusionBaffL),
+        Number(coefCrossSectionRefL),
+        Number(coefCrossSectionBaffL),
         Boolean(inf_bL),
         baffleL
       );
 
-      newContornoEsq = `${cond_left[0]};${albedoValue}`;
-      setContornoEsq(newContornoEsq);
+      newBoundaryLeft = `${leftCondition[0]};${albedoValue}`;
+      setBoundaryLeft(newBoundaryLeft);
     }
 
     if (albedoR) {
       const albedoValue = calculateAlbedo(
         Number(aR),
         Number(bR),
-        cond_right[1],
-        Number(coefDifusaoRefR),
-        Number(coefDifusaoBaffR),
-        Number(coefChoqueRefR),
-        Number(coefChoqueBaffR),
+        rightCondition[1],
+        Number(coefDiffusionRefR),
+        Number(coefDiffusionBaffR),
+        Number(coefCrossSectionRefR),
+        Number(coefCrossSectionBaffR),
         Boolean(inf_bR),
         baffleR
       );
 
-      newContornoDir = `${cond_right[0]};${albedoValue}`;
-      setContornoDir(newContornoDir);
+      newBoundaryRight = `${rightCondition[0]};${albedoValue}`;
+      setBoundaryRight(newBoundaryRight);
     }
 
     return {
-      newContornoEsq,
-      newContornoDir
+      newBoundaryLeft,
+      newBoundaryRight
     };
   };
   return (
@@ -593,16 +593,16 @@ const valitadionContorno = async (
           <FormInput
             label="Informe o número de regiões:"
             placeholder="Digite o número de regiões."
-            onChange={(value: string) => setNumRegioes(value)}
-            value={numRegioes}
+            onChange={(value: string) => setRegionCount(value)}
+            value={regionCount}
           />
           <FormInput
             label="Informe o número de zonas materiais:"
             placeholder="Digite o número de zonas materiais."
-            onChange={(value: string) => setZonasMateriais(value)}
-            value={zonasMateriais}
+            onChange={(value: string) => setMaterialZoneCount(value)}
+            value={materialZoneCount}
           />
-  
+
           {arrayFields.map(
             ({ key, label, placeholder, msgAlert, exAlert, value, setter }) => (
               <ArrayFormInput
@@ -625,16 +625,16 @@ const valitadionContorno = async (
             <FormInput
               label="Informe o número de nêutrons gerados por fissão:"
               placeholder="Informe um valor para ν"
-              onChange={(value: string) => setNi(value)}
-              value={Ni}
+              onChange={(value: string) => setNeutronsPerFission(value)}
+              value={neutronsPerFission}
             />
           )}
           <div>
             <FormInputWithAlert
               label="Potência gerada pelo reator:"
               placeholder="Informe a potência em MW"
-              onChange={(value: string) => setPotencia(value)}
-              value={potencia}
+              onChange={(value: string) => setPower(value)}
+              value={power}
               msgAlert='Se esse campo for deixado em branco, assume-se uma potência de 200 MW.'
               exAlert=''
             />
@@ -643,18 +643,18 @@ const valitadionContorno = async (
             <FormInputWithAlert
               label="Energia liberada por fissão:"
               placeholder="Informe a energia em MeV"
-              onChange={(value: string) => setEnergia(value)}
-              value={energia}
+              onChange={(value: string) => setEnergy(value)}
+              value={energy}
               msgAlert='Se esse campo for deixado em branco, assume-se uma energia de 200 MeV.'
               exAlert=''
             />
           </div>
           <CheckBoxInput
             text = {"Saída gráfica"}
-            value = {hasGrafic}
-            onChange = {setHasGrafic}
+            value = {hasGraphic}
+            onChange = {setHasGraphic}
           />
-          {(hasGrafic) && (
+          {(hasGraphic) && (
             <FormInput
               label="Passo da malha de discretização no gráfico:"
               placeholder="Informe o passo do gráfico"
@@ -686,24 +686,24 @@ const valitadionContorno = async (
             err = {err}
           />
           { (cc_active) && (
-            <ContornoModal
-              contornoDir = {contornoDir}
-              setContornoDir = {setContornoDir}
-              contornoEsq = {contornoEsq}
-              setContornoEsq = {setContornoEsq}
-              L = {getComprimento()}
-              successFunc = {valitadionContorno}
-              Lkeff={Lkeff}
-              setLKeff={setLkeff}
-              Lfluxo={Lfluxo}
-              setLfluxo={setfluxo}
+            <BoundaryModal
+              boundaryRight = {boundaryRight}
+              setBoundaryRight = {setBoundaryRight}
+              boundaryLeft = {boundaryLeft}
+              setBoundaryLeft = {setBoundaryLeft}
+              L = {getLength()}
+              successFunc = {validateBoundary}
+              keffTolerance={keffTolerance}
+              setKeffTolerance={setLkeff}
+              fluxTolerance={fluxTolerance}
+              setFluxTolerance={setFluxTolerance}
               msgErroDialog={msgErro}
               showModal ={showModal}
               setShowModal={setShowModal}
-              criterioParada={criterioParada}
+              stoppingCriterion={stoppingCriterion}
               setCriterioParada={setCriterioParada}
-              passos={passos}
-              setPassos={setPassos}
+              steps={steps}
+              setSteps={setSteps}
               setCCActive={setCCActive}
               albedoL={albedoL}
               setAlbedoL={setAlbedoL}
@@ -721,22 +721,22 @@ const valitadionContorno = async (
               setInf_bL={setInf_bL}
               inf_bR={inf_bR}
               setInf_bR={setInf_bR}
-              coefChoqueRefL={coefChoqueRefL}
-              setCoefChoqueRefL={setCoefChoqueRefL}
-              coefChoqueRefR={coefChoqueRefR}
-              setCoefChoqueRefR={setCoefChoqueRefR}
-              coefDifusaoRefL={coefDifusaoRefL}
-              setCoefDifuRefL={setCoefDifuRefL}
-              coefDifusaoRefR={coefDifusaoRefR}
-              setCoefDifuRefR={setCoefDifuRefR}
-              coefChoqueBaffL={coefChoqueBaffL}
-              setCoefChoqueBaffL={setCoefChoqueBaffL}
-              coefChoqueBaffR={coefChoqueBaffR}
-              setCoefChoqueBaffR={setCoefChoqueBaffR}
-              coefDifusaoBaffL={coefDifusaoBaffL}
-              setCoefDifuBaffL={setCoefDifuBaffL}
-              coefDifusaoBaffR={coefDifusaoBaffR}
-              setCoefDifuBaffR={setCoefDifuBaffR}
+              coefCrossSectionRefL={coefCrossSectionRefL}
+              setCoefCrossSectionRefL={setCoefCrossSectionRefL}
+              coefCrossSectionRefR={coefCrossSectionRefR}
+              setCoefCrossSectionRefR={setCoefCrossSectionRefR}
+              coefDiffusionRefL={coefDiffusionRefL}
+              setCoefDiffusionRefL={setCoefDiffusionRefL}
+              coefDiffusionRefR={coefDiffusionRefR}
+              setCoefDiffusionRefR={setCoefDiffusionRefR}
+              coefCrossSectionBaffL={coefCrossSectionBaffL}
+              setCoefCrossSectionBaffL={setCoefCrossSectionBaffL}
+              coefCrossSectionBaffR={coefCrossSectionBaffR}
+              setCoefCrossSectionBaffR={setCoefCrossSectionBaffR}
+              coefDiffusionBaffL={coefDiffusionBaffL}
+              setCoefDiffusionBaffL={setCoefDiffusionBaffL}
+              coefDiffusionBaffR={coefDiffusionBaffR}
+              setCoefDiffusionBaffR={setCoefDiffusionBaffR}
               baffleL={baffleL}
               setBafflebL={setBaffleL}
               baffleR={baffleR}

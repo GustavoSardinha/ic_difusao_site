@@ -11,11 +11,11 @@ import { ResultStateMultiplicative, isResultStateMultiplicative } from '../../In
 
 function ReportComponent({ initialState }: HomeWrapperProps) {
   const [result, setResult] = useState<ResultState | null>(initialState?.result || null);
-  const [vector_solutions, setVector_solutions] = useState<number[]>(initialState?.vector_solutions || []);
-  const [vector_keffs, setVector_keffs] = useState<number[]>(initialState?.vector_keffs || []);
-  const [vector_pot, setVector_pot] = useState<number[]>(initialState?.vector_pot || []);
-  const [itfluxo, setItfluxo] = useState<number>(initialState?.itfluxo || 0);
-  const [esps, setEsps] = useState<number[]>(initialState?.esps || []);
+  const [solutions, setVector_solutions] = useState<number[]>(initialState?.solutions || []);
+  const [keffValues, setVector_keffs] = useState<number[]>(initialState?.keffValues || []);
+  const [powers, setVector_pot] = useState<number[]>(initialState?.powers || []);
+  const [fluxIterations, setFluxIterations] = useState<number>(initialState?.fluxIterations || 0);
+  const [positions, setEsps] = useState<number[]>(initialState?.positions || []);
   const [graph, setGraph] = useState<string>("");
   const pdfRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -29,13 +29,13 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
     }
   }, [graph, initialState]);
 
-  const getComprimento = (): number => {
-    return result?.comprimento || 0;
+  const getLength = (): number => {
+    return result?.length || 0;
   };
 
-  const calcEspessurasPorRegiao = (): number[] => {
+  const calculateThicknessesPerRegion = (): number[] => {
     if (!result) return [];
-    return result.espessura.map((e, i) => e / result.numCelulasPorRegiao[i]);
+    return result.thickness.map((e, i) => e / result.cellsPerRegion[i]);
   };
 
   const findBoundaryConditionType = (value: string): string => {
@@ -64,7 +64,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   };
 
   const createGraphics = async (): Promise<string> => {
-    if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+    if (!solutions || solutions.length === 0 || !result) return "";
 
     try {
       const dataStep = (array: number[], step: number) =>
@@ -72,10 +72,10 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
           .map((value, index) => ({ index, value }))
           .filter((_, i) => i % step === 0 || i === array.length - 1);
 
-      const stepData = dataStep(vector_solutions, Number(result.stepGraphic));
+      const stepData = dataStep(solutions, Number(result.stepGraphic));
 
       const data = stepData.map((info) => ({
-        x: Number(esps[info.index]).toExponential(2),
+        x: Number(positions[info.index]).toExponential(2),
         y: Number(info.value).toExponential(2),
       }));
 
@@ -137,9 +137,9 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
       margin: [15, 15, 15, 15],
       filename: `relatorio_difusao_${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 1 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
         letterRendering: true,
         scrollY: 0
       },
@@ -153,7 +153,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
     html2pdf().set(opt).from(element).save();
   };
 
-  const showCondicoesdeContorno = (value: string, index: string, inten?: number): ReactNode => {
+  const showBoundaryConditions = (value: string, index: string, inten?: number): ReactNode => {
     const infos = value.split(";");
     if (infos.length !== 2) return <>Erro ao ler contorno</>;
 
@@ -193,8 +193,8 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
             <tbody>
                 <tr>
                   <td>${position}</td>
-                  <td>${esps[position - 1]?.toFixed(5) || 0}</td>
-                  <td><strong>${vector_solutions[position - 1].toExponential(5)}</strong></td>
+                  <td>${positions[position - 1]?.toFixed(5) || 0}</td>
+                  <td><strong>${solutions[position - 1].toExponential(5)}</strong></td>
                 </tr>
             </tbody>
           </table>
@@ -207,7 +207,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   }
 
   const createFluxTable = (): string => {
-    if (!vector_solutions || vector_solutions.length === 0 || !result) return "";
+    if (!solutions || solutions.length === 0 || !result) return "";
 
     const dataStep = (array: number[], step: number) => {
       return array
@@ -215,7 +215,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         .filter((_, i) => i % step === 0 || i === array.length - 1);
     };
 
-    const data = dataStep(vector_solutions, Number(result.stepTable));
+    const data = dataStep(solutions, Number(result.stepTable));
 
     return `
       <div class="avoid-page-break">
@@ -232,7 +232,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
             ${data.map((info) => `
               <tr>
                 <td>${info.index + 1}</td>
-                <td>${esps[info.index]?.toFixed(5) || 0}</td>
+                <td>${positions[info.index]?.toFixed(5) || 0}</td>
                 <td>${info.value.toExponential(5)}</td>
               </tr>
             `).join('')}
@@ -243,8 +243,8 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   };
 
   const createKeffTable = (): string => {
-    if (!vector_keffs || vector_keffs.length === 0 || !result) return "";
-    const data = vector_keffs.map((value, index) => ({ index, value }));
+    if (!keffValues || keffValues.length === 0 || !result) return "";
+    const data = keffValues.map((value, index) => ({ index, value }));
 
     return `
       <div class="avoid-page-break">
@@ -270,9 +270,9 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
   };
 
   const createPotTable = (): string => {
-    if (!vector_pot || vector_pot.length === 0 || !result) return "";
+    if (!powers || powers.length === 0 || !result) return "";
     const linesPerPage = 25;
-    const data = vector_pot.map((value, index) => ({ index, value }));
+    const data = powers.map((value, index) => ({ index, value }));
 
     const chunkArray = <T,>(arr: T[], size: number): T[][] => {
       const out: T[][] = [];
@@ -305,9 +305,9 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
     `).join('');
   };
 
-  const PotenciaTotal = () => {
-    if (!vector_pot || vector_pot.length === 0 || !result) return 0;
-    return vector_pot.reduce((acc, curr) => acc + curr, 0);
+  const powerTotal = () => {
+    if (!powers || powers.length === 0 || !result) return 0;
+    return powers.reduce((acc, curr) => acc + curr, 0);
   }
 
   const Back = () => {
@@ -317,23 +317,23 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
 
   const BackwithData = () => {
     if (isResultStateNonMultiplicative(result)) {
-      navigate("/naomultiplicativo", { state: { result, vector_solutions, esps }, replace: true });
+      navigate("/naomultiplicativo", { state: { result, solutions, positions }, replace: true });
     } else {
-      navigate("/multiplicativo", { state: { result, vector_solutions, esps }, replace: true });
+      navigate("/multiplicativo", { state: { result, solutions, positions }, replace: true });
     }
   };
 
-  const Reconstrucition = () => navigate("/reconstrucao", { state: { result, vector_solutions, esps } });
-  const DrivenPower = () => navigate("/estabilizar-potencia", { state: { result, vector_solutions, esps, vector_pot } });
+  const Reconstrucition = () => navigate("/reconstrucao", { state: { result, solutions, positions } });
+  const DrivenPower = () => navigate("/estabilizar-potencia", { state: { result, solutions, positions, powers } });
 
   return (
     <div style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', padding: '20px' }}>
-      
+
       <div style={{ display: 'flex', margin: '0 5vh', flexWrap: 'wrap', justifyContent: 'center', gap: '10px', marginBottom: '30px' }}>
         <button className='Continue-button modern-btn' onClick={Back}>Voltar</button>
         <button className='Continue-button modern-btn' onClick={BackwithData}>Voltar com dados anteriores</button>
         <button className='Continue-button modern-btn primary-btn' onClick={exportPDF}>Baixar PDF</button>
-        {(!result?.nogamma) && <button className='Continue-button modern-btn' onClick={Reconstrucition}>Reconstrução analítica</button>}
+        {(!result?.noGamma) && <button className='Continue-button modern-btn' onClick={Reconstrucition}>Reconstrução analítica</button>}
         {isResultStateMultiplicative(result) && (!result?.keff || result?.keff < 1) && (
           <button className='Continue-button modern-btn' onClick={DrivenPower}>Estabilização de Potência</button>
         )}
@@ -382,25 +382,25 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         </div>
 
         <h2 className="section-title first-section">Parâmetros de Entrada</h2>
-        
+
         <div className="flex-grid">
-          {generateSection('Método', result?.nogamma ? "Diferenças Finitas" : "Espectronodal")}
-          {generateSection('Regiões / Zonas', `${result?.numRegioes || 0} / ${result?.zonasMateriais || 0}`)}
+          {generateSection('Método', result?.noGamma ? "Diferenças Finitas" : "Espectronodal")}
+          {generateSection('Regiões / Zonas', `${result?.regionCount || 0} / ${result?.materialZoneCount || 0}`)}
         </div>
 
         <div className="flex-grid">
-          {generateSection('Mapeamento', result?.mapeamento.join(' ') || "-")}
-          {generateSection('Células por Região', result?.numCelulasPorRegiao.join(' ') || "-")}
+          {generateSection('Mapeamento', result?.mapping.join(' ') || "-")}
+          {generateSection('Células por Região', result?.cellsPerRegion.join(' ') || "-")}
         </div>
 
         {isResultStateNonMultiplicative(result) && (
           <div className="avoid-page-break">
             <div className="flex-grid">
-              {generateSection('Fonte de Nêutrons', result.fonteNeutrons.join(' '))}
-              {generateSection('Coef. de Difusão', result.coeficientesDifusao.join(' '))}
+              {generateSection('Fonte de Nêutrons', result.sourceNeutrons.join(' '))}
+              {generateSection('Coef. de Difusão', result.diffusionCoefficients.join(' '))}
             </div>
             <div className="flex-grid">
-              {generateSection('Choques Macroscópicos', result.choquesMacroscopicos.join(' '))}
+              {generateSection('Choques Macroscópicos', result.crossSectionsMacroscopic.join(' '))}
             </div>
           </div>
         )}
@@ -408,24 +408,24 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         {isResultStateMultiplicative(result) && (
           <div className="avoid-page-break">
             <div className="flex-grid">
-              {generateSection('Seções de Choques de Absorção', result.choquesMacroscopicosAbs.join(' '))}
-              {generateSection('Coeficientes de Difusão', result.coeficientesDifusao.join(' '))}
+              {generateSection('Seções de Choques de Absorção', result.crossSectionsMacroscopicAbs.join(' '))}
+              {generateSection('Coeficientes de Difusão', result.diffusionCoefficients.join(' '))}
             </div>
             <div className="flex-grid">
-              {generateSection('Seções de Choques de Fissão', result.choquesMacroscopicosFis.join(' '))}
+              {generateSection('Seções de Choques de Fissão', result.crossSectionsMacroscopicFis.join(' '))}
             </div>
           </div>
         )}
 
         <div className="flex-grid">
-          {generateSection('Comprimento Total', `${getComprimento()} cm`)}
-          {generateSection('Espessuras (Células/Região)', calcEspessurasPorRegiao().map(v => v.toFixed(4)).join(' | '))}
+          {generateSection('Comprimento Total', `${getLength()} cm`)}
+          {generateSection('Espessuras (Células/Região)', calculateThicknessesPerRegion().map(v => v.toFixed(4)).join(' | '))}
         </div>
 
         {isResultStateMultiplicative(result) && (
           <div className="flex-grid">
-            {generateSection('Potência Gerada', `${result.potencia} MW`)}
-            {generateSection('Energia Liberada por Fissão', `${result.energia} MeV`)}
+            {generateSection('Potência Gerada', `${result.power} MW`)}
+            {generateSection('Energia Liberada por Fissão', `${result.energy} MeV`)}
           </div>
         )}
 
@@ -433,26 +433,26 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         <div className="flex-grid">
           <div className="info-card" style={{ textAlign: 'center' }}>
             <h3 style={{ fontSize: '15px', color: '#0056b3', margin: '0 0 10px 0' }}>Fronteira Esquerda</h3>
-            {isResultStateMultiplicative(result) 
-              ? renderMultiplicativeLabel(result.albedoL, result.baffleL, result.contornoEsq)
-              : showCondicoesdeContorno(result?.contornoEsq || '', '0', isResultStateNonMultiplicative(result) ? result.incidenciaEsq : undefined)
+            {isResultStateMultiplicative(result)
+              ? renderMultiplicativeLabel(result.albedoL, result.baffleL, result.boundaryLeft)
+              : showBoundaryConditions(result?.boundaryLeft || '', '0', isResultStateNonMultiplicative(result) ? result.incidenceLeft : undefined)
             }
           </div>
           <div className="info-card" style={{ textAlign: 'center' }}>
             <h3 style={{ fontSize: '15px', color: '#0056b3', margin: '0 0 10px 0' }}>Fronteira Direita</h3>
             {isResultStateMultiplicative(result)
-              ? renderMultiplicativeLabel(result.albedoR, result.baffleR, result.contornoDir)
-              : showCondicoesdeContorno(result?.contornoDir || '', 'L', isResultStateNonMultiplicative(result) ? result.incidenciaDir : undefined)
+              ? renderMultiplicativeLabel(result.albedoR, result.baffleR, result.boundaryRight)
+              : showBoundaryConditions(result?.boundaryRight || '', 'L', isResultStateNonMultiplicative(result) ? result.incidenceRight : undefined)
             }
           </div>
         </div>
 
         <h2 className="section-title">Resultados da Simulação</h2>
-        
+
         {isResultStateMultiplicative(result) && (
           <div className="info-card avoid-page-break" style={{ marginBottom: '20px', textAlign: 'center', backgroundColor: '#eaf4ff' }}>
             <h3 style={{ margin: 0, color: '#004085', fontSize: '18px' }}>
-              Potência Total Calculada: <strong>{PotenciaTotal().toFixed(2)} MW</strong>
+              Potência Total Calculada: <strong>{powerTotal().toFixed(2)} MW</strong>
             </h3>
           </div>
         )}
@@ -460,15 +460,15 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         {isResultStateMultiplicative(result) && (
           <div className="convergence-box">
             <p className="convergence-text">
-              Fator de multiplicação efetivo convergiu em <span className="convergence-value">{vector_keffs.length}</span> iteração(ões).
+              Fator de multiplicação efetivo convergiu em <span className="convergence-value">{keffValues.length}</span> iteração(ões).
             </p>
             <p className="convergence-text">
-              Fluxo escalar de partículas convergiu em <span className="convergence-value">{itfluxo}</span> iteração(ões).
+              Fluxo escalar de partículas convergiu em <span className="convergence-value">{fluxIterations}</span> iteração(ões).
             </p>
           </div>
         )}
 
-        {result?.hasGrafic && (
+        {result?.hasGraphic && (
           <div style={{ marginTop: '20px' }} dangerouslySetInnerHTML={{ __html: graph }} />
         )}
 
@@ -485,7 +485,7 @@ function ReportComponent({ initialState }: HomeWrapperProps) {
         )}
 
         <div dangerouslySetInnerHTML={{ __html: createFluxTable() }} />
-        
+
       </div>
     </div>
   );

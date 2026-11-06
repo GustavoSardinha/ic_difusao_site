@@ -9,8 +9,8 @@ import { isResultStateMultiplicative } from '../../Interfaces/ResultStateMultipl
 
 function ReconstructionComponent({ initialState }: HomeWrapperProps) {
   const [result] = useState<ResultState | null>(initialState?.result || null);
-  const [vector_solutions] = useState<number[]>(
-    initialState?.vector_solutions || []
+  const [solutions] = useState<number[]>(
+    initialState?.solutions || []
   );
   const [solution_consts, setSolutionConsts] = useState<number[]>([]);
   const [filterPoint, setFilterPoint] = useState<string>('');
@@ -20,8 +20,8 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
     if (result && solution_consts.length === 0) generateConstants();
   }, [result]);
 
-  function getComprimento(): number {
-    return Number(result?.comprimento || 0);
+  function getLength(): number {
+    return Number(result?.length || 0);
   }
 
   function generateConstants(): void {
@@ -30,23 +30,23 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
     if (isResultStateNonMultiplicative(result)) {
       const {
-        numRegioes,
-        mapeamento,
-        numCelulasPorRegiao,
-        fonteNeutrons,
-        coeficientesDifusao,
-        choquesMacroscopicos,
-        espessura,
+        regionCount,
+        mapping,
+        cellsPerRegion,
+        sourceNeutrons,
+        diffusionCoefficients,
+        crossSectionsMacroscopic,
+        thickness,
       } = result;
 
       let cells = 0;
-      for (let i = 0; i < numRegioes; i++) {
-        const h = espessura[i];
-        const zona = mapeamento[i];
-        const L = Math.sqrt(coeficientesDifusao[zona - 1] / choquesMacroscopicos[zona - 1]);
+      for (let i = 0; i < regionCount; i++) {
+        const h = thickness[i];
+        const zone = mapping[i];
+        const L = Math.sqrt(diffusionCoefficients[zone - 1] / crossSectionsMacroscopic[zone - 1]);
 
-        const phi0 = vector_solutions[cells] - fonteNeutrons[i] / choquesMacroscopicos[zona - 1];
-        const phiH = vector_solutions[cells + numCelulasPorRegiao[i]] - fonteNeutrons[i] / choquesMacroscopicos[zona - 1];
+        const phi0 = solutions[cells] - sourceNeutrons[i] / crossSectionsMacroscopic[zone - 1];
+        const phiH = solutions[cells + cellsPerRegion[i]] - sourceNeutrons[i] / crossSectionsMacroscopic[zone - 1];
 
         const A =
           (phiH - phi0 * Math.exp(-h / L)) /
@@ -56,48 +56,48 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
           (Math.exp(h / L) - Math.exp(-h / L));
 
         sol_const.push(A, B);
-        cells += numCelulasPorRegiao[i];
+        cells += cellsPerRegion[i];
       }
     }
 
     else if (isResultStateMultiplicative(result)) {
       const {
-        numRegioes,
-        mapeamento,
-        numCelulasPorRegiao,
-        coeficientesDifusao,
-        choquesMacroscopicosAbs,
-        choquesMacroscopicosFis,
-        Ni,
+        regionCount,
+        mapping,
+        cellsPerRegion,
+        diffusionCoefficients,
+        crossSectionsMacroscopicAbs,
+        crossSectionsMacroscopicFis,
+        neutronsPerFission: neutronYield,
         keff,
-        espessura,
+        thickness,
         noNi,
       } = result;
 
-      const niValor = noNi ? Number(Ni) : 1;
+      const effectiveNeutronYield = noNi ? Number(neutronYield) : 1;
       const eps = 1e-12;
 
       let nodeIndex = 0;
 
-      for (let i = 0; i < numRegioes; i++) {
-        const zona = mapeamento[i];
-        const D = coeficientesDifusao[zona - 1];
-        const Sa = choquesMacroscopicosAbs[zona - 1];
-        const Sf = choquesMacroscopicosFis[zona - 1];
+      for (let i = 0; i < regionCount; i++) {
+        const zone = mapping[i];
+        const D = diffusionCoefficients[zone - 1];
+        const Sa = crossSectionsMacroscopicAbs[zone - 1];
+        const Sf = crossSectionsMacroscopicFis[zone - 1];
 
-        const nCells = numCelulasPorRegiao[i];
-        const regionThickness = espessura[i];
+        const nCells = cellsPerRegion[i];
+        const regionThickness = thickness[i];
         const hCell = regionThickness / nCells;
 
-        const B2raw = (niValor * Sf) / keff - Sa;
+        const B2raw = (effectiveNeutronYield * Sf) / keff - Sa;
         const B2 = B2raw / D;
 
         for (let k = 0; k < nCells; k++) {
           const leftIdx = nodeIndex + k;
           const rightIdx = leftIdx + 1;
 
-          const phiL = vector_solutions[leftIdx];
-          const phiR = vector_solutions[rightIdx];
+          const phiL = solutions[leftIdx];
+          const phiR = solutions[rightIdx];
 
           if (B2 > 0) {
             const beta = Math.sqrt(B2);
@@ -108,7 +108,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
                 ? (phiR - A * Math.cos(beta * hCell)) / denom
                 : (phiR - A * Math.cos(beta * hCell)) / (denom + eps);
             sol_const.push(A, C);
-          } 
+          }
           else if (B2 < 0) {
             const alpha = Math.sqrt(-B2);
             const A = phiL;
@@ -118,7 +118,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
                 ? (phiR - A * Math.cosh(alpha * hCell)) / denom
                 : (phiR - A * Math.cosh(alpha * hCell)) / (denom + eps);
             sol_const.push(A, C);
-          } 
+          }
           else {
             const A = phiL;
             const C = (phiR - phiL) / (Math.abs(hCell) > eps ? hCell : eps);
@@ -131,18 +131,18 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
     setSolutionConsts(sol_const);
     console.log("Solution constants:", sol_const);
-    
+
     }
   }
 
   function findAPoint(x: number): number[] {
     if (!result) return [];
-    const { numRegioes, espessura, comprimento } = result;
-    if (x < 0 || x > comprimento) return [];
+    const { regionCount, thickness, length } = result;
+    if (x < 0 || x > length) return [];
 
     let acc = 0;
-    for (let i = 0; i < numRegioes; i++) {
-      acc += espessura[i];
+    for (let i = 0; i < regionCount; i++) {
+      acc += thickness[i];
       if (x <= acc) return [i, acc];
     }
     return [];
@@ -155,22 +155,22 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
     const regionIdx = regInfos[0];
     const regionEnd = regInfos[1];
-    const regionStart = regionEnd - result.espessura[regionIdx];
+    const regionStart = regionEnd - result.thickness[regionIdx];
     const localXInRegion = x - regionStart;
 
 
     if (isResultStateNonMultiplicative(result)) {
       const {
-        mapeamento,
-        fonteNeutrons,
-        coeficientesDifusao,
-        choquesMacroscopicos,
+        mapping,
+        sourceNeutrons,
+        diffusionCoefficients,
+        crossSectionsMacroscopic,
       } = result;
 
-      const zona = mapeamento[regionIdx];
+      const zone = mapping[regionIdx];
       const L = Math.sqrt(
-        coeficientesDifusao[zona - 1] /
-        choquesMacroscopicos[zona - 1]
+        diffusionCoefficients[zone - 1] /
+        crossSectionsMacroscopic[zone - 1]
       );
 
       const dx = localXInRegion;
@@ -178,33 +178,33 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
       return (
         solution_consts[2 * regionIdx] * Math.exp(dx / L) +
         solution_consts[2 * regionIdx + 1] * Math.exp(-dx / L) +
-        fonteNeutrons[regionIdx] /
-          choquesMacroscopicos[zona - 1]
+        sourceNeutrons[regionIdx] /
+          crossSectionsMacroscopic[zone - 1]
       );
     }
 
     if (isResultStateMultiplicative(result)) {
       const {
-        mapeamento,
-        coeficientesDifusao,
-        choquesMacroscopicosAbs,
-        choquesMacroscopicosFis,
-        espessura,
-        numCelulasPorRegiao,
-        Ni,
+        mapping,
+        diffusionCoefficients,
+        crossSectionsMacroscopicAbs,
+        crossSectionsMacroscopicFis,
+        thickness,
+        cellsPerRegion,
+        neutronsPerFission: neutronYield,
         keff,
         noNi,
       } = result;
 
-      const niValor = noNi ? Number(Ni) : 1;
+      const effectiveNeutronYield = noNi ? Number(neutronYield) : 1;
 
-      const zona = mapeamento[regionIdx];
-      const D = coeficientesDifusao[zona - 1];
-      const Sa = choquesMacroscopicosAbs[zona - 1];
-      const Sf = choquesMacroscopicosFis[zona - 1];
+      const zone = mapping[regionIdx];
+      const D = diffusionCoefficients[zone - 1];
+      const Sa = crossSectionsMacroscopicAbs[zone - 1];
+      const Sf = crossSectionsMacroscopicFis[zone - 1];
 
-      const nCells = numCelulasPorRegiao[regionIdx];
-      const hCell = espessura[regionIdx] / nCells;
+      const nCells = cellsPerRegion[regionIdx];
+      const hCell = thickness[regionIdx] / nCells;
 
       const cellLocalIndex = Math.min(
         Math.floor(localXInRegion / hCell),
@@ -213,7 +213,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
       let globalCellIndex = 0;
       for (let i = 0; i < regionIdx; i++) {
-        globalCellIndex += numCelulasPorRegiao[i];
+        globalCellIndex += cellsPerRegion[i];
       }
       globalCellIndex += cellLocalIndex;
 
@@ -222,17 +222,17 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
       const dx = localXInRegion - cellLocalIndex * hCell;
 
-      const B2 = ((niValor * Sf) / keff - Sa) / D;
+      const B2 = ((effectiveNeutronYield * Sf) / keff - Sa) / D;
       const eps = 1e-12;
 
       if (B2 > 0) {
         const beta = Math.sqrt(B2);
         return A * Math.cos(beta * dx) + C * Math.sin(beta * dx);
-      } 
+      }
       else if (B2 < 0) {
         const alpha = Math.sqrt(-B2);
         return A * Math.cosh(alpha * dx) + C * Math.sinh(alpha * dx);
-      } 
+      }
       else {
         return A + C * dx;
       }
@@ -241,71 +241,71 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
     return NaN;
   }
   function absorptionRate(a: number, b:number) : number {
-    if (!result) 
-      return -1; 
-    let absRate = 0; 
-    if(isResultStateNonMultiplicative(result)){ 
-      const { 
-        mapeamento,
-        fonteNeutrons, 
-        coeficientesDifusao, 
-        choquesMacroscopicos, 
-        espessura, 
-      } = result; 
-      const regInfosA = findAPoint(a); 
-      const regInfosB = findAPoint(b); 
+    if (!result)
+      return -1;
+    let absRate = 0;
+    if(isResultStateNonMultiplicative(result)){
+      const {
+        mapping,
+        sourceNeutrons,
+        diffusionCoefficients,
+        crossSectionsMacroscopic,
+        thickness,
+      } = result;
+      const regInfosA = findAPoint(a);
+      const regInfosB = findAPoint(b);
       for(let i = regInfosA[0]; i <= regInfosB[0]; i++){
-        const zona = mapeamento[i]; 
-        const L = Math.sqrt(coeficientesDifusao[zona - 1]/choquesMacroscopicos[zona - 1]); 
-        let dxa = 0; 
-        let dxb = espessura[i]; 
-        if(i == regInfosA[0]) 
-          dxa = a - (regInfosA[1] - espessura[i]); 
-        if(i == regInfosB[0]) 
-          dxb = b - (regInfosB[1] - espessura[i]); 
-        absRate += L*choquesMacroscopicos[zona - 1]*(solution_consts[2*i]*(Math.pow(Math.E, dxb/L) - Math.pow(Math.E, dxa/L)) - solution_consts[2*i + 1]*(Math.pow(Math.E, - dxb/L) - Math.pow(Math.E, - dxa/L))) + fonteNeutrons[i]*(dxb - dxa) 
-      } 
-    } 
-    return absRate; 
+        const zone = mapping[i];
+        const L = Math.sqrt(diffusionCoefficients[zone - 1]/crossSectionsMacroscopic[zone - 1]);
+        let dxa = 0;
+        let dxb = thickness[i];
+        if(i == regInfosA[0])
+          dxa = a - (regInfosA[1] - thickness[i]);
+        if(i == regInfosB[0])
+          dxb = b - (regInfosB[1] - thickness[i]);
+        absRate += L*crossSectionsMacroscopic[zone - 1]*(solution_consts[2*i]*(Math.pow(Math.E, dxb/L) - Math.pow(Math.E, dxa/L)) - solution_consts[2*i + 1]*(Math.pow(Math.E, - dxb/L) - Math.pow(Math.E, - dxa/L))) + sourceNeutrons[i]*(dxb - dxa)
+      }
+    }
+    return absRate;
   }
   function powerRate(a: number, b: number): number {
     if (!result) return -1;
     if (!isResultStateMultiplicative(result)) return -1;
 
     const {
-      mapeamento,
-      coeficientesDifusao,
-      choquesMacroscopicosAbs,
-      choquesMacroscopicosFis,
-      numCelulasPorRegiao,
-      espessura,
+      mapping,
+      diffusionCoefficients,
+      crossSectionsMacroscopicAbs,
+      crossSectionsMacroscopicFis,
+      cellsPerRegion,
+      thickness,
       keff,
-      energia,
+      energy,
       noNi,
-      Ni,
+      neutronsPerFission: neutronYield,
     } = result;
 
     if (b <= a) return -1;
 
-    const E = 1.602176634e-13 * Number(energia);
-    const niValor = noNi ? Number(Ni) : 1;
+    const E = 1.602176634e-13 * Number(energy);
+    const effectiveNeutronYield = noNi ? Number(neutronYield) : 1;
     const eps = 1e-12;
 
     let power = 0;
     let globalCellIndex = 0;
     let xAccRegionStart = 0;
 
-    for (let r = 0; r < numCelulasPorRegiao.length; r++) {
-      const zona = mapeamento[r];
-      const D = coeficientesDifusao[zona - 1];
-      const Sa = choquesMacroscopicosAbs[zona - 1];
-      const Sf = choquesMacroscopicosFis[zona - 1];
+    for (let r = 0; r < cellsPerRegion.length; r++) {
+      const zone = mapping[r];
+      const D = diffusionCoefficients[zone - 1];
+      const Sa = crossSectionsMacroscopicAbs[zone - 1];
+      const Sf = crossSectionsMacroscopicFis[zone - 1];
 
-      const nCells = numCelulasPorRegiao[r];
-      const regionLength = espessura[r];
+      const nCells = cellsPerRegion[r];
+      const regionLength = thickness[r];
       const hCell = regionLength / nCells;
 
-      const B2 = ((niValor * Sf) / keff - Sa) / D;
+      const B2 = ((effectiveNeutronYield * Sf) / keff - Sa) / D;
 
       for (let k = 0; k < nCells; k++) {
         const cellStart = xAccRegionStart + k * hCell;
@@ -360,7 +360,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
   return (
     <div>
-      <PlotComponent f={(x) => fluxFunction(x)} L={1000} range={[0, getComprimento()]} />
+      <PlotComponent f={(x) => fluxFunction(x)} L={1000} range={[0, getLength()]} />
 
       <ArrayFormInput
         label="Digite um ponto para ser filtrado"
@@ -373,10 +373,10 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
       <div style={{ justifyContent: 'center', alignItems: 'center' }}>
         {(() => {
           const x = Number(filterPoint);
-          
+
           if(filterPoint === '')
             return;
-          
+
           if (Number.isNaN(x)) {
             return (
               <p style={{ textAlign: 'center' }}>
@@ -421,7 +421,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
               const a = Number(parts[0]);
               const b = Number(parts[1]);
-              const length = getComprimento();
+              const length = getLength();
 
               // Validação do Domínio
               if (Number.isNaN(a) || Number.isNaN(b) || a < 0 || b > length || b <= a) {
@@ -433,7 +433,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
               }
 
               const value = absorptionRate(a, b);
-              
+
               if (Number.isNaN(value) || value === -1) {
                 return (
                   <p style={{ textAlign: 'center' }}>
@@ -470,7 +470,7 @@ function ReconstructionComponent({ initialState }: HomeWrapperProps) {
 
               const x = Number(parts[0]);
               const y = Number(parts[1]);
-              const length = getComprimento();
+              const length = getLength();
 
               // Validação do Domínio adicionando a checagem com 'length'
               if (Number.isNaN(x) || Number.isNaN(y) || x < 0 || y > length || y <= x) {

@@ -4,16 +4,16 @@ import "../../../Styles/Modal/Contorno.css";
 import "../../../Styles/FormInput/Input.css";
 import FormInput from "../../FormInput";
 
-interface ContornoModalProps {
-  contornoEsq: string;
-  setContornoEsq: (value: string) => void;
-  incidenciaEsq: number;
-  setIncidenciaEsq: (value: number) => void;
+interface BoundaryModalProps {
+  boundaryLeft: string;
+  setBoundaryLeft: (value: string) => void;
+  incidenceLeft: number;
+  setIncidenceLeft: (value: number) => void;
 
-  contornoDir: string;
-  setContornoDir: (value: string) => void;
-  incidenciaDir: number;
-  setIncidenciaDir: (value: number) => void;
+  boundaryRight: string;
+  setBoundaryRight: (value: string) => void;
+  incidenceRight: number;
+  setIncidenceRight: (value: number) => void;
 
   L: number;
 
@@ -21,14 +21,14 @@ interface ContornoModalProps {
 
 }
 
-function ContornoModal(props: ContornoModalProps) {
+function BoundaryModal(props: BoundaryModalProps) {
   const isZeroCase = (value: string) =>
     value === "0;0" || value === "0;99999999999999999999";
-  const [disabledEsq, setDisabledEsq] = useState(
-    () => isZeroCase(props.contornoEsq)
+  const [disabledLeft, setDisabledLeft] = useState(
+    () => isZeroCase(props.boundaryLeft)
   );
-  const [disabledDir, setDisabledDir] = useState(
-    () => isZeroCase(props.contornoDir)
+  const [disabledRight, setDisabledRight] = useState(
+    () => isZeroCase(props.boundaryRight)
   );
 
 
@@ -36,14 +36,14 @@ function ContornoModal(props: ContornoModalProps) {
     element: string,
     disableFunc: React.Dispatch<React.SetStateAction<boolean>>,
     setFunc: (value: string) => void,
-    setIncidenciaFunc: (value: number) => void
+    setIncidenceFunc: (value: number) => void
   ) {
     setFunc(element);
     if (element !== "0;0" && element !== "0;99999999999999999999") {
       disableFunc(false);
     } else {
       disableFunc(true);
-      setIncidenciaFunc(0);
+      setIncidenceFunc(0);
     }
   }
 
@@ -57,13 +57,13 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">x = 0</p>
             <select
               className="Picker"
-              value={props.contornoEsq}
+              value={props.boundaryLeft}
               onChange={(event) => {
                 verifyCase(
                   event.target.value,
-                  setDisabledEsq,
-                  props.setContornoEsq,
-                  props.setIncidenciaEsq
+                  setDisabledLeft,
+                  props.setBoundaryLeft,
+                  props.setIncidenceLeft
                 );
               }}
             >
@@ -80,11 +80,11 @@ function ContornoModal(props: ContornoModalProps) {
             <div>
               <p className="Subtitle">Incidência</p>
               <FormInput
-                disabled={disabledEsq}
+                disabled={disabledLeft}
                 label=""
                 placeholder="Informe a incidência em x = 0."
-                onChange={(value) => props.setIncidenciaEsq(Number(value))}
-                value={String(props.incidenciaEsq)}
+                onChange={(value) => props.setIncidenceLeft(Number(value))}
+                value={String(props.incidenceLeft)}
               />
             </div>
           </div>
@@ -93,13 +93,13 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">x = {props.L}</p>
             <select
               className="Picker"
-              value={props.contornoDir}
+              value={props.boundaryRight}
               onChange={(event) => {
                 verifyCase(
                   event.target.value,
-                  setDisabledDir,
-                  props.setContornoDir,
-                  props.setIncidenciaDir
+                  setDisabledRight,
+                  props.setBoundaryRight,
+                  props.setIncidenceRight
                 );
               }}
             >
@@ -116,11 +116,11 @@ function ContornoModal(props: ContornoModalProps) {
             <div>
               <p className="Subtitle">Incidência</p>
               <FormInput
-                disabled={disabledDir}
+                disabled={disabledRight}
                 label=""
                 placeholder={`Informe a incidência em x = ${props.L}.`}
-                onChange={(value) => props.setIncidenciaDir(Number(value))}
-                value={String(props.incidenciaDir)}
+                onChange={(value) => props.setIncidenceRight(Number(value))}
+                value={String(props.incidenceRight)}
               />
             </div>
           </div>
@@ -138,4 +138,4 @@ function ContornoModal(props: ContornoModalProps) {
   );
 }
 
-export default ContornoModal;
+export default BoundaryModal;

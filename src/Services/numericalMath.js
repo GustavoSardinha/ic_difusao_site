@@ -1,8 +1,8 @@
-export function thomasSimetrico(diag, off, rhs) {
+export function solveSymmetricTridiagonal(diag, off, rhs) {
     const n = diag.length;
-    const cp = new Array(n - 1); 
-    const dp = new Array(n);    
-  
+    const cp = new Array(n - 1);
+    const dp = new Array(n);
+
 
     dp[0] = rhs[0] / diag[0];
     if (n > 1) {
@@ -16,48 +16,48 @@ export function thomasSimetrico(diag, off, rhs) {
         cp[i] = - off[i] / denom;
       }
     }
-  
+
     const x = new Array(n);
     x[n - 1] = dp[n - 1];
     for (let i = n - 2; i >= 0; i--) {
       x[i] = dp[i] - cp[i] * x[i + 1];
     }
-  
+
     return x;
 }
 
-export function desvioRelativo(value, valueAnt){
-    return Math.abs(value - valueAnt)/value;
+export function relativeDeviation(value, valuePrevious){
+    return Math.abs(value - valuePrevious)/value;
 }
-export function integralNumerica(solucoes, espessura, inicio, fim) {
-  let resultado = 0;
+export function numericalIntegral(solutions, thickness, start, end) {
+  let result = 0;
 
-  for (let i = inicio; i < fim; i++) {
-    resultado += 0.5 * (solucoes[i] + solucoes[i + 1]) * espessura;
+  for (let i = start; i < end; i++) {
+    result += 0.5 * (solutions[i] + solutions[i + 1]) * thickness;
   }
 
-  return resultado;
+  return result;
 }
-export function integralDifusaoSimpson(solucoes, h, inicio, fim) {
-  const n = fim - inicio;
+export function integralDiffusionSimpson(solutions, h, start, end) {
+  const n = end - start;
 
   // fallback seguro
   if (n < 2) return 0;
   if (n % 2 !== 0) {
     // último intervalo via trapézio
-    let soma = solucoes[inicio] + solucoes[fim - 1];
+    let sum = solutions[start] + solutions[end - 1];
     for (let i = 1; i < n - 1; i++) {
-      soma += (i % 2 === 0 ? 2 : 4) * solucoes[inicio + i];
+      sum += (i % 2 === 0 ? 2 : 4) * solutions[start + i];
     }
-    return (h / 3) * soma
-         + 0.5 * (solucoes[fim - 1] + solucoes[fim]) * h;
+    return (h / 3) * sum
+         + 0.5 * (solutions[end - 1] + solutions[end]) * h;
   }
 
-  let soma = solucoes[inicio] + solucoes[fim];
+  let sum = solutions[start] + solutions[end];
 
   for (let i = 1; i < n; i++) {
-    soma += (i % 2 === 0 ? 2 : 4) * solucoes[inicio + i];
+    sum += (i % 2 === 0 ? 2 : 4) * solutions[start + i];
   }
 
-  return (h / 3) * soma;
+  return (h / 3) * sum;
 }

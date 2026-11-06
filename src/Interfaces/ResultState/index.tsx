@@ -1,19 +1,19 @@
 interface ResultState {
-  numRegioes: number;
-  zonasMateriais: number;
-  mapeamento: number[];
-  numCelulasPorRegiao: number[];
-  coeficientesDifusao: number[];
-  espessura: number[];
-  comprimento: number;
+  regionCount: number;
+  materialZoneCount: number;
+  mapping: number[];
+  cellsPerRegion: number[];
+  diffusionCoefficients: number[];
+  thickness: number[];
+  length: number;
   stepGraphic: number;
   stepTable: number;
-  hasGrafic: boolean;
+  hasGraphic: boolean;
   advancedOptions: boolean;
-  nogamma: boolean;
+  noGamma: boolean;
   filterPoint: number;
-  contornoDir: string;
-  contornoEsq: string;
+  boundaryRight: string;
+  boundaryLeft: string;
 }
 
 export default ResultState;

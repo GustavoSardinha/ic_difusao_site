@@ -1,14 +1,15 @@
 import ResultState from "../ResultState";
 
 export interface ResultStateMultiplicative extends ResultState{
-  choquesMacroscopicosAbs: number[];
-  choquesMacroscopicosFis: number[];
+  crossSectionsMacroscopicAbs: number[];
+  crossSectionsMacroscopicFis: number[];
   noNi: boolean;
-  Ni: number;
-  potencia: number;
-  energia: number;
-  Lkeff: string;
-  Lfluxo: string;
+  ni: number;
+  neutronsPerFission: number;
+  power: number;
+  energy: number;
+  keffTolerance: string;
+  fluxTolerance: string;
   keff: number;
   solutions: number[];
   albedoL: boolean;
@@ -19,18 +20,18 @@ export interface ResultStateMultiplicative extends ResultState{
   aR: number;
   bL: number;
   bR: number;
-  coefDifusaoRefL: number;
-  coefDifusaoRefR: number;
-  coefChoqueRefL: number;
-  coefChoqueRefR: number;
-  coefDifusaoBaffL: number;
-  coefDifusaoBaffR: number;
-  coefChoqueBaffL: number;
-  coefChoqueBaffR: number;
+  coefDiffusionRefL: number;
+  coefDiffusionRefR: number;
+  coefCrossSectionRefL: number;
+  coefCrossSectionRefR: number;
+  coefDiffusionBaffL: number;
+  coefDiffusionBaffR: number;
+  coefCrossSectionBaffL: number;
+  coefCrossSectionBaffR: number;
   baffleL: boolean;
   baffleR: boolean;
 }
 
 export function isResultStateMultiplicative(obj: any): obj is ResultStateMultiplicative {
-  return obj && typeof obj === 'object' && 'choquesMacroscopicosFis' in obj;
+  return obj && typeof obj === 'object' && 'crossSectionsMacroscopicFis' in obj;
 }

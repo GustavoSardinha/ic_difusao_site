@@ -1,14 +1,14 @@
 import { useState } from "react";
 
 interface RunAllParams {
-  numRegioes: string;
-  zonasMateriais: string;
-  mapeamento: string;
-  numCelulasPorRegiao: string;
-  fonteNeutrons: string;
-  coeficientesDifusao: string;
-  choquesMacroscopicos: string;
-  espessura: string;
+  regionCount: string;
+  materialZoneCount: string;
+  mapping: string;
+  cellsPerRegion: string;
+  sourceNeutrons: string;
+  diffusionCoefficients: string;
+  crossSectionsMacroscopic: string;
+  thickness: string;
   stepGraphic: number | string;
   stepTable: number | string;
   advancedOptions?: boolean;
@@ -16,15 +16,15 @@ interface RunAllParams {
 }
 
 interface RunAllResult {
-  numRegioes: number;
-  zonasMateriais: number;
-  mapeamento: number[];
-  numCelulasPorRegiao: number[];
-  fonteNeutrons: number[];
-  coeficientesDifusao: number[];
-  choquesMacroscopicos: number[];
-  espessura: number[];
-  comprimento: number;
+  regionCount: number;
+  materialZoneCount: number;
+  mapping: number[];
+  cellsPerRegion: number[];
+  sourceNeutrons: number[];
+  diffusionCoefficients: number[];
+  crossSectionsMacroscopic: number[];
+  thickness: number[];
+  length: number;
   stepGraphic: number | string;
   stepTable: number | string;
 }
@@ -102,25 +102,25 @@ export function useValidation() {
     setValidated(null);
 
     const {
-      numRegioes,
-      zonasMateriais,
-      mapeamento,
-      numCelulasPorRegiao,
-      fonteNeutrons,
-      coeficientesDifusao,
-      choquesMacroscopicos,
-      espessura,
+      regionCount,
+      materialZoneCount,
+      mapping,
+      cellsPerRegion,
+      sourceNeutrons,
+      diffusionCoefficients,
+      crossSectionsMacroscopic,
+      thickness,
       stepGraphic,
       stepTable,
       advancedOptions,
       filterPoint,
     } = params;
 
-    const r = parseInt(numRegioes, 10);
+    const r = parseInt(regionCount, 10);
     if (isNaN(r) || r <= 0)
       throw new Error(`O *Número de Regiões* não pode estar em branco.`);
 
-    const z = parseInt(zonasMateriais, 10);
+    const z = parseInt(materialZoneCount, 10);
     if (isNaN(z) || z <= 0)
       throw new Error(`O *Número de Zonas Materiais* não pode estar em branco.`);
     if (z > r)
@@ -128,63 +128,63 @@ export function useValidation() {
         `O *Número de Zonas Materiais* não pode ser maior que o *Número de Regiões*.`
       );
 
-    const mapArr = validateIntForm(mapeamento, "Mapeamento", r, "regiões");
-    if (mapArr.some((idx) => idx > z))
+    const mappingArray = validateIntForm(mapping, "Mapeamento", r, "regiões");
+    if (mappingArray.some((idx) => idx > z))
       throw new Error(
         `Os índices do campo *Mapeamento* não podem ser maiores que o número de Zonas.`
       );
-    validateNoZeros(mapArr, "Mapeamento");
+    validateNoZeros(mappingArray, "Mapeamento");
 
-    const cellsArr = validateIntForm(
-      numCelulasPorRegiao,
+    const cellCounts = validateIntForm(
+      cellsPerRegion,
       "Número de Células por Região",
       r,
       "regiões"
     );
-    validateNoZeros(cellsArr, "Número de Células por Região");
+    validateNoZeros(cellCounts, "Número de Células por Região");
 
-    const fonteArr = validateFloatForm(
-      fonteNeutrons,
+    const sourceArr = validateFloatForm(
+      sourceNeutrons,
       "Fonte de Nêutrons",
       r,
       "regiões"
     );
-    const diffArr = validateFloatForm(
-      coeficientesDifusao,
+    const diffusionCoefficientArray = validateFloatForm(
+      diffusionCoefficients,
       "Coeficientes de Difusão",
       z,
       "zonas"
     );
-    validateNoZeros(diffArr, "Coeficientes de Difusão");
+    validateNoZeros(diffusionCoefficientArray, "Coeficientes de Difusão");
 
-    const chocArr = validateFloatForm(
-      choquesMacroscopicos,
+    const crossSectionArray = validateFloatForm(
+      crossSectionsMacroscopic,
       "Seções de Choque Macroscópicas",
       z,
       "zonas"
     );
-    validateNoZeros(chocArr, "Seções de Choque Macroscópicas");
+    validateNoZeros(crossSectionArray, "Seções de Choque Macroscópicas");
 
-    const espArr = validateFloatForm(
-      espessura,
+    const thicknessArray = validateFloatForm(
+      thickness,
       "Espessura de cada Região",
       r,
       "regiões"
     );
-    validateNoZeros(espArr, "Espessura de cada Região");
+    validateNoZeros(thicknessArray, "Espessura de cada Região");
 
-    const totalLength = sum(espArr);
+    const totalLength = sum(thicknessArray);
 
     validateSteps(
       stepGraphic,
       "Passo no Gráfico",
-      sum(cellsArr),
+      sum(cellCounts),
       "Número de Células"
     );
     validateSteps(
       stepTable,
       "Passo na Tabela",
-      sum(cellsArr),
+      sum(cellCounts),
       "Número de Células"
     );
 
@@ -192,21 +192,21 @@ export function useValidation() {
       validateSteps(
         filterPoint,
         "Índice na malha de discretização",
-        sum(cellsArr) + 1,
+        sum(cellCounts) + 1,
         "Número de Células + 1"
       );
     }
 
     const result: RunAllResult = {
-      numRegioes: r,
-      zonasMateriais: z,
-      mapeamento: mapArr,
-      numCelulasPorRegiao: cellsArr,
-      fonteNeutrons: fonteArr,
-      coeficientesDifusao: diffArr,
-      choquesMacroscopicos: chocArr,
-      espessura: espArr,
-      comprimento: totalLength,
+      regionCount: r,
+      materialZoneCount: z,
+      mapping: mappingArray,
+      cellsPerRegion: cellCounts,
+      sourceNeutrons: sourceArr,
+      diffusionCoefficients: diffusionCoefficientArray,
+      crossSectionsMacroscopic: crossSectionArray,
+      thickness: thicknessArray,
+      length: totalLength,
       stepGraphic,
       stepTable,
     };

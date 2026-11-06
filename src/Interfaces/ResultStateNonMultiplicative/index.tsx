@@ -1,13 +1,13 @@
 import ResultState from "../ResultState";
 
 export interface ResultStateNonMultiplicative extends ResultState {
-  fonteNeutrons: number[];
-  choquesMacroscopicos: number[];
-  incidenciaDir: number;
-  incidenciaEsq: number;
+  sourceNeutrons: number[];
+  crossSectionsMacroscopic: number[];
+  incidenceRight: number;
+  incidenceLeft: number;
 }
 
 
 export function isResultStateNonMultiplicative(obj: any): obj is ResultStateNonMultiplicative {
-  return obj && typeof obj === 'object' && 'incidenciaEsq' in obj;
+  return obj && typeof obj === 'object' && 'incidenceLeft' in obj;
 }

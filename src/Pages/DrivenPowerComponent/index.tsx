@@ -4,29 +4,35 @@ import ResultState from '../../Interfaces/ResultState';
 import PlotComponent from '../../Components/AnaliticalGraphics/PlotComponent';
 import PlotHistogramComponent from '../../Components/AnaliticalGraphics/PlotHistogramComponent';
 import ContinueButton from '../../Components/ContinueButton';
+import { getNonMultiplicativeFluxProfile } from '../../Services/nonMultiplicativeSolver';
+import { ResultStateNonMultiplicative } from '../../Interfaces/ResultStateNonMultiplicative';
+import { m } from 'framer-motion';
+import { ResultStateMultiplicative } from '../../Interfaces/ResultStateMultiplicative';
+import { numericalIntegral } from '../../Services/numericalMath';
 
 function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   const [result] = useState<ResultState | null>(initialState?.result || null);
-  const [vector_solutions] = useState<number[]>(
-    initialState?.vector_solutions || []
+  const [solutions] = useState<number[]>(
+    initialState?.solutions || []
   );
-  const [vector_pot, setVectorPot] = useState<number[]>(initialState?.vector_pot || []);
-  const isMultiplicative = vector_pot.map((value) => value !== 0);
+  const [powers, setVectorPot] = useState<number[]>(initialState?.powers || []);
+  const [sources, setSources] = useState<number[]>([]);
+  const isMultiplicative = powers.map((value) => value !== 0);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   const [targetPower, setTargetPower] = useState<string[]>(() => {
-    const total = vector_pot.reduce((acc, value) => acc + value, 0);
+    const total = powers.reduce((acc, value) => acc + value, 0);
 
     if (total <= 0) {
-      return vector_pot.map(() => '0.0000');
+      return powers.map(() => '0.0000');
     }
 
-    const percentages = vector_pot.map(
+    const percentages = powers.map(
       (value) => Number(((value / total) * 100).toFixed(4))
     );
 
-    const largestIndex = vector_pot.reduce(
+    const largestIndex = powers.reduce(
       (largest, value, index, values) =>
         value > values[largest] ? index : largest,
       0
@@ -46,9 +52,9 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
   const [draggingIndex] = useState<number | null>(null);
   const [err, setErr] = useState<Error | null>(null);
 
-  const totalPower = vector_pot.reduce((acc, value) => acc + value, 0);
+  const totalPower = powers.reduce((acc, value) => acc + value, 0);
 
-  const regions = vector_pot.map((power) => ({
+  const regions = powers.map((power) => ({
     power,
     percentual: totalPower > 0 ? (power / totalPower) * 100 : 0,
   }));
@@ -57,17 +63,17 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     const dx: number[] = [];
     let x = 0;
 
-    for (let i = 0; i < (result?.numRegioes ?? 0); i++) {
-      const espessura = result?.espessura[i] ?? 0;
-      const numCelulas = result?.numCelulasPorRegiao[i] ?? 0;
+    for (let i = 0; i < (result?.regionCount ?? 0); i++) {
+      const thickness = result?.thickness[i] ?? 0;
+      const numCells = result?.cellsPerRegion[i] ?? 0;
 
-      if (numCelulas <= 0) {
+      if (numCells <= 0) {
         continue;
       }
 
-      const cellSize = espessura / numCelulas;
+      const cellSize = thickness / numCells;
 
-      for (let j = 0; j < numCelulas; j++) {
+      for (let j = 0; j < numCells; j++) {
         dx.push(x);
         x += cellSize;
       }
@@ -82,15 +88,15 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     const dx = getDX();
     const i = dx.findIndex((value) => value === x);
 
-    return i >= 0 ? vector_solutions[i] : NaN;
+    return i >= 0 ? solutions[i] : NaN;
   }
 
   function getRegions(): number[] {
     const regions: number[] = [];
     let x = 0;
 
-    for (let i = 0; i < (result?.numRegioes ?? 0); i++) {
-      const cellSize = result?.espessura[i] || 2;
+    for (let i = 0; i < (result?.regionCount ?? 0); i++) {
+      const cellSize = result?.thickness[i] || 2;
 
       regions.push((2 * x + cellSize) / 2);
       x += cellSize;
@@ -157,7 +163,80 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
     solveProblem();
   }
   function solveProblem() {
-    console.log(vector_pot);
+    let regionCount = result?.regionCount ?? 0;
+    for(let i = 0; i < regionCount; i++){
+      let sourceNeutrons = [];
+      let regionIndex = result?.mapping[i] ?? 1;
+      regionIndex--;
+      console.log(`Região ${i + 1} mapeada para índice ${regionIndex}`);
+      const E_fission_J = Number((result as ResultStateMultiplicative)?.energy) * 1.602176634e-13;
+      let Q = (result as ResultStateMultiplicative)?.crossSectionsMacroscopicFis[regionIndex]*E_fission_J / 1000000;
+      console.log(Q);
+      let crossSectionsCapture = [];
+      for(let j = 0; j < regionCount; j++){
+        let regionIndexCap = result?.mapping[j] ?? 1;
+        regionIndexCap--;
+        let crossCaptureSection = 0;
+        if(result && (result as ResultStateMultiplicative)?.noNi){
+          crossCaptureSection = (result as ResultStateMultiplicative)?.crossSectionsMacroscopicAbs[regionIndexCap] - (result as ResultStateMultiplicative)?.crossSectionsMacroscopicFis[regionIndexCap];
+        } else {
+          crossCaptureSection = (result as ResultStateMultiplicative)?.crossSectionsMacroscopicAbs[regionIndexCap] - (result as ResultStateMultiplicative)?.crossSectionsMacroscopicFis[regionIndexCap];
+        }
+        console.log(`Seção de captura para a Região ${j + 1}:`, crossCaptureSection);
+        console.log(`Seção de fissão para a Região ${j + 1}:`, (result as ResultStateMultiplicative)?.crossSectionsMacroscopicFis[regionIndexCap]);
+        console.log(`Seção de absorção para a Região ${j + 1}:`, (result as ResultStateMultiplicative)?.crossSectionsMacroscopicAbs[regionIndexCap]);
+        console.log(regionIndexCap);
+        crossSectionsCapture.push(crossCaptureSection);
+        if(i != j)
+          sourceNeutrons.push(0);
+        else
+          sourceNeutrons.push(Q);
+      }
+      console.log((result as ResultStateMultiplicative));
+      console.log(`Fonte de nêutrons para a Região ${i + 1}:`, sourceNeutrons);
+      console.log(`Seção de captura para a Região ${i + 1}:`, crossSectionsCapture);
+      let calculationResult: ResultStateNonMultiplicative = {
+        regionCount: regionCount,
+        materialZoneCount: result?.materialZoneCount ?? 0,
+        mapping: result?.mapping ?? [],
+        cellsPerRegion: result?.cellsPerRegion ?? [],
+        diffusionCoefficients: result?.diffusionCoefficients ?? [],
+        thickness: result?.thickness ?? [],
+        length: result?.length ?? 0,
+        stepGraphic: 0,
+        stepTable: 0,
+        hasGraphic: false,
+        advancedOptions: false,
+        noGamma: false,
+        filterPoint: 0,
+        boundaryRight: result?.boundaryRight ?? '',
+        boundaryLeft: result?.boundaryLeft ?? '',
+        sourceNeutrons: sourceNeutrons,
+        crossSectionsMacroscopic: crossSectionsCapture,
+        incidenceRight: 0,
+        incidenceLeft: 0
+      };
+      const { solutions, positions } = getNonMultiplicativeFluxProfile(calculationResult); 
+      console.log(`Soluções para a Região ${i + 1}:`, solutions);
+      let start = 0;
+      let end = 0;
+      let index = 1;
+      let estimatedPower = 0;
+      for (let regions = 0; regions < regionCount; regions++) {
+        let regionIndex = result?.mapping[regions] ?? 1;      
+        const idx = regionIndex - 1;
+        const h = (result?.thickness[regions] ?? 0) / (result?.cellsPerRegion[regions] ?? 1);
+        end = index + (result?.cellsPerRegion[regions] ?? 1);
+        let p = numericalIntegral(solutions, h, start, end - 1);
+        estimatedPower += p;
+        index += result?.cellsPerRegion[regions] ?? 1;
+        start = end - 1;
+      }
+      console.log(`Potência estimada para a Região ${i + 1}:`, estimatedPower);
+      sources.push(powers[i] / estimatedPower);
+      setSources([...sources]);
+    }
+    console.log('Fatores de ajuste das fontes de nêutrons:', sources);
   }
   const totalTargetPower = targetPower.reduce(
     (acc, value) => acc + (Number(value) || 0),
@@ -241,7 +320,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
       >
         Distribuição de Potência:
       </span>
-
+    
       <div
         ref={containerRef}
         style={{
@@ -359,7 +438,7 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
                     textAlign: 'center',
                   }}
                 >
-                  {vector_pot[index].toFixed(4)}
+                  {powers[index].toFixed(4)}
                 </td>
 
                 <td
@@ -418,19 +497,31 @@ function DrivenPowerComponent({ initialState }: HomeWrapperProps) {
           </div>
         </div>
       </div>
+      {sources.length > 0 && (
+        <div className="sources-container">
 
+          <div className="sources-list">
+            {sources.map((value, index) => (
+              <div key={index} className="source-item">
+                <span>Q{index + 1} =  </span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       <PlotComponent
         f={getSolutions}
         L={1000}
-        range={[0, result?.comprimento ?? 0]}
+        range={[0, result?.length ?? 0]}
         x_data={getDX()}
         markers={true}
       />
 
       <PlotHistogramComponent
         x_data={getRegions()}
-        y_data={vector_pot}
-        width={result?.espessura ?? []}
+        y_data={powers}
+        width={result?.thickness ?? []}
       />
     </div>
   );

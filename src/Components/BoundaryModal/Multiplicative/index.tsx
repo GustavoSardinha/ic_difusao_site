@@ -9,24 +9,24 @@ import CheckBoxInput from "../../CheckBoxInput";
 import FormInput from "../../FormInput";
 
 
-interface ContornoModalProps {
-  contornoEsq: string;
-  setContornoEsq: (value: string) => void;
-  contornoDir: string;
-  setContornoDir: (value: string) => void;
+interface BoundaryModalProps {
+  boundaryLeft: string;
+  setBoundaryLeft: (value: string) => void;
+  boundaryRight: string;
+  setBoundaryRight: (value: string) => void;
   L: number;
   successFunc: (
-    contornoEsq: string,
-    contornoDir: string
+    boundaryLeft: string,
+    boundaryRight: string
   ) => void;
-  Lkeff: string;
-  setLKeff: (value: string) => void
-  Lfluxo: string;
-  setLfluxo: (value: string) => void;
+  keffTolerance: string;
+  setKeffTolerance: (value: string) => void
+  fluxTolerance: string;
+  setFluxTolerance: (value: string) => void;
   msgErroDialog: string;
   showModal: boolean;
   setShowModal: (value: boolean) => void;
-  criterioParada: boolean;
+  stoppingCriterion: boolean;
   setCriterioParada: (value: boolean) => void;
   albedoL: boolean;
   setAlbedoL: (value: boolean) => void;
@@ -36,8 +36,8 @@ interface ContornoModalProps {
   setInf_bL: (value: boolean) => void;
   inf_bR: boolean;
   setInf_bR: (value: boolean) => void;
-  passos: number;
-  setPassos: (value: number) => void;
+  steps: number;
+  setSteps: (value: number) => void;
   setCCActive: (value: boolean) => void;
   aL:string;
   setAL: (value: string) => void;
@@ -47,42 +47,42 @@ interface ContornoModalProps {
   setAR: (value: string) => void;
   bR:string;
   setBR: (value: string) => void;
-  coefDifusaoRefL: string;
-  setCoefDifuRefL: (value: string) => void;
-  coefDifusaoRefR: string;
-  setCoefDifuRefR: (value: string) => void;
-  coefChoqueRefL: string;
-  setCoefChoqueRefL: (value: string) => void;
-  coefChoqueRefR: string;
-  setCoefChoqueRefR: (value: string) => void;
-  coefDifusaoBaffL: string;
-  setCoefDifuBaffL: (value: string) => void;
-  coefDifusaoBaffR: string;
-  setCoefDifuBaffR: (value: string) => void;
-  coefChoqueBaffL: string;
-  setCoefChoqueBaffL: (value: string) => void;
-  coefChoqueBaffR: string;
-  setCoefChoqueBaffR: (value: string) => void;
+  coefDiffusionRefL: string;
+  setCoefDiffusionRefL: (value: string) => void;
+  coefDiffusionRefR: string;
+  setCoefDiffusionRefR: (value: string) => void;
+  coefCrossSectionRefL: string;
+  setCoefCrossSectionRefL: (value: string) => void;
+  coefCrossSectionRefR: string;
+  setCoefCrossSectionRefR: (value: string) => void;
+  coefDiffusionBaffL: string;
+  setCoefDiffusionBaffL: (value: string) => void;
+  coefDiffusionBaffR: string;
+  setCoefDiffusionBaffR: (value: string) => void;
+  coefCrossSectionBaffL: string;
+  setCoefCrossSectionBaffL: (value: string) => void;
+  coefCrossSectionBaffR: string;
+  setCoefCrossSectionBaffR: (value: string) => void;
   baffleL: boolean;
   setBafflebL: (value: boolean) => void;
   baffleR: boolean;
   setBaffleR: (value: boolean) => void;
 }
-function copyData(props: ContornoModalProps) {
-  props.setContornoDir(props.contornoEsq);
+function copyData(props: BoundaryModalProps) {
+  props.setBoundaryRight(props.boundaryLeft);
   props.setInf_bR(props.inf_bL);
   props.setAlbedoR(props.albedoL);
   props.setBaffleR(props.baffleL);
   props.setAR(props.aL);
   props.setBR(props.bL);
-  props.setCoefDifuRefR(props.coefDifusaoRefL);
-  props.setCoefDifuBaffR(props.coefDifusaoBaffL);
-  props.setCoefChoqueRefR(props.coefChoqueRefL);
-  props.setCoefChoqueBaffR(props.coefChoqueBaffL);
+  props.setCoefDiffusionRefR(props.coefDiffusionRefL);
+  props.setCoefDiffusionBaffR(props.coefDiffusionBaffL);
+  props.setCoefCrossSectionRefR(props.coefCrossSectionRefL);
+  props.setCoefCrossSectionBaffR(props.coefCrossSectionBaffL);
 }
-function ContornoModal(props: ContornoModalProps) {
-  const contornoEsqRef = useRef<HTMLSelectElement>(null);
-  const contornoDirRef = useRef<HTMLSelectElement>(null);
+function BoundaryModal(props: BoundaryModalProps) {
+  const boundaryLeftRef = useRef<HTMLSelectElement>(null);
+  const boundaryRightRef = useRef<HTMLSelectElement>(null);
 
   return (
     <div className="Modal-overlay Modal-overlayC">
@@ -93,10 +93,10 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">Esquerda</p>
             <p className="Subtitle">x = 0</p>
             <select
-              ref={contornoEsqRef}
+              ref={boundaryLeftRef}
               className="Picker"
-              value={props.contornoEsq}
-              onChange={(event) => {props.setContornoEsq(event.target.value)}}>
+              value={props.boundaryLeft}
+              onChange={(event) => {props.setBoundaryLeft(event.target.value)}}>
               {(!props.albedoL) && (
                 <option value="0;0">Reflexiva</option>
               )}
@@ -108,10 +108,10 @@ function ContornoModal(props: ContornoModalProps) {
             <p className="Subtitle">Direita</p>
             <p className="Subtitle">x = {props.L}</p>
             <select
-              ref={contornoDirRef}
+              ref={boundaryRightRef}
               className="Picker"
-              value={props.contornoDir}
-              onChange={(event) => {props.setContornoDir(event.target.value)}}
+              value={props.boundaryRight}
+              onChange={(event) => {props.setBoundaryRight(event.target.value)}}
             >
               {(!props.albedoR) && (
                 <option value="0;0">Reflexiva</option>
@@ -174,15 +174,15 @@ function ContornoModal(props: ContornoModalProps) {
                       disabled={false}
                       label="Informe o coeficiente de difusão do refletor"
                       placeholder={`Digite os coeficientes de difusão`}
-                      onChange={(value) => props.setCoefDifuRefL(value)}
-                      value={String(props.coefDifusaoRefL)}
+                      onChange={(value) => props.setCoefDiffusionRefL(value)}
+                      value={String(props.coefDiffusionRefL)}
                   />
                   <FormInputNoMask
                       disabled={false}
                       label="Informe a seção de choque macroscópica do refletor"
                       placeholder={`Digite as seções de choque macroscópicas`}
-                      onChange={(value) => props.setCoefChoqueRefL(value)}
-                      value={String(props.coefChoqueRefL)}
+                      onChange={(value) => props.setCoefCrossSectionRefL(value)}
+                      value={String(props.coefCrossSectionRefL)}
                   />
                 {(props.baffleL) && (
                   <div>
@@ -190,15 +190,15 @@ function ContornoModal(props: ContornoModalProps) {
                         disabled={false}
                         label="Informe o coeficiente de difusão do baffle"
                         placeholder={`Digite os coeficientes de difusão`}
-                        onChange={(value) => props.setCoefDifuBaffL(value)}
-                        value={String(props.coefDifusaoBaffL)}
+                        onChange={(value) => props.setCoefDiffusionBaffL(value)}
+                        value={String(props.coefDiffusionBaffL)}
                     />
                     <FormInputNoMask
                         disabled={false}
                         label="Informe a seção de choque macroscópica do baffle"
                         placeholder={`Digite as seções de choque macroscópicas`}
-                        onChange={(value) => props.setCoefChoqueBaffL(value)}
-                        value={String(props.coefChoqueBaffL)}
+                        onChange={(value) => props.setCoefCrossSectionBaffL(value)}
+                        value={String(props.coefCrossSectionBaffL)}
                     />
                   </div>
                 )}
@@ -244,15 +244,15 @@ function ContornoModal(props: ContornoModalProps) {
                       disabled={false}
                       label="Informe o coeficiente de difusão do refletor"
                       placeholder={`Digite os coeficientes de difusão`}
-                      onChange={(value) => props.setCoefDifuRefR(value)}
-                      value={String(props.coefDifusaoRefR)}
+                      onChange={(value) => props.setCoefDiffusionRefR(value)}
+                      value={String(props.coefDiffusionRefR)}
                   />
                   <FormInputNoMask
                       disabled={false}
                       label="Informe a seção de choque macroscópica do refletor"
                       placeholder={`Digite as seções de choque macroscópicas`}
-                      onChange={(value) => props.setCoefChoqueRefR(value)}
-                      value={String(props.coefChoqueRefR)}
+                      onChange={(value) => props.setCoefCrossSectionRefR(value)}
+                      value={String(props.coefCrossSectionRefR)}
                   />
                   {(props.baffleR) && (
                     <div>
@@ -260,15 +260,15 @@ function ContornoModal(props: ContornoModalProps) {
                           disabled={false}
                           label="Informe o coeficiente de difusão do baffle"
                           placeholder={`Digite os coeficientes de difusão`}
-                          onChange={(value) => props.setCoefDifuBaffR(value)}
-                          value={String(props.coefDifusaoBaffR)}
+                          onChange={(value) => props.setCoefDiffusionBaffR(value)}
+                          value={String(props.coefDiffusionBaffR)}
                       />
                       <FormInputNoMask
                           disabled={false}
                           label="Informe a seção de choque macroscópica do baffle"
                           placeholder={`Digite as seções de choque macroscópicas`}
-                          onChange={(value) => props.setCoefChoqueBaffR(value)}
-                          value={String(props.coefChoqueBaffR)}
+                          onChange={(value) => props.setCoefCrossSectionBaffR(value)}
+                          value={String(props.coefCrossSectionBaffR)}
                       />
                     </div>
                   )}
@@ -276,15 +276,15 @@ function ContornoModal(props: ContornoModalProps) {
               )}
             </div>
           </div>
-          {(!props.criterioParada) && (
+          {(!props.stoppingCriterion) && (
             <div  className="Div-row">
                 <div>
                   <FormInputNoMask
                       disabled={false}
                       label="Informe o critério de parada para keff"
                       placeholder={`Digite o critério de parada para keff`}
-                      onChange={(value) => props.setLKeff(value)}
-                      value={String(props.Lkeff)}
+                      onChange={(value) => props.setKeffTolerance(value)}
+                      value={String(props.keffTolerance)}
                   />
                 </div>
                 <div>
@@ -292,22 +292,22 @@ function ContornoModal(props: ContornoModalProps) {
                       disabled={false}
                       label="Informe o critério de parada para fluxo"
                       placeholder={`Digite o critério de parada para o fluxo`}
-                      onChange={(value) => props.setLfluxo(value)}
-                      value={String(props.Lfluxo)}
+                      onChange={(value) => props.setFluxTolerance(value)}
+                      value={String(props.fluxTolerance)}
                   />
                 </div>
             </div>
           )}
           <button className="Continue-button" onClick={() => copyData(props)}>Copiar dados da esquerda para a direita</button>
-          {(props.criterioParada) && (
+          {(props.stoppingCriterion) && (
             <div>
               <p className="Subtitle">Número fixo de iterações</p>
               <FormInput
                 disabled={false}
                 label="Informe o número fixo de iterações"
                 placeholder={`Digite o número fixo de iterações`}
-                onChange={(value) => props.setPassos(Number(value))}
-                value={String(props.passos)}
+                onChange={(value) => props.setSteps(Number(value))}
+                value={String(props.steps)}
               ></FormInput>
             </div>
           )
@@ -319,16 +319,16 @@ function ContornoModal(props: ContornoModalProps) {
               className="Continue-button"
               type="button"
               onClick={() => {
-                const contornoEsqAtual = contornoEsqRef.current?.value ?? "0;0";
-                const contornoDirAtual = contornoDirRef.current?.value ?? "0;0";
+                const boundaryLeftCurrent = boundaryLeftRef.current?.value ?? "0;0";
+                const boundaryRightCurrent = boundaryRightRef.current?.value ?? "0;0";
 
-                props.setContornoEsq(contornoEsqAtual);
-                props.setContornoDir(contornoDirAtual);
+                props.setBoundaryLeft(boundaryLeftCurrent);
+                props.setBoundaryRight(boundaryRightCurrent);
 
-              
+
                 props.successFunc(
-                  contornoEsqAtual,
-                  contornoDirAtual
+                  boundaryLeftCurrent,
+                  boundaryRightCurrent
                 );
               }}
               value={"Executar"}
@@ -346,7 +346,7 @@ function ContornoModal(props: ContornoModalProps) {
         <div className="Div-row">
           <CheckBoxInput
             text = {"Critério de parada fixo"}
-            value = {props.criterioParada}
+            value = {props.stoppingCriterion}
             onChange = {props.setCriterioParada}
           />
         </div>
@@ -364,4 +364,4 @@ function ContornoModal(props: ContornoModalProps) {
   );
 }
 
-export default ContornoModal;
+export default BoundaryModal;
